@@ -6,6 +6,10 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<Platforms>AnyCPU;x64</Platforms>
+		<PlatformTarget>x64</PlatformTarget>
+		<!-- ✅ ADD THIS -->
+		<UseWPF>true</UseWPF>
+		<!-- ✅ ADD THIS -->
 	</PropertyGroup>
 
 	<ItemGroup>
