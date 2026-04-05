@@ -3,19 +3,20 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="../DataLab/DataLab.csproj">
+  <Project Path="B-Lab/B-Lab.csproj">
+    <Platform Solution="*|Any CPU" Project="x64" />
     <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="Debug|Any CPU" Project="x64" />
   </Project>
-  <Project Path="../MasterModel/MasterModel.csproj" Id="1be6bb1e-0f3c-4c24-9058-ea8780d12946">
+  <Project Path="RevitUI/RevitUI.csproj">
+    <Platform Solution="*|Any CPU" Project="x64" />
     <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="Debug|Any CPU" Project="x64" />
   </Project>
-  <Project Path="../RevitUI/RevitUI.csproj">
+  <Project Path="DataLab/DataLab.csproj">
+    <Platform Solution="*|Any CPU" Project="x64" />
     <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="Debug|Any CPU" Project="x64" />
   </Project>
-  <Project Path="B-Lab.csproj">
+  <Project Path="MasterModel/MasterModel.csproj">
+    <Platform Solution="*|Any CPU" Project="x64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
 </Solution>

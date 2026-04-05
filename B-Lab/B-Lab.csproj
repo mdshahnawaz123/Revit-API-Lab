@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<RootNamespace>B_Lab</RootNamespace>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Platforms>x64</Platforms>
+		<PlatformTarget>x64</PlatformTarget>
+		<UseWPF>true</UseWPF>
+		<Prefer32Bit>false</Prefer32Bit>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2026.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\DataLab\DataLab.csproj" />
+		<ProjectReference Include="..\RevitUI\RevitUI.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="..\DataLab\Resources\Helper\**\*.*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>Helper\%(RecursiveDir)%(Filename)%(Extension)</Link>
+		</Content>
+	</ItemGroup>
+
+	<Target Name="CreateAddinManifest" AfterTargets="Build">
+		<PropertyGroup>
+			<AddinPath>$(CommonApplicationData)\Autodesk\Revit\Addins\2026\B-Lab.addin</AddinPath>
+			<AddinContent><![CDATA[<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>B-Lab AddIn</Name>
+    <Assembly>$(TargetDir)B-Lab.dll</Assembly>
+    <ClientId>0d9c15ae-c9e1-4120-b490-d46c3fc9b9ef</ClientId>
+    <FullClassName>B_Lab.RevitApp.App</FullClassName>
+    <VendorId>ADSK</VendorId>
+    <VendorDescription>Autodesk, www.autodesk.com</VendorDescription>
+  </AddIn>
+</RevitAddIns>]]></AddinContent>
+		</PropertyGroup>
+		<MakeDir Directories="$(CommonApplicationData)\Autodesk\Revit\Addins\2026\" Condition="!Exists('$(CommonApplicationData)\Autodesk\Revit\Addins\2026\')" />
+		<WriteLinesToFile File="$(AddinPath)" Lines="$(AddinContent)" Overwrite="true" Encoding="UTF-8" />
+	</Target>
+</Project>

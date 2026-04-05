@@ -1,12 +1,12 @@
-﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitUI.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RevitUI.UI;
 
 namespace B_Lab.Command
 {
@@ -21,6 +21,9 @@ namespace B_Lab.Command
             var app = uiapp.Application;
             var uidoc = uiapp.ActiveUIDocument;
             var doc = uidoc.Document;
+
+            // ── LOGIN CHECK ───────────────────────────────────────────────────
+            if (!RevitUI.UI.LoginGuard.IsAuthorized()) return Result.Cancelled;
 
             try
             {

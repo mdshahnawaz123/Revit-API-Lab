@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows</TargetFramework>
-		<RootNamespace>B_Lab</RootNamespace>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<Platforms>x64</Platforms>
@@ -12,9 +11,7 @@
 	<ItemGroup>
 		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2026.0.0" />
 	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\DataLab\DataLab.csproj" />
-		<ProjectReference Include="..\RevitUI\RevitUI.csproj" />
-		<ProjectReference Include="..\MasterModel\MasterModel.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+	<ProjectReference Include="..\DataLab\DataLab.csproj" />
+  </ItemGroup>
 </Project>
