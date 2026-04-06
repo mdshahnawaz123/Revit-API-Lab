@@ -3,8 +3,10 @@ using Autodesk.Revit.UI;
 using RevitUI.ExternalCommand.ParameterFilter;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 
 namespace RevitUI.UI
 {
@@ -23,6 +25,23 @@ namespace RevitUI.UI
         private readonly IsolateExternal _IsoExternal;
 
         private List<Parameter> _currentParameters = new();
+
+
+        [DllImport("user32.dll")]
+        static extern int SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
+
+        const int WM_SETICON = 0x80;
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            var hwnd = new WindowInteropHelper(this).Handle;
+
+            // Remove small & large icon
+            SendMessage(hwnd, WM_SETICON, 0, 0);
+            SendMessage(hwnd, WM_SETICON, 1, 0);
+        }
 
         // ✅ Singleton - assign _instance BEFORE Show()
         public static void GetOrCreate(Document doc, UIDocument uidoc)

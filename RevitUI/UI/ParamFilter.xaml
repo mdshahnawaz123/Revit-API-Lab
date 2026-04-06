@@ -1,6 +1,7 @@
 <Window x:Class="RevitUI.UI.ParamFilter"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:RevitUI.UI"
         Title="Parameter Filter"
         Icon="{x:Null}"
         Height="330" Width="520"
