@@ -9,9 +9,9 @@ namespace B_Lab.RevitApp
 {
     public class App : IExternalApplication
     {
-        private const string TAB_NAME = "BIM Digital Design";
-        private const string PANEL_NAME = "Opening";
-        private const string PANEL_NAME1 = "QC Panel";
+        private const string? TAB_NAME = "BIM Digital Design";
+        private const string? PANEL_NAME = "Opening";
+        private const string? PANEL_NAME1 = "QC Panel";
 
         private static string? _assemblyFolder;
 
