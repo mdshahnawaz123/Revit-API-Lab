@@ -10,6 +10,9 @@ namespace RevitUI.UI
 {
     public partial class ParamFilter : Window
     {
+        // ✅ Single static instance
+        private static ParamFilter? _instance;
+
         private readonly Document _doc;
         private readonly UIDocument _uidoc;
 
@@ -19,13 +22,35 @@ namespace RevitUI.UI
         private readonly ExternalEvent _IsolateEvent;
         private readonly IsolateExternal _IsoExternal;
 
-        // Store full Parameter objects so we can get ElementId later
         private List<Parameter> _currentParameters = new();
 
-        public ParamFilter(Document doc, UIDocument uidoc)
+        // ✅ Singleton - assign _instance BEFORE Show()
+        public static void GetOrCreate(Document doc, UIDocument uidoc)
+        {
+            if (_instance != null)
+            {
+                if (!_instance.IsVisible)
+                    _instance.Show();
+
+                if (_instance.WindowState == WindowState.Minimized)
+                    _instance.WindowState = WindowState.Normal;
+
+                _instance.Activate();
+                _instance.Focus();
+                return;
+            }
+
+            // ✅ Assign FIRST - any re-entrant call will now see _instance != null
+            _instance = new ParamFilter(doc, uidoc);
+            _instance.Closed += (s, e) => _instance = null;
+            _instance.Show(); // Show AFTER assignment
+        }
+
+        // ✅ Private constructor - cannot use "new" from outside
+        private ParamFilter(Document doc, UIDocument uidoc)
         {
             InitializeComponent();
-            this.HideIcon();
+
             _doc = doc;
             _uidoc = uidoc;
 
@@ -40,7 +65,6 @@ namespace RevitUI.UI
 
         private void LoadCategories()
         {
-            // Get all model categories that have elements
             var categories = _doc.Settings.Categories
                 .Cast<Category>()
                 .Where(c => c.CategoryType == CategoryType.Model && c.AllowsBoundParameters)
@@ -58,7 +82,6 @@ namespace RevitUI.UI
 
             _currentParameters = new List<Parameter>();
 
-            // Grab one instance element to read its parameters
             var instanceElement = new FilteredElementCollector(_doc)
                 .OfCategoryId(cat.Id)
                 .WhereElementIsNotElementType()
@@ -67,7 +90,6 @@ namespace RevitUI.UI
             if (instanceElement != null)
                 _currentParameters.AddRange(instanceElement.Parameters.Cast<Parameter>());
 
-            // Grab one type element
             var typeElement = new FilteredElementCollector(_doc)
                 .OfCategoryId(cat.Id)
                 .WhereElementIsElementType()
@@ -76,7 +98,6 @@ namespace RevitUI.UI
             if (typeElement != null)
                 _currentParameters.AddRange(typeElement.Parameters.Cast<Parameter>());
 
-            // Deduplicate by parameter name, keep only filterable (string/numeric) ones
             _currentParameters = _currentParameters
                 .Where(p => p.Definition != null)
                 .GroupBy(p => p.Definition.Name)
@@ -84,24 +105,16 @@ namespace RevitUI.UI
                 .OrderBy(p => p.Definition.Name)
                 .ToList();
 
-            // Display the name in the ComboBox
             ParameterCombo.DisplayMemberPath = "Definition.Name";
             ParameterCombo.ItemsSource = _currentParameters;
         }
 
         private void OnApplyFilter(object sender, RoutedEventArgs e)
         {
-            var selectedCat = CategoryCombo.SelectedItem as Category;
-            var selectedParam = ParameterCombo.SelectedItem as Parameter;
-            var selectedRule = (RuleCombo.SelectedItem as ComboBoxItem)?.Content?.ToString();
-            var value = ValueBox.Text?.Trim();
+            if (!ValidateInputs(out Category selectedCat, out Parameter selectedParam,
+                out string selectedRule, out string value))
+                return;
 
-            if (selectedCat == null) { MessageBox.Show("Select a Category."); return; }
-            if (selectedParam == null) { MessageBox.Show("Select a Parameter."); return; }
-            if (string.IsNullOrEmpty(selectedRule)) { MessageBox.Show("Select an Operator."); return; }
-            if (string.IsNullOrWhiteSpace(value)) { MessageBox.Show("Enter a filter value."); return; }
-
-            // Pass data to the external event handler
             _paramExternal.CategoryId = selectedCat.Id;
             _paramExternal.ParameterElementId = selectedParam.Id;
             _paramExternal.RuleOperator = selectedRule;
@@ -112,17 +125,10 @@ namespace RevitUI.UI
 
         private void OnIsolate(object sender, RoutedEventArgs e)
         {
-            var selectedCat = CategoryCombo.SelectedItem as Category;
-            var selectedParam = ParameterCombo.SelectedItem as Parameter;
-            var selectedRule = (RuleCombo.SelectedItem as ComboBoxItem)?.Content?.ToString();
-            var value = ValueBox.Text?.Trim();
+            if (!ValidateInputs(out Category selectedCat, out Parameter selectedParam,
+                out string selectedRule, out string value))
+                return;
 
-            if (selectedCat == null) { MessageBox.Show("Select a Category."); return; }
-            if (selectedParam == null) { MessageBox.Show("Select a Parameter."); return; }
-            if (string.IsNullOrEmpty(selectedRule)) { MessageBox.Show("Select an Operator."); return; }
-            if (string.IsNullOrWhiteSpace(value)) { MessageBox.Show("Enter a filter value."); return; }
-
-            // Pass the same data the apply handler uses
             _IsoExternal.CategoryId = selectedCat.Id;
             _IsoExternal.ParameterElementId = selectedParam.Id;
             _IsoExternal.RuleOperator = selectedRule;
@@ -131,17 +137,28 @@ namespace RevitUI.UI
             _IsolateEvent.Raise();
         }
 
+        private bool ValidateInputs(out Category cat, out Parameter param,
+            out string rule, out string value)
+        {
+            cat = CategoryCombo.SelectedItem as Category;
+            param = ParameterCombo.SelectedItem as Parameter;
+            rule = (RuleCombo.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            value = ValueBox.Text?.Trim();
+
+            if (cat == null) { MessageBox.Show("Select a Category."); return false; }
+            if (param == null) { MessageBox.Show("Select a Parameter."); return false; }
+            if (string.IsNullOrEmpty(rule)) { MessageBox.Show("Select an Operator."); return false; }
+            if (string.IsNullOrWhiteSpace(value)) { MessageBox.Show("Enter a filter value."); return false; }
+
+            return true;
+        }
+
         private void OnClear(object sender, RoutedEventArgs e)
         {
             CategoryCombo.SelectedIndex = -1;
             ParameterCombo.ItemsSource = null;
             RuleCombo.SelectedIndex = -1;
             ValueBox.Clear();
-        }
-
-        private void OnRemoveRule(object sender, RoutedEventArgs e)
-        {
-            // If you add multiple rules later, remove the selected one here
         }
 
         private void OnClose(object sender, RoutedEventArgs e)

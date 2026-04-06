@@ -11,6 +11,7 @@ namespace B_Lab.RevitApp
     {
         private const string TAB_NAME = "BIM Digital Design";
         private const string PANEL_NAME = "Opening";
+        private const string PANEL_NAME1 = "QC Panel";
 
         private static string? _assemblyFolder;
 
@@ -23,75 +24,82 @@ namespace B_Lab.RevitApp
             {
                 try { application.CreateRibbonTab(TAB_NAME); } catch { }
 
+                // ── Panels ────────────────────────────────────────────────────
                 RibbonPanel panel = application
                     .GetRibbonPanels(TAB_NAME)
                     .FirstOrDefault(p => p.Name == PANEL_NAME)
                     ?? application.CreateRibbonPanel(TAB_NAME, PANEL_NAME);
 
+                RibbonPanel panel1 = application
+                    .GetRibbonPanels(TAB_NAME)
+                    .FirstOrDefault(p => p.Name == PANEL_NAME1)
+                    ?? application.CreateRibbonPanel(TAB_NAME, PANEL_NAME1);
+
                 string dll = Path.Combine(_assemblyFolder!, "RevitUI.dll");
 
-                // ── MEP Opening ──────────────────────────────────────────────
+                // ── Button Data ───────────────────────────────────────────────
                 var mepBtn = new PushButtonData(
-                    "MEP_Opening_BTN",
-                    "MEP",
-                    dll,
-                    "RevitUI.Command.OpeningCommand"
-                );
+                    "MEP_Opening_BTN", "MEP", dll,
+                    "RevitUI.Command.OpeningCommand");
 
-                // ── Door/Window Opening ──────────────────────────────────────
                 var dwBtn = new PushButtonData(
-                    "DW_Opening_BTN",
-                    "Door/Window",
-                    dll,
-                    "RevitUI.Command.LinkedDoorOpening"
-                );
+                    "DW_Opening_BTN", "Door/Window", dll,
+                    "RevitUI.Command.LinkedDoorOpening");
 
-                // Add BOTH at once using stacked buttons — guaranteed to appear
+                var paraBtn = new PushButtonData(
+                    "para_Filter_BTN", "Parameter\nFilter", dll,
+                    "RevitUI.Command.ParamCommand");
+
+                // ── Add to panels ─────────────────────────────────────────────
                 panel.AddStackedItems(mepBtn, dwBtn);
+                var paraButton = panel1.AddItem(paraBtn) as PushButton; // ✅ capture reference
 
-                // Set images, tooltips, and contextual help (F1)
-                string helpPath = Path.Combine(_assemblyFolder!, "Helper", "master-opening-sleeves-help.html");
-                
-                // Fallback: Check if we are in AddinManager (temp folder) and look for original build folder
-                if (!File.Exists(helpPath))
-                {
-                    // You might want to manually check a known location if this fails frequently in AddinManager
-                }
+                // ── Help file paths ───────────────────────────────────────────
+                string mepHelpPath = Path.Combine(_assemblyFolder!, "Helper", "master-opening-sleeves-help.html");
+                string paraHelpPath = Path.Combine(_assemblyFolder!, "Helper", "ParameterFilterHelp.html"); // ✅ F1 for ParamFilter
 
-                ContextualHelp? ch = null;
-                if (File.Exists(helpPath))
-                {
-                    ch = new ContextualHelp(ContextualHelpType.Url, helpPath);
-                }
-                else
-                {
-                    // DEBUG: If you still don't see F1, uncomment the line below to see where it searches
-                    // TaskDialog.Show("Help Missing", $"Searched at: {helpPath}");
-                }
+                ContextualHelp? mepHelp = File.Exists(mepHelpPath)
+                    ? new ContextualHelp(ContextualHelpType.Url, mepHelpPath)
+                    : null;
 
+                ContextualHelp? paraHelp = File.Exists(paraHelpPath)
+                    ? new ContextualHelp(ContextualHelpType.Url, paraHelpPath)
+                    : null;
+
+                // ── Setup Opening panel buttons ───────────────────────────────
                 foreach (RibbonItem item in panel.GetItems())
                 {
-                    if (item is PushButton btn)
+                    if (item is not PushButton btn) continue;
+                    if (mepHelp != null) btn.SetContextualHelp(mepHelp);
+
+                    if (item.Name == "MEP_Opening_BTN")
                     {
-                        // Common setup
-                        if (ch != null) btn.SetContextualHelp(ch);
-
-                        if (item.Name == "MEP_Opening_BTN")
-                        {
-                            var img = ImageUtils.GetEmbeddedImage("DataLab.Resources.Wall.png");
-                            btn.Image = img;
-                            btn.LargeImage = img;
-                            btn.ToolTip = "MEP Opening Tool - Create openings for Pipes, Ducts, and Cable Trays.";
-                        }
-
-                        if (item.Name == "DW_Opening_BTN")
-                        {
-                            var img = ImageUtils.GetEmbeddedImage("DataLab.Resources.Door.png");
-                            btn.Image = img;
-                            btn.LargeImage = img;
-                            btn.ToolTip = "Door/Window Opening Tool - Create openings from linked models.";
-                        }
+                        var img = ImageUtils.GetEmbeddedImage("DataLab.Resources.Wall.png");
+                        btn.Image = img;
+                        btn.LargeImage = img;
+                        btn.ToolTip = "MEP Opening Tool - Create openings for Pipes, Ducts, and Cable Trays.";
                     }
+
+                    if (item.Name == "DW_Opening_BTN")
+                    {
+                        var img = ImageUtils.GetEmbeddedImage("DataLab.Resources.Door.png");
+                        btn.Image = img;
+                        btn.LargeImage = img;
+                        btn.ToolTip = "Door/Window Opening Tool - Create openings from linked models.";
+                    }
+                }
+
+                // ── Setup Parameter Filter button (panel1) ────────────────────
+                if (paraButton != null)
+                {
+                    var img = ImageUtils.GetEmbeddedImage("DataLab.Resources.para.png");
+                    paraButton.Image = img;
+                    paraButton.LargeImage = img;
+                    paraButton.ToolTip = "Parameter Filter - Filter and isolate elements by parameter value.";
+
+                    // ✅ F1 contextual help pointing to ParameterFilterHelp.html
+                    if (paraHelp != null)
+                        paraButton.SetContextualHelp(paraHelp);
                 }
 
                 return Result.Succeeded;
@@ -107,11 +115,9 @@ namespace B_Lab.RevitApp
         {
             if (string.IsNullOrEmpty(args.Name)) return null;
 
-            // Get simple name
             string assemblyName = new AssemblyName(args.Name).Name;
             string fileName = assemblyName + ".dll";
 
-            // List of directories to search
             var searchPaths = new[]
             {
                 Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
@@ -124,10 +130,7 @@ namespace B_Lab.RevitApp
                 string path = Path.Combine(dir, fileName);
                 if (File.Exists(path))
                 {
-                    try
-                    {
-                        return Assembly.LoadFrom(path);
-                    }
+                    try { return Assembly.LoadFrom(path); }
                     catch { continue; }
                 }
             }
