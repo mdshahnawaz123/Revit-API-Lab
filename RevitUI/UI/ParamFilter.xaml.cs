@@ -7,6 +7,8 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
+using System.Windows.Media;
+using static RevitUI.ExternalCommand.ParameterFilter.SmartFilterColorHandler;
 
 namespace RevitUI.UI
 {
@@ -14,6 +16,7 @@ namespace RevitUI.UI
     {
         // ✅ Single static instance
         private static ParamFilter? _instance;
+        public static ParamFilter? Instance => _instance;
 
         private readonly Document _doc;
         private readonly UIDocument _uidoc;
@@ -25,6 +28,18 @@ namespace RevitUI.UI
         private readonly IsolateExternal _IsoExternal;
 
         private List<Parameter> _currentParameters = new();
+
+        private System.Windows.Media.Color _selectedColor = Colors.White;
+
+        private readonly AssignColorHandler _colorHandler;
+        private readonly ExternalEvent _colorEvent;
+
+        private readonly ClearColorHandler _clearHandler;
+        private readonly ExternalEvent _clearEvent;
+
+        private readonly SmartFilterColorHandler _smartHandler;
+        private readonly ExternalEvent _smartEvent;
+
 
 
         [DllImport("user32.dll")]
@@ -78,6 +93,15 @@ namespace RevitUI.UI
 
             _IsoExternal = new IsolateExternal();
             _IsolateEvent = ExternalEvent.Create(_IsoExternal);
+
+            _colorHandler = new AssignColorHandler();
+            _colorEvent = ExternalEvent.Create(_colorHandler);
+
+            _clearHandler = new ClearColorHandler();
+            _clearEvent = ExternalEvent.Create(_clearHandler);
+
+            _smartHandler = new SmartFilterColorHandler();
+            _smartEvent = ExternalEvent.Create(_smartHandler);
 
             LoadCategories();
         }
@@ -139,6 +163,8 @@ namespace RevitUI.UI
             _paramExternal.RuleOperator = selectedRule;
             _paramExternal.FilterValue = value;
 
+            _paramExternal.ScopeMode = GetScopeMode();
+
             _applyFilterEvent.Raise();
         }
 
@@ -153,7 +179,17 @@ namespace RevitUI.UI
             _IsoExternal.RuleOperator = selectedRule;
             _IsoExternal.FilterValue = value;
 
+            _IsoExternal.ScopeMode = GetScopeMode();
+
             _IsolateEvent.Raise();
+        }
+
+        private int GetScopeMode()
+        {
+            // 0 = Active View (Both), 1 = Host Only, 2 = Link Only (All Links)
+            if (ScopeHost.IsChecked == true) return 1;
+            if (ScopeLink.IsChecked == true) return 2;
+            return 0; // Default to Active View
         }
 
         private bool ValidateInputs(out Category cat, out Parameter param,
@@ -183,6 +219,79 @@ namespace RevitUI.UI
         private void OnClose(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void PickColor_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new System.Windows.Forms.ColorDialog();
+
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                _selectedColor = System.Windows.Media.Color.FromRgb(
+                    dialog.Color.R,
+                    dialog.Color.G,
+                    dialog.Color.B);
+
+                ColorPreview.Background = new SolidColorBrush(_selectedColor);
+
+                HexText.Text = $"#{_selectedColor.R:X2}{_selectedColor.G:X2}{_selectedColor.B:X2}";
+            }
+        }
+
+        private void AssignColor_Click(object sender, RoutedEventArgs e)
+        {
+            var cat = CategoryCombo.SelectedItem as Category;
+            var param = ParameterCombo.SelectedItem as Parameter;
+            var rule = (RuleCombo.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            var value = ValueBox.Text;
+
+            if (cat == null || param == null || string.IsNullOrEmpty(rule) || string.IsNullOrEmpty(value))
+            {
+                MessageBox.Show("Complete all fields");
+                return;
+            }
+
+            var revitColor = new Autodesk.Revit.DB.Color(
+                _selectedColor.R,
+                _selectedColor.G,
+                _selectedColor.B);
+
+            // 🔥 CRITICAL FIX → PASS STORAGE TYPE
+            var ruleData = new SmartFilterColorHandler.FilterRuleData
+            {
+                ParameterId = param.Id,
+                ParameterName = param.Definition.Name,
+                Operator = rule,
+                Value = value,
+                StorageType = param.StorageType // 🔥 MUST HAVE
+            };
+
+            _smartHandler.CategoryId = cat.Id;
+            _smartHandler.UseAndLogic = true;
+
+            _smartHandler.Rules = new List<FilterRuleData> { ruleData };
+
+            _smartHandler.RevitColor = revitColor;
+
+            _smartHandler.ScopeMode = GetScopeMode();
+
+            _smartEvent.Raise();
+        }
+
+        private void ClearOverride_Click(object sender, RoutedEventArgs e)
+        {
+            var cat = CategoryCombo.SelectedItem as Category;
+            if (cat == null)
+            {
+                MessageBox.Show("Select a Category first.");
+                return;
+            }
+
+            _clearHandler.CategoryId = cat.Id;
+            _clearHandler.ScopeMode = GetScopeMode();
+            _clearEvent.Raise();
+
+            ColorPreview.Background = Brushes.White;
         }
     }
 }

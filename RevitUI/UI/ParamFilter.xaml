@@ -3,8 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:RevitUI.UI"
         Title="Parameter Filter"
-        Icon="{x:Null}"
-        Height="330" Width="520"
+        Height="550" Width="550"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
 
@@ -13,16 +12,6 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/RevitUI;component/UI/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-
-            <!-- ComboBox modern style -->
-            <Style TargetType="ComboBox">
-                <Setter Property="Padding" Value="8,6"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Background" Value="White"/>
-                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-                <Setter Property="Height" Value="32"/>
-            </Style>
 
             <!-- Label style -->
             <Style x:Key="FieldLabel" TargetType="TextBlock">
@@ -34,10 +23,6 @@
 
             <!-- Secondary Button -->
             <Style x:Key="SecondaryButton" TargetType="Button">
-                <Setter Property="Background" Value="White"/>
-                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Padding" Value="14,6"/>
                 <Setter Property="Margin" Value="4,0"/>
                 <Setter Property="Cursor" Value="Hand"/>
@@ -45,10 +30,7 @@
 
             <!-- Danger Button -->
             <Style x:Key="DangerButton" TargetType="Button">
-                <Setter Property="Background" Value="White"/>
                 <Setter Property="Foreground" Value="#C0392B"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Padding" Value="14,6"/>
                 <Setter Property="Margin" Value="4,0"/>
                 <Setter Property="Cursor" Value="Hand"/>
@@ -57,108 +39,170 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <!-- Scroll protection -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
 
-        <!-- CATEGORY ROW -->
-        <StackPanel Grid.Row="0">
-            <TextBlock Text="Category" Style="{StaticResource FieldLabel}"/>
-            <ComboBox x:Name="CategoryCombo"
-                      SelectionChanged="ElementWhenCategoryChanged"
-                      DisplayMemberPath="Name"/>
-        </StackPanel>
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Category -->
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="Auto"/>
+                <!-- Scope -->
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="Auto"/>
+                <!-- Filter -->
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="Auto"/>
+                <!-- Color -->
+                <RowDefinition Height="*"/>
+                <!-- Spacer -->
+                <RowDefinition Height="Auto"/>
+                <!-- Buttons -->
+            </Grid.RowDefinitions>
 
-        <!-- FILTER RULE CARD -->
-        <Border Grid.Row="2"
-                Style="{StaticResource Card}">
-            <StackPanel>
-
-                <!-- Card Header -->
-                <TextBlock Text="FILTER RULE"
-                           FontSize="10"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource PrimaryBrush}"
-                           Margin="0,0,0,12"
-                           />
-
-                <!-- 3-Column Rule Builder -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Parameter -->
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Parameter" Style="{StaticResource FieldLabel}"/>
-                        <ComboBox x:Name="ParameterCombo"
-                                  DisplayMemberPath="Definition.Name"/>
-                    </StackPanel>
-
-                    <!-- Operator -->
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="Operator" Style="{StaticResource FieldLabel}"/>
-                        <ComboBox x:Name="RuleCombo">
-                            <ComboBoxItem Content="Equals"/>
-                            <ComboBoxItem Content="Contains"/>
-                            <ComboBoxItem Content="Begins With"/>
-                            <ComboBoxItem Content="Ends With"/>
-                            <ComboBoxItem Content="Greater Than"/>
-                            <ComboBoxItem Content="Less Than"/>
-                        </ComboBox>
-                    </StackPanel>
-
-                    <!-- Value -->
-                    <StackPanel Grid.Column="4">
-                        <TextBlock Text="Value" Style="{StaticResource FieldLabel}"/>
-                        <TextBox x:Name="ValueBox"
-                                 Style="{StaticResource ModernTextBox}"
-                                 Height="32"
-                                 VerticalContentAlignment="Center"
-                                 />
-                    </StackPanel>
-
-                </Grid>
+            <!-- CATEGORY -->
+            <StackPanel Grid.Row="0">
+                <TextBlock Text="Category" Style="{StaticResource FieldLabel}"/>
+                <ComboBox x:Name="CategoryCombo"
+                          SelectionChanged="ElementWhenCategoryChanged"
+                          DisplayMemberPath="Name"
+                          Height="32"/>
             </StackPanel>
-        </Border>
 
-        <!-- DIVIDER -->
-        <Separator Grid.Row="4"
-                   Background="{StaticResource BorderBrush}"
-                   Margin="0,0,0,12"/>
+            <!-- SCOPE -->
+            <StackPanel Grid.Row="2">
+                <TextBlock Text="SCOPE" Style="{StaticResource FieldLabel}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,5">
+                    <RadioButton x:Name="ScopeActiveView" Content="Active View (Both)" IsChecked="True" Margin="0,0,15,0"/>
+                    <RadioButton x:Name="ScopeHost" Content="Host Model Only" Margin="0,0,15,0"/>
+                    <RadioButton x:Name="ScopeLink" Content="Linked Models Only"/>
+                </StackPanel>
+            </StackPanel>
 
-        <!-- ACTION BUTTONS -->
-        <StackPanel Grid.Row="5"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right">
+            <!-- FILTER RULE -->
+            <Border Grid.Row="4"
+                    Style="{StaticResource Card}"
+                    Padding="12">
 
-            <Button Content="Isolate"
-                    Style="{StaticResource SecondaryButton}"
-                    Click="OnIsolate"/>
+                <StackPanel>
+                    <TextBlock Text="FILTER RULE"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               Margin="0,0,0,12"/>
 
-            <Button Content="Clear"
-                    Style="{StaticResource DangerButton}"
-                    Click="OnClear"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-            <Button Content="Close"
-                    Style="{StaticResource SecondaryButton}"
-                    Click="OnClose"/>
+                        <!-- Parameter -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Parameter" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox x:Name="ParameterCombo"
+                                      DisplayMemberPath="Definition.Name"
+                                      Height="32"/>
+                        </StackPanel>
 
-            <Button Content="Apply Filter"
-                    Style="{StaticResource IconButton}"
-                    Click="OnApplyFilter"/>
+                        <!-- Operator -->
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Operator" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox x:Name="RuleCombo" Height="32">
+                                <ComboBoxItem Content="Equals"/>
+                                <ComboBoxItem Content="Contains"/>
+                                <ComboBoxItem Content="Begins With"/>
+                                <ComboBoxItem Content="Ends With"/>
+                                <ComboBoxItem Content="Greater Than"/>
+                                <ComboBoxItem Content="Less Than"/>
+                            </ComboBox>
+                        </StackPanel>
 
-        </StackPanel>
+                        <!-- Value -->
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Value" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="ValueBox"
+                                     Height="32"
+                                     VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
 
-    </Grid>
+            <!-- COLOR SECTION -->
+            <Border Grid.Row="6"
+                    Style="{StaticResource Card}"
+                    Padding="12">
+
+                <StackPanel>
+
+                    <TextBlock Text="COLOR"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               Margin="0,0,0,12"/>
+
+                    <!-- Preview -->
+                    <Border x:Name="ColorPreview"
+                            Height="80"
+                            Background="White"
+                            BorderBrush="Gray"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Margin="0,0,0,10"/>
+
+                    <!-- HEX -->
+                    <TextBlock x:Name="HexText"
+                               Text="#FFFFFF"
+                               Margin="0,0,0,10"
+                               Foreground="Gray"/>
+
+                    <!-- Buttons -->
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Pick"
+                                Width="80"
+                                Margin="0,0,10,0"
+                                Click="PickColor_Click"/>
+
+                        <Button Content="Set Color"
+                                Width="80"
+                                Margin="0,0,10,0"
+                                Click="AssignColor_Click"/>
+
+                        <Button Content="Clear"
+                                Width="80"
+                                Click="ClearOverride_Click"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </Border>
+
+            <!-- ACTION BUTTONS -->
+            <StackPanel Grid.Row="8"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+
+                <Button Content="Isolate"
+                        Style="{StaticResource SecondaryButton}"
+                        Click="OnIsolate"/>
+
+                <Button Content="Clear"
+                        Style="{StaticResource DangerButton}"
+                        Click="OnClear"/>
+
+                <Button Content="Close"
+                        Style="{StaticResource SecondaryButton}"
+                        Click="OnClose"/>
+
+                <Button Content="Find Elements"
+                        Style="{StaticResource IconButton}"
+                        Click="OnApplyFilter"/>
+            </StackPanel>
+
+        </Grid>
+    </ScrollViewer>
 </Window>

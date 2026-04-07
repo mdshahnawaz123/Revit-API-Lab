@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.UI;
+using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
 using System;
 using System.Collections.Generic;
@@ -13,6 +13,8 @@ namespace RevitUI.ExternalCommand.ParameterFilter
         public ElementId? CategoryId { get; set; }
         public string? FilterValue { get; set; }
         public string? RuleOperator { get; set; }
+
+        public int ScopeMode { get; set; } = 0;
 
         public void Execute(UIApplication app)
         {
@@ -63,7 +65,31 @@ namespace RevitUI.ExternalCommand.ParameterFilter
                     return;
                 }
 
-                // Collect matching elements from the host model
+                // ScopeMode == 2 (Link Only)
+                if (ScopeMode == 2)
+                {
+                    int totalFound = 0;
+                    var linkInstances = new FilteredElementCollector(doc)
+                        .OfClass(typeof(RevitLinkInstance))
+                        .Cast<RevitLinkInstance>();
+
+                    foreach (var linkInst in linkInstances)
+                    {
+                        var linkDoc = linkInst.GetLinkDocument();
+                        if (linkDoc != null)
+                        {
+                            totalFound += new FilteredElementCollector(linkDoc)
+                                .OfCategoryId(CategoryId)
+                                .WhereElementIsNotElementType()
+                                .WherePasses(paramFilter)
+                                .GetElementCount();
+                        }
+                    }
+
+                    TaskDialog.Show("Result", $"Found {totalFound} matching element(s) across all Linked Documents.\n\n(Note: Revit's API prevents external commands from directly highlighting/panning the camera to linked sub-elements. Please use the 'Isolate' or 'Apply' (Color) buttons to visualize them instead!)");
+                    return;
+                }
+
                 var matchingIds = new List<ElementId>();
 
                 var hostElements = new FilteredElementCollector(doc)
@@ -77,13 +103,14 @@ namespace RevitUI.ExternalCommand.ParameterFilter
 
                 if (matchingIds.Count == 0)
                 {
-                    TaskDialog.Show("Result", "No elements matched the filter.");
+                    TaskDialog.Show("Result", "No host elements matched the filter.");
                     return;
                 }
 
                 // Show all matching elements in one call
+                uidoc.Selection.SetElementIds(matchingIds);
                 uidoc.ShowElements(matchingIds);
-                TaskDialog.Show("Result", $"{matchingIds.Count} element(s) found and shown.");
+                TaskDialog.Show("Result", $"{matchingIds.Count} host element(s) selected & shown.");
             }
             catch (Exception ex)
             {
