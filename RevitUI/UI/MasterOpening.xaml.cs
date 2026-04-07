@@ -92,8 +92,9 @@ namespace RevitUI.UI
             try
             {
                 var symbols = new FilteredElementCollector(_doc)
-                    .OfClass(typeof(FamilyInstance))
-                    .Cast<FamilyInstance>()
+                    .OfClass(typeof(FamilySymbol))
+                    .OfCategory(BuiltInCategory.OST_GenericModel)
+                    .Cast<FamilySymbol>()
                     .OrderBy(s => s.Name)
                     .ToList();
 

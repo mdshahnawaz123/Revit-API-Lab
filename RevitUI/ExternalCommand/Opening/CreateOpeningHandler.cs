@@ -35,6 +35,25 @@ namespace RevitUI.UI
 
             try
             {
+                // Register Master Updater logic so sleeves track MEP objects
+                try
+                {
+                    var updater = new MepSleeveUpdater(app.ActiveAddInId);
+                    if (UpdaterRegistry.IsUpdaterRegistered(updater.GetUpdaterId()))
+                    {
+                        UpdaterRegistry.UnregisterUpdater(updater.GetUpdaterId(), doc);
+                    }
+                    UpdaterRegistry.RegisterUpdater(updater, doc, true);
+                    
+                    UpdaterRegistry.AddTrigger(updater.GetUpdaterId(), new ElementCategoryFilter(BuiltInCategory.OST_PipeCurves), Element.GetChangeTypeGeometry());
+                    UpdaterRegistry.AddTrigger(updater.GetUpdaterId(), new ElementCategoryFilter(BuiltInCategory.OST_DuctCurves), Element.GetChangeTypeGeometry());
+                    UpdaterRegistry.AddTrigger(updater.GetUpdaterId(), new ElementCategoryFilter(BuiltInCategory.OST_CableTray), Element.GetChangeTypeGeometry());
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[RegisterUpdater] {ex.Message}");
+                }
+
                 // All openings go into the HOST document — one transaction per item
                 // so a single failure does not roll back everything.
                 foreach (var item in Items.Where(i => i.Process))
@@ -427,11 +446,16 @@ namespace RevitUI.UI
             // 2) Fallback: point or level placement
             if (fi == null)
             {
-                try
+                // Unhosted families or Host families require different signatures
+                // Give Host placement priority 
+                try { fi = doc.Create.NewFamilyInstance(center, sym, host, StructuralType.NonStructural); } catch { }
+                
+                if (fi == null)
                 {
-                    fi = doc.Create.NewFamilyInstance(center, sym, StructuralType.NonStructural);
+                    try { fi = doc.Create.NewFamilyInstance(center, sym, StructuralType.NonStructural); } catch { }
                 }
-                catch
+                
+                if (fi == null)
                 {
                     var lvl = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().FirstOrDefault();
                     if (lvl != null)
@@ -446,6 +470,10 @@ namespace RevitUI.UI
             // Align family origin to center (compensate internal origin offsets)
             try
             {
+                // CRITICAL: We changed model structure by adding the family, so we must regenerate
+                // before requesting bounding boxes, otherwise they return uninitialized (origin) positions.
+                doc.Regenerate();
+                
                 var bb = fi.get_BoundingBox(null);
                 if (bb != null)
                 {
@@ -525,6 +553,16 @@ namespace RevitUI.UI
                 item.Status = fi != null ? "Done ✓" : ("Failed: sleeve not placed. See log: " + path);
             }
             catch { }
+
+            // Apply parameter allowing MepSleeveUpdater to track this sleeve globally
+            if (fi != null)
+            {
+                try
+                {
+                    fi.LookupParameter("PipeId")?.Set(item.MEPId.ToString());
+                }
+                catch { }
+            }
 
             return fi != null;
         }
