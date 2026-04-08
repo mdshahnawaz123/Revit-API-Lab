@@ -326,7 +326,7 @@ namespace RevitUI.UI
 
             if (!failures.Any()) return summary;
 
-            summary += "\n\nFailures:\n" + string.Join('\n', failures.Take(10));
+            summary += "\n\nFailures:\n" + string.Join("\n", failures.Take(10));
 
             try
             {

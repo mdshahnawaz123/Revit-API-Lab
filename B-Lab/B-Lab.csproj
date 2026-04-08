@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net8.0-windows</TargetFramework>
+		<TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
 		<RootNamespace>B_Lab</RootNamespace>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -12,8 +13,18 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2026.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.7.0" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
 		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2024.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2026.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\DataLab\DataLab.csproj" />
@@ -27,8 +38,11 @@
 	</ItemGroup>
 
 	<Target Name="CreateAddinManifest" AfterTargets="Build">
+		<ItemGroup>
+			<RevitVersion Include="2024" Condition="'$(TargetFramework)' == 'net48'" />
+			<RevitVersion Include="2025;2026;2027" Condition="'$(TargetFramework)' == 'net8.0-windows'" />
+		</ItemGroup>
 		<PropertyGroup>
-			<AddinPath>$(CommonApplicationData)\Autodesk\Revit\Addins\2026\B-Lab.addin</AddinPath>
 			<AddinContent><![CDATA[<?xml version="1.0" encoding="utf-8"?>
 <RevitAddIns>
   <AddIn Type="Application">
@@ -41,7 +55,11 @@
   </AddIn>
 </RevitAddIns>]]></AddinContent>
 		</PropertyGroup>
-		<MakeDir Directories="$(CommonApplicationData)\Autodesk\Revit\Addins\2026\" Condition="!Exists('$(CommonApplicationData)\Autodesk\Revit\Addins\2026\')" />
-		<WriteLinesToFile File="$(AddinPath)" Lines="$(AddinContent)" Overwrite="true" Encoding="UTF-8" />
+		
+		<WriteLinesToFile 
+			File="$(CommonApplicationData)\Autodesk\Revit\Addins\%(RevitVersion.Identity)\B-Lab.addin" 
+			Lines="$(AddinContent)" 
+			Overwrite="true" 
+			Encoding="UTF-8" />
 	</Target>
 </Project>

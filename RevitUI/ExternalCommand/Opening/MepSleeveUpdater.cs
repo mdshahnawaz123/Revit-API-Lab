@@ -106,13 +106,18 @@ namespace RevitUI.ExternalCommand.Opening
             if (linkDoc == null) return 0;
 
             Transform linkTransform = linkInstance.GetTransform();
-            string linkName = linkDoc.Title.Replace(".rvt", "", StringComparison.OrdinalIgnoreCase);
+            // net48 compatibility: Use IndexOf or Regex for case-insensitive replace/contains
+            string linkName = linkDoc.Title;
+            if (linkName.EndsWith(".rvt", StringComparison.OrdinalIgnoreCase))
+                linkName = linkName.Substring(0, linkName.Length - 4);
 
             List<FamilyInstance> linkSleeves = allSleeves
                 .Where(s => {
                     string? pid = s.LookupParameter("PipeId")?.AsString();
                     if (string.IsNullOrEmpty(pid)) return false;
-                    return pid.Contains($":{linkName}:", StringComparison.OrdinalIgnoreCase) ||
+                    
+                    // .Contains(s, comparison) is netcore only
+                    return pid.IndexOf($":{linkName}:", StringComparison.OrdinalIgnoreCase) >= 0 ||
                            pid.StartsWith($"LINK:{linkName}:", StringComparison.OrdinalIgnoreCase);
                 })
                 .ToList();

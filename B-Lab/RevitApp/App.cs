@@ -125,8 +125,7 @@ namespace B_Lab.RevitApp
 
             var searchPaths = new[]
             {
-                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                @"C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\x64\Debug\net8.0-windows"
+                _assemblyFolder
             };
 
             foreach (var dir in searchPaths)
