@@ -480,6 +480,22 @@ namespace RevitUI.UI
             }
             catch { }
 
+            // ── Set Dimensions (Dia, L, B) ────────────────────────────────────
+            try
+            {
+                // item.HalfWidth/Height already include the clearance from the scan phase
+                double width = item.HalfWidth * 2.0;
+                double height = item.HalfHeight * 2.0;
+
+                // Circular: Pipe
+                fi.LookupParameter("Dia")?.Set(width);
+
+                // Rectangular: Duct/CableTray
+                fi.LookupParameter("L")?.Set(width);
+                fi.LookupParameter("B")?.Set(height);
+            }
+            catch { }
+
             return true;
         }
     }

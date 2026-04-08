@@ -8,6 +8,7 @@ namespace RevitUI.UI
     public class SyncSleeveHandler : IExternalEventHandler
     {
         public Action<string>? OnComplete { get; set; }
+        public double ClearanceFeet { get; set; }
 
         public void Execute(UIApplication app)
         {
@@ -19,7 +20,7 @@ namespace RevitUI.UI
                 t.Start();
                 try
                 {
-                    count = MepSleeveUpdater.ProcessAllSleeves(doc);
+                    count = MepSleeveUpdater.ProcessAllSleeves(doc, ClearanceFeet);
                     t.Commit();
                 }
                 catch (Exception ex)

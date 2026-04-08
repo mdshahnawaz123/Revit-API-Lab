@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
+using RevitUI.UI;
 
 namespace RevitUI.ExternalCommand.Opening
 {
@@ -75,7 +76,7 @@ namespace RevitUI.ExternalCommand.Opening
             }
         }
 
-        public static int ProcessAllSleeves(Document doc)
+        public static int ProcessAllSleeves(Document doc, double? clearanceFeet = null)
         {
             int movedCount = 0;
             List<FamilyInstance> allSleeves = new FilteredElementCollector(doc)
@@ -87,19 +88,19 @@ namespace RevitUI.ExternalCommand.Opening
             var links = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>();
             foreach (var link in links)
             {
-                movedCount += ProcessLinkSleeves(doc, link, allSleeves);
+                movedCount += ProcessLinkSleeves(doc, link, allSleeves, clearanceFeet);
             }
 
             var curves = new FilteredElementCollector(doc).OfClass(typeof(MEPCurve)).Cast<MEPCurve>();
             foreach (var curve in curves)
             {
-                movedCount += ProcessHostSleeves(doc, curve, allSleeves);
+                movedCount += ProcessHostSleeves(doc, curve, allSleeves, clearanceFeet);
             }
             
             return movedCount;
         }
 
-        private static int ProcessLinkSleeves(Document doc, RevitLinkInstance linkInstance, List<FamilyInstance> allSleeves)
+        private static int ProcessLinkSleeves(Document doc, RevitLinkInstance linkInstance, List<FamilyInstance> allSleeves, double? clearanceFeet = null)
         {
             int count = 0;
             Document linkDoc = linkInstance.GetLinkDocument();
@@ -134,51 +135,98 @@ namespace RevitUI.ExternalCommand.Opening
                     Element linkedMep = linkDoc.GetElement(new ElementId(mepIdLong));
                     if (linkedMep is MEPCurve linkedMepCurve)
                     {
-                        LocationCurve linkedLoc = linkedMepCurve.Location as LocationCurve;
-                        if (linkedLoc != null && linkedLoc.Curve is Line linkedLine)
-                        {
-                            XYZ p0 = linkTransform.OfPoint(linkedLine.GetEndPoint(0));
-                            XYZ p1 = linkTransform.OfPoint(linkedLine.GetEndPoint(1));
-                            XYZ dir = (p1 - p0).Normalize();
-
-                            if (!dir.IsZeroLength())
-                            {
-                                if (AlignSleeveToLine(doc, sleeve, Line.CreateUnbound(p0, dir)))
-                                    count++;
-                            }
-                        }
+                        if (SyncSleeve(doc, sleeve, linkedMepCurve, linkTransform, clearanceFeet))
+                            count++;
                     }
                 }
             }
             return count;
         }
 
-        private static int ProcessHostSleeves(Document doc, MEPCurve mepCurve, List<FamilyInstance> allSleeves)
+        private static int ProcessHostSleeves(Document doc, MEPCurve mepCurve, List<FamilyInstance> allSleeves, double? clearanceFeet = null)
         {
             int count = 0;
-            LocationCurve mepLoc = mepCurve.Location as LocationCurve;
-            if (mepLoc == null) return 0;
-
-            Line mepLine = mepLoc.Curve as Line;
-            if (mepLine == null) return 0;
-
             string mepIdStrHost = mepCurve.Id.ToString();
             List<FamilyInstance> sleeves = allSleeves
                 .Where(s => s.LookupParameter("PipeId")?.AsString() == mepIdStrHost)
                 .ToList();
 
-            XYZ p0 = mepLine.GetEndPoint(0);
-            XYZ p1 = mepLine.GetEndPoint(1);
-            XYZ dir = (p1 - p0).Normalize();
-            if (dir.IsZeroLength()) return 0;
-
-            Line unboundLine = Line.CreateUnbound(p0, dir);
             foreach (FamilyInstance sleeve in sleeves)
             {
-                if (AlignSleeveToLine(doc, sleeve, unboundLine))
+                if (SyncSleeve(doc, sleeve, mepCurve, null, clearanceFeet))
                     count++;
             }
             return count;
+        }
+
+        private static bool SyncSleeve(Document doc, FamilyInstance sleeve, MEPCurve mep, Transform? xform, double? clearanceFeet)
+        {
+            bool changed = false;
+
+            // 1. Position Sync
+            LocationCurve? mepLoc = mep.Location as LocationCurve;
+            if (mepLoc != null && mepLoc.Curve is Line mepLine)
+            {
+                XYZ p0 = xform != null ? xform.OfPoint(mepLine.GetEndPoint(0)) : mepLine.GetEndPoint(0);
+                XYZ p1 = xform != null ? xform.OfPoint(mepLine.GetEndPoint(1)) : mepLine.GetEndPoint(1);
+                XYZ dir = (p1 - p0).Normalize();
+                if (!dir.IsZeroLength())
+                {
+                    if (AlignSleeveToLine(doc, sleeve, Line.CreateUnbound(p0, dir)))
+                        changed = true;
+                }
+            }
+
+            // 2. Dimension Sync (only if clearance specified)
+            if (clearanceFeet.HasValue)
+            {
+                if (UpdateSleeveDimensions(sleeve, mep, clearanceFeet.Value))
+                    changed = true;
+            }
+
+            return changed;
+        }
+
+        private static bool UpdateSleeveDimensions(FamilyInstance sleeve, MEPCurve mep, double clearance)
+        {
+            bool changed = false;
+            (double halfW, double halfH) = GeometryHelper.GetMepHalfSize(mep);
+
+            // Circular: Pipe
+            Parameter? diaParam = sleeve.LookupParameter("Dia");
+            if (diaParam != null && diaParam.IsReadOnly == false)
+            {
+                double targetDia = (halfW + clearance) * 2.0;
+                if (Math.Abs(diaParam.AsDouble() - targetDia) > 0.001)
+                {
+                    diaParam.Set(targetDia);
+                    changed = true;
+                }
+            }
+
+            // Rectangular: Duct/CableTray
+            Parameter? lParam = sleeve.LookupParameter("L");
+            Parameter? bParam = sleeve.LookupParameter("B");
+            if (lParam != null && lParam.IsReadOnly == false)
+            {
+                double targetL = (halfW + clearance) * 2.0;
+                if (Math.Abs(lParam.AsDouble() - targetL) > 0.001)
+                {
+                    lParam.Set(targetL);
+                    changed = true;
+                }
+            }
+            if (bParam != null && bParam.IsReadOnly == false)
+            {
+                double targetB = (halfH + clearance) * 2.0;
+                if (Math.Abs(bParam.AsDouble() - targetB) > 0.001)
+                {
+                    bParam.Set(targetB);
+                    changed = true;
+                }
+            }
+
+            return changed;
         }
         
         private static bool AlignSleeveToLine(Document doc, FamilyInstance sleeve, Line unboundLine)

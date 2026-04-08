@@ -260,6 +260,10 @@ namespace RevitUI.UI
         private void SyncSleeves(object sender, RoutedEventArgs e)
         {
             SetProgress(0, "Syncing all sleeves…");
+            
+            // Pass the current clearance from UI to the sync handler
+            _syncHandler.ClearanceFeet = GeometryHelper.MmToFeet(TBClear.Text, 50);
+
             BtnScan.IsEnabled = false;
             BtnCreate.IsEnabled = false;
             BtnSync.IsEnabled = false;
