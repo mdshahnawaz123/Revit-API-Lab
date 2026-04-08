@@ -18,7 +18,8 @@ namespace RevitUI.Command
 
             try
             {
-                RevitUI.UI.MasterOpening.GetOrCreate(doc, uidoc);
+                RevitUI.ExternalCommand.Opening.MepSleeveUpdater.Register(commandData.Application.ActiveAddInId);
+                RevitUI.UI.MasterOpening.GetOrCreate(doc, uidoc, commandData.Application.ActiveAddInId);
             }
             catch (Exception ex)
             {

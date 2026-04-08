@@ -20,7 +20,7 @@ public class PlaceSleevesAtWallIntersection : IExternalCommand
             .OfClass(typeof(FamilySymbol))
             .OfCategory(BuiltInCategory.OST_GenericModel)
             .Cast<FamilySymbol>()
-            .FirstOrDefault(x => x.Name.Contains("OPN_Rectangular Cut"))!;
+            .FirstOrDefault(x => x.Name.Contains("OPN_Circular Cut"))!;
 
         if (sleeveSymbol == null)
         {
@@ -115,28 +115,7 @@ public class PlaceSleevesAtWallIntersection : IExternalCommand
             t.Commit();
         }
 
-        // ── 3. Register the PipeSleeveUpdater so sleeves follow pipe moves ──
-        try
-        {
-            var updater = new PipeSleeveUpdater(commandData.Application.ActiveAddInId);
-            if (UpdaterRegistry.IsUpdaterRegistered(updater.GetUpdaterId()))
-            {
-                UpdaterRegistry.UnregisterUpdater(updater.GetUpdaterId(), doc);
-            }
-            
-            UpdaterRegistry.RegisterUpdater(updater, doc, true);
 
-            // Trigger on any geometry change of ANY Pipe element globally
-            UpdaterRegistry.AddTrigger(
-                updater.GetUpdaterId(),
-                new ElementCategoryFilter(BuiltInCategory.OST_PipeCurves),
-                Element.GetChangeTypeGeometry());
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine(
-                $"[PlaceSleeves] Updater registration failed: {ex.Message}");
-        }
 
         TaskDialog.Show("Done",
             $"✅ Placed : {placed}\n⚠️ Skipped: {skipped}");
@@ -159,7 +138,7 @@ public class PlaceSleevesAtWallIntersection : IExternalCommand
         }
 
         // Try setting width/height to pipe diameter + clearance (approx 50mm = 0.164 ft)
-        double size = pipeOD + 0.164; 
+        double size = pipeOD + 0.164;
         var sizeParams = new[] { "Width", "Height", "W", "H", "B", "Opening Width", "Opening Height" };
         foreach (var pName in sizeParams)
         {

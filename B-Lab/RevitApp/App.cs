@@ -1,9 +1,12 @@
 using Autodesk.Revit.UI;
+using Autodesk.Revit.DB;
 using DataLab.Resources;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using RevitUI.ExternalCommand.Opening;
 
 namespace B_Lab.RevitApp
 {
@@ -22,6 +25,8 @@ namespace B_Lab.RevitApp
 
             try
             {
+                RegisterMepSleeveUpdater(application.ActiveAddInId);
+
                 try { application.CreateRibbonTab(TAB_NAME); } catch { }
 
                 // ── Panels ────────────────────────────────────────────────────
@@ -140,8 +145,27 @@ namespace B_Lab.RevitApp
 
         public Result OnShutdown(UIControlledApplication application)
         {
+            // Unregister using the known GUID to be safe
+            var updaterId = new UpdaterId(application.ActiveAddInId, new Guid("E5D8F0A2-C14B-4E31-9F38-725CD19A8B73"));
+            if (UpdaterRegistry.IsUpdaterRegistered(updaterId))
+            {
+                try { UpdaterRegistry.UnregisterUpdater(updaterId); } catch { }
+            }
+
             AppDomain.CurrentDomain.AssemblyResolve -= OnAssemblyResolve;
             return Result.Succeeded;
+        }
+
+        private static MepSleeveUpdater? _mepSleeveUpdater;
+
+        private void RegisterMepSleeveUpdater(AddInId addInId)
+        {
+            // Call the static Register method to ensure consistent filters and logic
+            MepSleeveUpdater.Register(addInId);
+            
+            // Still keep a reference if needed for Unregister in OnShutdown, 
+            // though MepSleeveUpdater.Register manages its own singleton.
+            // We can retrieve the registered updater's ID for OnShutdown.
         }
     }
 }

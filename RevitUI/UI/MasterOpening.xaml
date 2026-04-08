@@ -145,9 +145,11 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                             VerticalAlignment="Center">
-                    <Button Content="Scan For Clashes"  Width="130" Height="32"
+                    <Button x:Name="BtnSync" Content="Sync Sleeves" Width="110" Height="32"
+                            Margin="0,0,10,0" Click="SyncSleeves"/>
+                    <Button x:Name="BtnScan" Content="Scan For Clashes"  Width="130" Height="32"
                             Margin="0,0,10,0" Click="ScanClash"/>
-                    <Button Content="Create Openings"   Width="130" Height="32"
+                    <Button x:Name="BtnCreate" Content="Create Openings"   Width="130" Height="32"
                             Background="#007ACC" Foreground="White"
                             FontWeight="Bold" Click="CreateOpening"/>
                 </StackPanel>

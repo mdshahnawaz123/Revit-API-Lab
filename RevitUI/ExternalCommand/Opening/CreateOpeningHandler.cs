@@ -23,6 +23,7 @@ namespace RevitUI.UI
         // When using family sleeves, the selected FamilySymbol to place
         public ElementId? SleeveSymbolId { get; set; }
         public string? SleeveSymbolName { get; set; }
+        public AddInId? CurrentAddInId { get; set; }
         public Action<string>? OnComplete { get; set; }
 
         public void Execute(UIApplication app)
@@ -35,29 +36,12 @@ namespace RevitUI.UI
 
             try
             {
-                // Register Master Updater logic so sleeves track MEP objects
-                try
-                {
-                    var updater = new MepSleeveUpdater(app.ActiveAddInId);
-                    if (UpdaterRegistry.IsUpdaterRegistered(updater.GetUpdaterId()))
-                    {
-                        UpdaterRegistry.UnregisterUpdater(updater.GetUpdaterId(), doc);
-                    }
-                    UpdaterRegistry.RegisterUpdater(updater, doc, true);
-                    
-                    UpdaterRegistry.AddTrigger(updater.GetUpdaterId(), new ElementCategoryFilter(BuiltInCategory.OST_PipeCurves), Element.GetChangeTypeGeometry());
-                    UpdaterRegistry.AddTrigger(updater.GetUpdaterId(), new ElementCategoryFilter(BuiltInCategory.OST_DuctCurves), Element.GetChangeTypeGeometry());
-                    UpdaterRegistry.AddTrigger(updater.GetUpdaterId(), new ElementCategoryFilter(BuiltInCategory.OST_CableTray), Element.GetChangeTypeGeometry());
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[RegisterUpdater] {ex.Message}");
-                }
-
-                // All openings go into the HOST document — one transaction per item
-                // so a single failure does not roll back everything.
+               
                 foreach (var item in Items.Where(i => i.Process))
                 {
+                    // Skip if already done or failed in a previous attempt
+                    if (item.Status?.StartsWith("Done") == true) continue;
+                    
                     try
                     {
                         // The host element is ALWAYS in the host document
@@ -467,10 +451,15 @@ namespace RevitUI.UI
                 var bb = fi.get_BoundingBox(null);
                 if (bb != null)
                 {
-                    var bbCenter = (bb.Min + bb.Max) / 2;
-                    var correction = center - bbCenter;
-                    if (!correction.IsAlmostEqualTo(XYZ.Zero))
-                        ElementTransformUtils.MoveElement(doc, fi.Id, correction);
+                    // Work in host coordinates
+                    var bbCenter = (bb.Min + bb.Max) / 2.0;
+                    var translation = center - bbCenter;
+                    
+                    // Only move if significantly misaligned
+                    if (translation.GetLength() > 0.0001)
+                    {
+                        ElementTransformUtils.MoveElement(doc, fi.Id, translation);
+                    }
                 }
             }
             catch { }
@@ -478,7 +467,16 @@ namespace RevitUI.UI
             // ── Apply tracking parameter for MepSleeveUpdater ─────────────────
             try
             {
-                fi.LookupParameter("PipeId")?.Set(item.MEPId.ToString());
+                string pipeIdValue;
+                if (item.MEPIsLinked)
+                {
+                    pipeIdValue = $"LINK:{item.MEPLinkName}:{item.MEPId}";
+                }
+                else
+                {
+                    pipeIdValue = new ElementId(item.MEPId).ToString();
+                }
+                fi.LookupParameter("PipeId")?.Set(pipeIdValue);
             }
             catch { }
 

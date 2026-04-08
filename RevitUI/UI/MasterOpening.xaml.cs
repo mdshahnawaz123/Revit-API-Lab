@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
+using RevitUI.ExternalCommand.Opening;
 
 namespace RevitUI.UI
 {
@@ -22,8 +23,10 @@ namespace RevitUI.UI
         // ── External events ───────────────────────────────────────────────────
         private readonly ClashScanHandler _scanHandler = new();
         private readonly CreateOpeningHandler _openHandler = new();
+        private readonly SyncSleeveHandler _syncHandler = new();
         private readonly ExternalEvent _scanEvent;
         private readonly ExternalEvent _openEvent;
+        private readonly ExternalEvent _syncEvent;
 
         // ── State ─────────────────────────────────────────────────────────────
         private readonly ObservableCollection<ClashItem> _clashes = new();
@@ -31,7 +34,7 @@ namespace RevitUI.UI
         private readonly UIDocument _uidoc;
 
         // ── Singleton factory ─────────────────────────────────────────────────
-        public static void GetOrCreate(Document doc, UIDocument uidoc)
+        public static void GetOrCreate(Document doc, UIDocument uidoc, AddInId addInId)
         {
             const string title = "BIM Digital Design";
             IntPtr hwnd = FindWindow(null, title);
@@ -41,11 +44,11 @@ namespace RevitUI.UI
                 SetForegroundWindow(hwnd);
                 return;
             }
-            new MasterOpening(doc, uidoc).Show();
+            new MasterOpening(doc, uidoc, addInId).Show();
         }
 
         // ── Constructor ───────────────────────────────────────────────────────
-        public MasterOpening(Document doc, UIDocument uidoc)
+        public MasterOpening(Document doc, UIDocument uidoc, AddInId addInId)
         {
             InitializeComponent();
             this.HideIcon();
@@ -54,7 +57,9 @@ namespace RevitUI.UI
 
             // Create external events
             _scanEvent = ExternalEvent.Create(_scanHandler);
+            _openHandler.CurrentAddInId = addInId;
             _openEvent = ExternalEvent.Create(_openHandler);
+            _syncEvent = ExternalEvent.Create(_syncHandler);
 
             // Bind DataGrid
             ClashGrid.ItemsSource = _clashes;
@@ -77,6 +82,10 @@ namespace RevitUI.UI
                 SetProgress(100, count > 0
                     ? $"Scan complete — {count} clash(es) detected."
                     : "Scan complete — no clashes found.");
+                    
+                BtnScan.IsEnabled = true;
+                BtnCreate.IsEnabled = true;
+                BtnSync.IsEnabled = true;
             });
 
             // ── Create-openings callback ──────────────────────────────────────
@@ -87,9 +96,21 @@ namespace RevitUI.UI
                 SetProgress(100, msg.Split('\n')[0]);   // first line only in progress bar
                 ClashGrid.Items.Refresh();
 
+                BtnScan.IsEnabled = true;
+                BtnCreate.IsEnabled = true;
+                BtnSync.IsEnabled = true;
+
                 // Show full report (includes failure list if any) in a dialog
                 if (msg.Contains("failed") || msg.Contains("Failed"))
                     TaskDialog.Show("Opening Report", msg);
+            });
+
+            _syncHandler.OnComplete = msg => Dispatcher.Invoke(() =>
+            {
+                SetProgress(100, msg);
+                BtnScan.IsEnabled = true;
+                BtnCreate.IsEnabled = true;
+                BtnSync.IsEnabled = true;
             });
 
             LoadModelSummary();
@@ -230,7 +251,20 @@ namespace RevitUI.UI
             TxtDoneCount.Text = "Openings done: —";
             SetProgress(0, "Scanning for clashes…");
 
+            BtnScan.IsEnabled = false;
+            BtnCreate.IsEnabled = false;
+            BtnSync.IsEnabled = false;
             _scanEvent.Raise();
+        }
+
+        private void SyncSleeves(object sender, RoutedEventArgs e)
+        {
+            SetProgress(0, "Syncing all sleeves…");
+            BtnScan.IsEnabled = false;
+            BtnCreate.IsEnabled = false;
+            BtnSync.IsEnabled = false;
+            
+            _syncEvent.Raise();
         }
 
         // ── Create openings button ────────────────────────────────────────────
@@ -261,7 +295,17 @@ namespace RevitUI.UI
                 _openHandler.SleeveSymbolName = null;
             }
 
+            foreach (var item in ready)
+            {
+                item.Status = "Queued…";
+            }
+            ClashGrid.Items.Refresh();
+
             SetProgress(0, $"Creating {ready.Count} opening(s)…");
+            
+            BtnScan.IsEnabled = false;
+            BtnCreate.IsEnabled = false;
+            BtnSync.IsEnabled = false;
             _openEvent.Raise();
         }
 

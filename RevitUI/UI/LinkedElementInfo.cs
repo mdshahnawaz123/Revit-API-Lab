@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 
 namespace RevitUI.UI
 {
@@ -11,6 +11,7 @@ namespace RevitUI.UI
         public Element Element { get; }
         public Transform LinkTransform { get; }
         public string LinkName { get; }
+        public ElementId LinkInstanceId { get; }
         public bool IsLinked { get; }
 
         /// <summary>Host-model MEP element.</summary>
@@ -19,15 +20,17 @@ namespace RevitUI.UI
             Element = element;
             LinkTransform = Transform.Identity;
             LinkName = "Host";
+            LinkInstanceId = ElementId.InvalidElementId;
             IsLinked = false;
         }
 
         /// <summary>Linked-model MEP element.</summary>
-        public LinkedElementInfo(Element element, Transform linkTransform, string linkName)
+        public LinkedElementInfo(Element element, Transform linkTransform, string linkName, ElementId linkInstanceId)
         {
             Element = element;
             LinkTransform = linkTransform;
             LinkName = linkName;
+            LinkInstanceId = linkInstanceId;
             IsLinked = true;
         }
 

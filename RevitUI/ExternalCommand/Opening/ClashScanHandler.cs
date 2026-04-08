@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.DB.Electrical;
 using Autodesk.Revit.DB.Mechanical;
@@ -130,15 +130,15 @@ namespace RevitUI.UI
 
                 if (ScanPipes)
                     foreach (var e in linkDoc.GetPipes())
-                        list.Add(new LinkedElementInfo(e, xform, linkName));
+                        list.Add(new LinkedElementInfo(e, xform, linkName, linkInstId));
 
                 if (ScanDucts)
                     foreach (var e in linkDoc.GetDucts())
-                        list.Add(new LinkedElementInfo(e, xform, linkName));
+                        list.Add(new LinkedElementInfo(e, xform, linkName, linkInstId));
 
                 if (ScanCableTrays)
                     foreach (var e in linkDoc.GetCableTrays())
-                        list.Add(new LinkedElementInfo(e, xform, linkName));
+                        list.Add(new LinkedElementInfo(e, xform, linkName, linkInstId));
             }
 
             return list;
@@ -230,14 +230,15 @@ namespace RevitUI.UI
                 Results.Add(new ClashItem
                 {
                     // MEP
-                    MEPId = (int)mepInfo.Element.Id.Value,
+                    MEPId = mepInfo.Element.Id.Value,
                     MEPType = GetMepLabel(mepInfo.Element),
                     MEPSource = mepInfo.DisplayLabel,
                     MEPIsLinked = mepInfo.IsLinked,
                     MEPLinkName = mepInfo.IsLinked ? mepInfo.LinkName : null,
+                    MEPLinkInstanceId = mepInfo.IsLinked ? mepInfo.LinkInstanceId : null,
 
                     // Host (always in host document)
-                    HostId = (int)host.Id.Value,
+                    HostId = host.Id.Value,
                     HostType = hostLabel,
                     HostSource = "Host",
 

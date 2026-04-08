@@ -13,8 +13,8 @@ namespace RevitUI.UI
         private string _status = "Pending";
 
         // ── Identity ──────────────────────────────────────────────────────────
-        public int MEPId { get; set; }
-        public int HostId { get; set; }
+        public long MEPId { get; set; }
+        public long HostId { get; set; }
         public string MEPType { get; set; } = "";
         public string HostType { get; set; } = "";
         public string MEPLevel { get; set; } = "";
