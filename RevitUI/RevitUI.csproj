@@ -33,4 +33,7 @@
 	<ItemGroup>
 	  <Reference Include="System.Windows.Forms" />
 	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Resources\*.rfa" />
+	</ItemGroup>
 </Project>

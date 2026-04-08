@@ -79,24 +79,43 @@ namespace RevitUI.ExternalCommand.Opening
         public static int ProcessAllSleeves(Document doc, double? clearanceFeet = null)
         {
             int movedCount = 0;
+
+            // 1. Collect all potential sleeves (must have PipeId parameter populated)
             List<FamilyInstance> allSleeves = new FilteredElementCollector(doc)
                 .OfClass(typeof(FamilyInstance))
                 .Cast<FamilyInstance>()
                 .Where(fi => fi.LookupParameter("PipeId") != null && !string.IsNullOrEmpty(fi.LookupParameter("PipeId").AsString()))
                 .ToList();
 
+            if (allSleeves.Count == 0) return 0;
+
+            // 2. Identify all possibly affected hosts
+            // Process Links
             var links = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>();
             foreach (var link in links)
             {
                 movedCount += ProcessLinkSleeves(doc, link, allSleeves, clearanceFeet);
             }
 
-            var curves = new FilteredElementCollector(doc).OfClass(typeof(MEPCurve)).Cast<MEPCurve>();
+            // Process Host MEP Curves (explicitly including Pipes, Ducts, Cable Trays, Conduits)
+            var catFilter = new LogicalOrFilter(new List<ElementFilter>
+            {
+                new ElementCategoryFilter(BuiltInCategory.OST_PipeCurves),
+                new ElementCategoryFilter(BuiltInCategory.OST_DuctCurves),
+                new ElementCategoryFilter(BuiltInCategory.OST_CableTray),
+                new ElementCategoryFilter(BuiltInCategory.OST_Conduit)
+            });
+
+            var curves = new FilteredElementCollector(doc)
+                .WherePasses(catFilter)
+                .WhereElementIsNotElementType()
+                .Cast<MEPCurve>();
+
             foreach (var curve in curves)
             {
                 movedCount += ProcessHostSleeves(doc, curve, allSleeves, clearanceFeet);
             }
-            
+
             return movedCount;
         }
 
@@ -107,19 +126,20 @@ namespace RevitUI.ExternalCommand.Opening
             if (linkDoc == null) return 0;
 
             Transform linkTransform = linkInstance.GetTransform();
-            // net48 compatibility: Use IndexOf or Regex for case-insensitive replace/contains
-            string linkName = linkDoc.Title;
-            if (linkName.EndsWith(".rvt", StringComparison.OrdinalIgnoreCase))
-                linkName = linkName.Substring(0, linkName.Length - 4);
+            string linkTitle = linkDoc.Title.ToUpper();
+            string linkTitleNoExt = linkTitle.EndsWith(".RVT") ? linkTitle.Substring(0, linkTitle.Length - 4) : linkTitle;
 
+            // Filter sleeves belonging to this link using robust case-insensitive matching
             List<FamilyInstance> linkSleeves = allSleeves
                 .Where(s => {
-                    string? pid = s.LookupParameter("PipeId")?.AsString();
+                    string? pid = s.LookupParameter("PipeId")?.AsString()?.ToUpper();
                     if (string.IsNullOrEmpty(pid)) return false;
                     
-                    // .Contains(s, comparison) is netcore only
-                    return pid.IndexOf($":{linkName}:", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                           pid.StartsWith($"LINK:{linkName}:", StringComparison.OrdinalIgnoreCase);
+                    // Match link title with or without extension, or simple inclusion
+                    return pid.Contains($":{linkTitle}:") || 
+                           pid.Contains($":{linkTitleNoExt}:") ||
+                           pid.Contains($"LINK:{linkTitle}:") ||
+                           pid.Contains($"LINK:{linkTitleNoExt}:");
                 })
                 .ToList();
 
@@ -147,6 +167,8 @@ namespace RevitUI.ExternalCommand.Opening
         {
             int count = 0;
             string mepIdStrHost = mepCurve.Id.ToString();
+            
+            // Match sleeves pointing to this specific host ID
             List<FamilyInstance> sleeves = allSleeves
                 .Where(s => s.LookupParameter("PipeId")?.AsString() == mepIdStrHost)
                 .ToList();
@@ -192,37 +214,56 @@ namespace RevitUI.ExternalCommand.Opening
             bool changed = false;
             (double halfW, double halfH) = GeometryHelper.GetMepHalfSize(mep);
 
-            // Circular: Pipe
-            Parameter? diaParam = sleeve.LookupParameter("Dia");
-            if (diaParam != null && diaParam.IsReadOnly == false)
+            // Circular: Pipe / Conduit (Supports "Dia", "Diameter", "d")
+            string[] diaNames = { "Dia", "Diameter", "d" };
+            foreach (string name in diaNames)
             {
-                double targetDia = (halfW + clearance) * 2.0;
-                if (Math.Abs(diaParam.AsDouble() - targetDia) > 0.001)
+                Parameter? p = sleeve.LookupParameter(name);
+                if (p != null && !p.IsReadOnly)
                 {
-                    diaParam.Set(targetDia);
-                    changed = true;
+                    double targetDia = (halfW + clearance) * 2.0;
+                    if (Math.Abs(p.AsDouble() - targetDia) > 0.001)
+                    {
+                        p.Set(targetDia);
+                        changed = true;
+                    }
+                    break;
                 }
             }
 
-            // Rectangular: Duct/CableTray
-            Parameter? lParam = sleeve.LookupParameter("L");
-            Parameter? bParam = sleeve.LookupParameter("B");
-            if (lParam != null && lParam.IsReadOnly == false)
+            // Rectangular: Duct / Cable Tray (Supports "L", "B", "Width", "Height", "W", "H", "Opening Width", etc.)
+            string[] wNames = { "L", "Width", "W", "Sleeve Width", "Opening Width" };
+            string[] hNames = { "B", "Height", "H", "Sleeve Height", "Opening Height" };
+
+            // Sync Width
+            foreach (string name in wNames)
             {
-                double targetL = (halfW + clearance) * 2.0;
-                if (Math.Abs(lParam.AsDouble() - targetL) > 0.001)
+                Parameter? p = sleeve.LookupParameter(name);
+                if (p != null && !p.IsReadOnly)
                 {
-                    lParam.Set(targetL);
-                    changed = true;
+                    double targetW = (halfW + clearance) * 2.0;
+                    if (Math.Abs(p.AsDouble() - targetW) > 0.001)
+                    {
+                        p.Set(targetW);
+                        changed = true;
+                    }
+                    break;
                 }
             }
-            if (bParam != null && bParam.IsReadOnly == false)
+
+            // Sync Height
+            foreach (string name in hNames)
             {
-                double targetB = (halfH + clearance) * 2.0;
-                if (Math.Abs(bParam.AsDouble() - targetB) > 0.001)
+                Parameter? p = sleeve.LookupParameter(name);
+                if (p != null && !p.IsReadOnly)
                 {
-                    bParam.Set(targetB);
-                    changed = true;
+                    double targetH = (halfH + clearance) * 2.0;
+                    if (Math.Abs(p.AsDouble() - targetH) > 0.001)
+                    {
+                        p.Set(targetH);
+                        changed = true;
+                    }
+                    break;
                 }
             }
 

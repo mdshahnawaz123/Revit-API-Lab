@@ -115,6 +115,9 @@ namespace RevitUI.UI
 
             LoadModelSummary();
 
+            // ── Auto-load embedded families ──────────────────────────────────
+            SleeveFamilyLoader.EnsureFamiliesLoaded(_doc);
+
             // Populate sleeve family combo with FamilySymbol entries from the host document
             try
             {
@@ -126,7 +129,17 @@ namespace RevitUI.UI
                     .ToList();
 
                 SleeveCombo.ItemsSource = symbols;
-                if (symbols.Count > 0) SleeveCombo.SelectedIndex = 0;
+
+                // Auto-select preferred family if available
+                if (symbols.Count > 0)
+                {
+                    var preferred = symbols.FirstOrDefault(s => s.Family.Name.Equals("CIRCULAR CUT", StringComparison.OrdinalIgnoreCase) || 
+                                                               s.Family.Name.Equals("RECTANGULAR CUT", StringComparison.OrdinalIgnoreCase));
+                    if (preferred != null)
+                        SleeveCombo.SelectedItem = preferred;
+                    else
+                        SleeveCombo.SelectedIndex = 0;
+                }
             }
             catch { /* non-critical */ }
         }
