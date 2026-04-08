@@ -59,6 +59,12 @@ namespace RevitUI.UI
             // Bind DataGrid
             ClashGrid.ItemsSource = _clashes;
 
+            // Enforce Mutually Exclusive Host selections for Family orientation
+            CheckBoxWall.Checked += HostSelection_Changed;
+            CheckBoxFloor.Checked += HostSelection_Changed;
+            CheckBoxCeil.Checked += HostSelection_Changed;
+            if (CheckBoxBeam != null) CheckBoxBeam.Checked += HostSelection_Changed;
+
             // ── Scan callback (fires on UI thread via Dispatcher) ─────────────
             _scanHandler.OnComplete = count => Dispatcher.Invoke(() =>
             {
@@ -114,6 +120,45 @@ namespace RevitUI.UI
         {
             if (SleeveCombo != null) SleeveCombo.Visibility = System.Windows.Visibility.Visible;
             if (TxtSleeveComing != null) TxtSleeveComing.Visibility = System.Windows.Visibility.Visible;
+        }
+
+        // ── Host Checkbox Constraints ─────────────────────────────────────────
+        private bool _isUpdatingHosts = false;
+        private void HostSelection_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isUpdatingHosts) return;
+
+            var changedBox = sender as System.Windows.Controls.CheckBox;
+            if (changedBox?.IsChecked != true) return;
+
+            bool isWallChecked = CheckBoxWall.IsChecked == true || (CheckBoxBeam != null && CheckBoxBeam.IsChecked == true);
+            bool isFloorChecked = CheckBoxFloor.IsChecked == true || CheckBoxCeil.IsChecked == true;
+
+            // If user checked a Wall while Floor is checked, or vice versa
+            if (isWallChecked && isFloorChecked)
+            {
+                _isUpdatingHosts = true;
+                
+                if (changedBox == CheckBoxWall || (CheckBoxBeam != null && changedBox == CheckBoxBeam))
+                {
+                    CheckBoxFloor.IsChecked = false;
+                    CheckBoxCeil.IsChecked = false;
+                }
+                else
+                {
+                    CheckBoxWall.IsChecked = false;
+                    if (CheckBoxBeam != null) CheckBoxBeam.IsChecked = false;
+                }
+                
+                _isUpdatingHosts = false;
+
+                MessageBox.Show(
+                    "Please generate Wall sleeves separately from Floor/Ceiling sleeves!\n\n" +
+                    "Wall sleeves point horizontally, while floor sleeves point vertically, " +
+                    "meaning you MUST select a distinctly oriented Family from the dropdown for each type.", 
+                    "Orientation Conflict", 
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
 
         // ── Model info (read-only, no transaction needed) ─────────────────────

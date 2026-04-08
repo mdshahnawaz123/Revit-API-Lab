@@ -1,0 +1,47 @@
+﻿
+C:\Users\RE&DBIM\source\rep
+os\Revit-API-Lab\RevitUI\Ex
+ternalCommand\Opening\Creat
+eOpeningHandler.cs(423,36):
+ error CS0103: The name 'Pl
+aceSleevesAtWallIntersectio
+n' does not exist in the 
+current context [C:\Users\R
+E&DBIM\source\repos\Revit-A
+PI-Lab\RevitUI\RevitUI_fufc
+ssnw_wpftmp.csproj]
+C:\Users\RE&DBIM\source\rep
+os\Revit-API-Lab\RevitUI\Ex
+ternalCommand\Opening\Creat
+eOpeningHandler.cs(435,21):
+ error CS0103: The name 'Pl
+aceSleevesAtWallIntersectio
+n' does not exist in the 
+current context [C:\Users\R
+E&DBIM\source\repos\Revit-A
+PI-Lab\RevitUI\RevitUI_fufc
+ssnw_wpftmp.csproj]
+C:\Users\RE&DBIM\source\rep
+os\Revit-API-Lab\RevitUI\Ex
+ternalCommand\Opening\Creat
+eOpeningHandler.cs(423,36):
+ error CS0103: The name 'Pl
+aceSleevesAtWallIntersectio
+n' does not exist in the 
+current context [C:\Users\R
+E&DBIM\source\repos\Revit-A
+PI-Lab\RevitUI\RevitUI_fufc
+ssnw_wpftmp.csproj]
+C:\Users\RE&DBIM\source\rep
+os\Revit-API-Lab\RevitUI\Ex
+ternalCommand\Opening\Creat
+eOpeningHandler.cs(435,21):
+ error CS0103: The name 'Pl
+aceSleevesAtWallIntersectio
+n' does not exist in the 
+current context [C:\Users\R
+E&DBIM\source\repos\Revit-A
+PI-Lab\RevitUI\RevitUI_fufc
+ssnw_wpftmp.csproj]
+
+

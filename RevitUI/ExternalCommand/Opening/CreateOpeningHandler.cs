@@ -359,7 +359,9 @@ namespace RevitUI.UI
 
         public string GetName() => "Create Openings";
 
-        // Place a family sleeve (FamilySymbol) at the clash center and orient it along the MEP run.
+        // Place a family sleeve (FamilySymbol) at the clash center.
+        // WALL:          placed on the wall FACE  (face-based, auto-oriented)
+        // FLOOR/CEILING: placed at intersection   (work-plane / unhosted, Z-up)
         private bool TryPlaceSleeveFamily(Document doc, Element host, XYZ center, ClashItem item)
         {
             if (SleeveSymbolId == null) return false;
@@ -369,93 +371,82 @@ namespace RevitUI.UI
 
             if (!sym.IsActive) sym.Activate();
 
-            var dir = new XYZ(item.WallDirX, item.WallDirY, item.WallDirZ);
-            if (dir.IsAlmostEqualTo(XYZ.Zero)) dir = XYZ.BasisX;
-            dir = dir.Normalize();
-
             FamilyInstance fi = null;
+            bool isWallHost = item.HostType.IndexOf("Wall", StringComparison.OrdinalIgnoreCase) >= 0;
 
-            // 1) Try face-hosted placement if a nearby face exists
-            try
+            if (isWallHost)
             {
-                var opts = new Options { ComputeReferences = true, DetailLevel = ViewDetailLevel.Fine };
-                var geom = host.get_Geometry(opts);
-                if (geom != null)
+                // ═══════════════════════════════════════════════════════════════
+                //  WALL PATH — place on wall face
+                // ═══════════════════════════════════════════════════════════════
+                try
                 {
-                    Face bestFace = null;
-                    double bestDist = double.MaxValue;
-                    foreach (GeometryObject go in geom)
+                    var opts = new Options { ComputeReferences = true, DetailLevel = ViewDetailLevel.Fine };
+                    var geom = host.get_Geometry(opts);
+                    if (geom != null)
                     {
-                        if (go is Solid s)
+                        Face bestFace = null;
+                        double bestDist = double.MaxValue;
+
+                        foreach (GeometryObject go in geom)
                         {
-                            foreach (Face f in s.Faces)
+                            if (go is Solid s && s.Volume > 1e-6)
                             {
-                                try
+                                foreach (Face f in s.Faces)
                                 {
-                                    var proj = f.Project(center);
-                                    if (proj != null)
+                                    try
                                     {
-                                        var pt = proj.XYZPoint;
-                                        var d = pt.DistanceTo(center);
-                                        if (d < bestDist)
+                                        // Only consider planar faces whose normal is horizontal (wall sides)
+                                        if (f is PlanarFace pf)
                                         {
-                                            bestDist = d;
+                                            XYZ fNorm = pf.FaceNormal;
+                                            if (Math.Abs(fNorm.Z) > 0.1) continue; // skip top/bottom faces
+                                        }
+
+                                        var proj = f.Project(center);
+                                        if (proj != null && proj.Distance < bestDist)
+                                        {
+                                            bestDist = proj.Distance;
                                             bestFace = f;
                                         }
                                     }
+                                    catch { }
                                 }
-                                catch { }
                             }
                         }
-                    }
 
-                    if (bestFace != null && bestDist < 3.0) // tolerance in feet
-                    {
-                        // Try possible NewFamilyInstance overloads that accept a Reference
-                        var creator = doc.Create;
-                        var methods = creator.GetType().GetMethods().Where(m => m.Name == "NewFamilyInstance");
-                        var rf = bestFace.Reference;
-                        var candidates = new List<object?[]>
+                        if (bestFace?.Reference != null)
                         {
-                            new object?[] { rf, center, sym },
-                            new object?[] { rf, sym, center }
-                        };
+                            // Compute a reference direction on the face (horizontal)
+                            XYZ normal = bestFace.ComputeNormal(bestFace.Project(center).UVPoint);
+                            XYZ refDir = normal.CrossProduct(XYZ.BasisZ);
+                            if (refDir.IsAlmostEqualTo(XYZ.Zero)) refDir = normal.CrossProduct(XYZ.BasisX);
+                            refDir = refDir.Normalize();
 
-                        foreach (var m in methods)
-                        {
-                            foreach (var args in candidates)
-                            {
-                                try
-                                {
-                                    var created = m.Invoke(creator, args);
-                                    if (created is FamilyInstance createdFi)
-                                    {
-                                        fi = createdFi;
-                                        break;
-                                    }
-                                }
-                                catch { }
-                            }
-                            if (fi != null) break;
+                            fi = doc.Create.NewFamilyInstance(bestFace.Reference, center, refDir, sym);
                         }
                     }
                 }
-            }
-            catch { }
+                catch { }
 
-            // 2) Fallback: point or level placement
-            if (fi == null)
-            {
-                // Unhosted families or Host families require different signatures
-                // Give Host placement priority 
-                try { fi = doc.Create.NewFamilyInstance(center, sym, host, StructuralType.NonStructural); } catch { }
-                
+                // Fallback: if face placement failed, try unhosted
                 if (fi == null)
                 {
                     try { fi = doc.Create.NewFamilyInstance(center, sym, StructuralType.NonStructural); } catch { }
                 }
-                
-                if (fi == null)
+
+                // Wall face placement auto-orients the family — no rotation needed
+            }
+            else
+            {
+                // ═══════════════════════════════════════════════════════════════
+                //  FLOOR / CEILING / BEAM PATH — unhosted work-plane placement
+                // ═══════════════════════════════════════════════════════════════
+                try
+                {
+                    fi = doc.Create.NewFamilyInstance(center, sym, StructuralType.NonStructural);
+                }
+                catch
                 {
                     var lvl = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().FirstOrDefault();
                     if (lvl != null)
@@ -463,108 +454,35 @@ namespace RevitUI.UI
                         try { fi = doc.Create.NewFamilyInstance(center, sym, lvl, StructuralType.NonStructural); } catch { }
                     }
                 }
+
+                // Floor/ceiling sleeves are drawn Z-up — no rotation needed
             }
 
             if (fi == null) return false;
 
-            // Align family origin to center (compensate internal origin offsets)
+            // ── Re-center via bounding box ────────────────────────────────────
             try
             {
-                // CRITICAL: We changed model structure by adding the family, so we must regenerate
-                // before requesting bounding boxes, otherwise they return uninitialized (origin) positions.
                 doc.Regenerate();
-                
                 var bb = fi.get_BoundingBox(null);
                 if (bb != null)
                 {
                     var bbCenter = (bb.Min + bb.Max) / 2;
-                    var delta = center - bbCenter;
-                    if (!delta.IsAlmostEqualTo(XYZ.Zero)) ElementTransformUtils.MoveElement(doc, fi.Id, delta);
+                    var correction = center - bbCenter;
+                    if (!correction.IsAlmostEqualTo(XYZ.Zero))
+                        ElementTransformUtils.MoveElement(doc, fi.Id, correction);
                 }
             }
             catch { }
 
-            // Rotate instance about Z to align with run direction
+            // ── Apply tracking parameter for MepSleeveUpdater ─────────────────
             try
             {
-                var angle = Math.Atan2(dir.Y, dir.X) - Math.Atan2(1, 0);
-                var axis = Line.CreateBound(center, center + XYZ.BasisZ);
-                ElementTransformUtils.RotateElement(doc, fi.Id, axis, angle);
+                fi.LookupParameter("PipeId")?.Set(item.MEPId.ToString());
             }
             catch { }
 
-            // 3) Attempt to cut host with instance void or host utilities via reflection
-            try
-            {
-                var revitAsm = typeof(Element).Assembly;
-
-                var ivType = revitAsm.GetType("Autodesk.Revit.DB.InstanceVoidCutUtils");
-                if (ivType != null)
-                {
-                    var methods = ivType.GetMethods(BindingFlags.Public | BindingFlags.Static);
-                    foreach (var m in methods.Where(x => x.Name.IndexOf("AddInstanceVoidCut", StringComparison.OrdinalIgnoreCase) >= 0))
-                    {
-                        try
-                        {
-                            var parms = m.GetParameters();
-                            if (parms.Length == 3 && parms[0].ParameterType == typeof(Document)) m.Invoke(null, new object?[] { doc, fi, host });
-                            else if (parms.Length == 2) m.Invoke(null, new object?[] { fi, host });
-                        }
-                        catch { }
-                    }
-                }
-
-                var hoType = revitAsm.GetType("Autodesk.Revit.DB.HostObjectUtils");
-                if (hoType != null)
-                {
-                    var hoMethods = hoType.GetMethods(BindingFlags.Public | BindingFlags.Static);
-                    foreach (var m in hoMethods.Where(x => x.Name.IndexOf("Cut", StringComparison.OrdinalIgnoreCase) >= 0))
-                    {
-                        try
-                        {
-                            var parms = m.GetParameters();
-                            if (parms.Length == 3 && parms[0].ParameterType == typeof(Document)) m.Invoke(null, new object?[] { doc, host, fi });
-                            else if (parms.Length == 2) m.Invoke(null, new object?[] { host, fi });
-                        }
-                        catch { }
-                    }
-                }
-            }
-            catch { }
-
-            // Diagnostic log
-            try
-            {
-                var lines = new List<string>();
-                lines.Add($"Sleeve placement for Clash MEPId={item.MEPId} HostId={item.HostId}");
-                if (fi != null)
-                {
-                    lines.Add($"Placed FamilyInstance Id={fi.Id} Symbol={sym.Family?.Name}/{sym.Name}");
-                    var bb = fi.get_BoundingBox(null);
-                    if (bb != null) lines.Add($"Instance bbox: Min={bb.Min}, Max={bb.Max}");
-                }
-                else
-                {
-                    lines.Add("Placement failed: no FamilyInstance created.");
-                }
-
-                var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"sleeve_place_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
-                System.IO.File.WriteAllLines(path, lines);
-                item.Status = fi != null ? "Done ✓" : ("Failed: sleeve not placed. See log: " + path);
-            }
-            catch { }
-
-            // Apply parameter allowing MepSleeveUpdater to track this sleeve globally
-            if (fi != null)
-            {
-                try
-                {
-                    fi.LookupParameter("PipeId")?.Set(item.MEPId.ToString());
-                }
-                catch { }
-            }
-
-            return fi != null;
+            return true;
         }
     }
 }
