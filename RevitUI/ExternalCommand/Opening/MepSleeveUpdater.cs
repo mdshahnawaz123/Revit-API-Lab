@@ -267,8 +267,24 @@ namespace RevitUI.ExternalCommand.Opening
                 }
             }
 
+            // Sync Depth (H) based on Host Thickness (if hosted)
+            if (sleeve.Host != null)
+            {
+                Parameter? pH = sleeve.LookupParameter("H");
+                if (pH != null && !pH.IsReadOnly)
+                {
+                    double targetH = GeometryHelper.GetHostThickness(sleeve.Host);
+                    if (Math.Abs(pH.AsDouble() - targetH) > 0.001)
+                    {
+                        pH.Set(targetH);
+                        changed = true;
+                    }
+                }
+            }
+
             return changed;
         }
+
         
         private static bool AlignSleeveToLine(Document doc, FamilyInstance sleeve, Line unboundLine)
         {

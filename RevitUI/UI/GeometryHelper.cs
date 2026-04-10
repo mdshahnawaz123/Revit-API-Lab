@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -153,5 +153,44 @@ namespace RevitUI.UI
 
         /// <summary>Converts a millimetre value directly to feet.</summary>
         public static double MmToFeet(double mm) => mm / 304.8;
+
+        /// <summary>
+        /// Generates a consistent ID string used to track associations between
+        /// MEP elements and their corresponding sleeves.
+        /// </summary>
+        public static string GetPipeIdValue(long mepId, bool isLinked, string? linkName)
+        {
+            if (isLinked && !string.IsNullOrEmpty(linkName))
+                return $"LINK:{linkName}:{mepId}";
+            
+            return mepId.ToString();
+        }
+
+        /// <summary>
+        /// Calculates the default thickness of a host element (Wall, Floor, or Ceiling).
+        /// </summary>
+        public static double GetHostThickness(Element host)
+        {
+            if (host is Wall wall) return wall.Width;
+
+            // Try to get thickness from compound structure (Floor, Ceiling, etc.)
+            ElementType? type = host.Document.GetElement(host.GetTypeId()) as ElementType;
+            if (type is HostObjAttributes hostType)
+            {
+                CompoundStructure cs = hostType.GetCompoundStructure();
+                if (cs != null) return cs.GetWidth();
+            }
+
+            // Fallback for elements without CompoundStructure but with a thickness parameter
+            Parameter? thickParam =
+                host.get_Parameter(BuiltInParameter.FLOOR_ATTR_DEFAULT_THICKNESS_PARAM) ??
+                host.get_Parameter(BuiltInParameter.CEILING_THICKNESS) ??
+                host.get_Parameter(BuiltInParameter.GENERIC_THICKNESS);
+
+            if (thickParam != null && thickParam.HasValue)
+                return thickParam.AsDouble();
+
+            return 0.5; // fallback 150mm
+        }
     }
 }

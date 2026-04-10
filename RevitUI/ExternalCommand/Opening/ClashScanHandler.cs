@@ -44,6 +44,7 @@ namespace RevitUI.UI
         {
             var doc = app.ActiveUIDocument.Document;
             Results.Clear();
+            var existingPipeIds = CollectExistingPipeIds(doc);
 
             var opt = new Options
             {
@@ -215,6 +216,10 @@ namespace RevitUI.UI
                         // ignore view lookup errors and continue
                     }
                 }
+
+                // DUPLICATE VALIDATION: Check if a sleeve with this PipeId exists near the intersection center
+                string currentPipeId = GeometryHelper.GetPipeIdValue(mepInfo.Element.Id.Value, mepInfo.IsLinked, mepInfo.LinkName);
+                
                 // Cheap bounding-box pre-filter
                 if (!GeometryHelper.BoundingBoxesOverlap(mepInfo.Element, host, mepXform))
                     continue;
@@ -224,6 +229,14 @@ namespace RevitUI.UI
 
                 var center = GeometryHelper.IntersectionCentroid(mepSolids, hostSolids);
                 if (center is null) continue;
+
+                bool alreadyExists = false;
+                if (_existingSleeves.TryGetValue(currentPipeId, out var locations))
+                {
+                    // Check if any existing sleeve for this PipeId is within 1 inch of the current clash
+                    alreadyExists = locations.Any(loc => loc.DistanceTo(center) < 0.1);
+                }
+
 
                 var hostDir = GetHostDirection(host);
 
@@ -252,10 +265,12 @@ namespace RevitUI.UI
                     WallDirY = hostDir.Y,
                     WallDirZ = hostDir.Z,
 
-                    Status = "Found"
+                    Status = alreadyExists ? "Done (Already Exists)" : "Found",
+                    Process = !alreadyExists
                 });
             }
         }
+
 
         // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -281,6 +296,40 @@ namespace RevitUI.UI
             CableTray => "Cable Tray",
             _ => e.Category?.Name ?? "MEP"
         };
+        
+        private Dictionary<string, List<XYZ>> _existingSleeves = new();
+
+        private Dictionary<string, List<XYZ>> CollectExistingPipeIds(Document doc)
+        {
+            _existingSleeves.Clear();
+            
+            // Collect all Generic Model instances (sleeves) that have a "PipeId" parameter
+            var sleeves = new FilteredElementCollector(doc)
+                .OfClass(typeof(FamilyInstance))
+                .OfCategory(BuiltInCategory.OST_GenericModel)
+                .Cast<FamilyInstance>();
+
+            foreach (var s in sleeves)
+            {
+                var param = s.LookupParameter("PipeId");
+                if (param != null && param.HasValue)
+                {
+                    string id = param.AsString();
+                    if (string.IsNullOrEmpty(id)) continue;
+                    
+                    LocationPoint? lp = s.Location as LocationPoint;
+                    if (lp == null) continue;
+
+                    if (!_existingSleeves.ContainsKey(id))
+                        _existingSleeves[id] = new List<XYZ>();
+                    
+                    _existingSleeves[id].Add(lp.Point);
+                }
+            }
+            
+            return _existingSleeves;
+        }
+
 
         public string GetName() => "Scan For Clashes";
     }

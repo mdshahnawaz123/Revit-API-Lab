@@ -36,11 +36,20 @@ namespace RevitUI.UI
 
             try
             {
+                var existingPipeIds = CollectExistingPipeIds(doc);
                
                 foreach (var item in Items.Where(i => i.Process))
                 {
                     // Skip if already done or failed in a previous attempt
                     if (item.Status?.StartsWith("Done") == true) continue;
+
+                    // Final check: if a sleeve was created since the last scan
+                    string pipeId = GeometryHelper.GetPipeIdValue(item.MEPId, item.MEPIsLinked, item.MEPLinkName);
+                    if (existingPipeIds.Contains(pipeId))
+                    {
+                        item.Status = "Done ✓ (Already Exists)";
+                        continue;
+                    }
                     
                     try
                     {
@@ -355,6 +364,32 @@ namespace RevitUI.UI
 
             if (!sym.IsActive) sym.Activate();
 
+            // ── DUPLICATE VALIDATION ──────────────────────────────────────────
+            // Check if a sleeve with this PipeId already exists within a small radius of the center.
+            // This prevents "identical instances" in the same place while allowing 
+            // multiple sleeves for a single long pipe in different walls.
+            string pipeIdValue = GeometryHelper.GetPipeIdValue(item.MEPId, item.MEPIsLinked, item.MEPLinkName);
+            var existing = new FilteredElementCollector(doc)
+                .OfClass(typeof(FamilyInstance))
+                .OfCategory(BuiltInCategory.OST_GenericModel)
+                .Where(e => {
+                    var p = e.LookupParameter("PipeId");
+                    if (p == null || !p.HasValue || p.AsString() != pipeIdValue) return false;
+                    
+                    LocationPoint? lp = e.Location as LocationPoint;
+                    if (lp == null) return false;
+                    
+                    // Check if existing sleeve is within 1 inch (0.083 ft) of the target center
+                    return lp.Point.DistanceTo(center) < 0.1; 
+                })
+                .FirstOrDefault();
+
+            if (existing != null)
+            {
+                item.Status = "Done ✓ (Already Exists)";
+                return true;
+            }
+
             FamilyInstance fi = null;
             bool isWallHost = item.HostType.IndexOf("Wall", StringComparison.OrdinalIgnoreCase) >= 0;
 
@@ -467,25 +502,19 @@ namespace RevitUI.UI
             // ── Apply tracking parameter for MepSleeveUpdater ─────────────────
             try
             {
-                string pipeIdValue;
-                if (item.MEPIsLinked)
-                {
-                    pipeIdValue = $"LINK:{item.MEPLinkName}:{item.MEPId}";
-                }
-                else
-                {
-                    pipeIdValue = new ElementId(item.MEPId).ToString();
-                }
                 fi.LookupParameter("PipeId")?.Set(pipeIdValue);
             }
             catch { }
 
-            // ── Set Dimensions (Dia, L, B) ────────────────────────────────────
+
+
+            // ── Set Dimensions (Dia, L, B, H) ─────────────────────────────────
             try
             {
                 // item.HalfWidth/Height already include the clearance from the scan phase
                 double width = item.HalfWidth * 2.0;
                 double height = item.HalfHeight * 2.0;
+                double thickness = GeometryHelper.GetHostThickness(host);
 
                 // Circular: Pipe
                 fi.LookupParameter("Dia")?.Set(width);
@@ -493,10 +522,30 @@ namespace RevitUI.UI
                 // Rectangular: Duct/CableTray
                 fi.LookupParameter("L")?.Set(width);
                 fi.LookupParameter("B")?.Set(height);
+                
+                // Depth: Set H for both family types
+                fi.LookupParameter("H")?.Set(thickness);
             }
             catch { }
 
             return true;
+            return true;
+        }
+
+
+        private HashSet<string> CollectExistingPipeIds(Document doc)
+        {
+            var set = new HashSet<string>();
+            var sleeves = new FilteredElementCollector(doc)
+                .OfClass(typeof(FamilyInstance))
+                .OfCategory(BuiltInCategory.OST_GenericModel);
+
+            foreach (var s in sleeves)
+            {
+                string? val = s.LookupParameter("PipeId")?.AsString();
+                if (!string.IsNullOrEmpty(val)) set.Add(val);
+            }
+            return set;
         }
     }
 }
