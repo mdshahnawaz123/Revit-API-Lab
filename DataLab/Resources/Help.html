@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Room 3D Text Generator - Help Document</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 40px;
+            background-color: #f7f7f7;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+
+        p {
+            line-height: 1.6;
+        }
+
+        ul {
+            margin-left: 20px;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+            .header img {
+                width: 80px;
+                margin-right: 20px;
+            }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: gray;
+        }
+
+        .code {
+            background: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: Consolas;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <img src="icon.png" alt="App Icon">
+        <div>
+            <h1>Room 3D Text Generator</h1>
+            <p><strong>Revit Add-in for Automatic 3D Room Labeling</strong></p>
+        </div>
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="section">
+        <h2>Description</h2>
+        <p>
+            The <strong>Room 3D Text Generator</strong> automatically creates 3D model text
+            for all rooms in your Revit project based on room names (and optionally numbers).
+        </p>
+        <p>
+            This enhances visualization in 3D views and helps with presentation,
+            coordination, and model readability.
+        </p>
+    </div>
+
+    <!-- GENERAL USAGE -->
+    <div class="section">
+        <h2>General Usage Instructions</h2>
+        <ul>
+            <li>Open your Revit project.</li>
+            <li>Navigate to the <strong>Add-Ins</strong> tab.</li>
+            <li>Click <strong>Room 3D Text</strong>.</li>
+            <li>The tool will automatically:</li>
+            <ul>
+                <li>Collect all placed rooms</li>
+                <li>Read room names</li>
+                <li>Place 3D text at the center of each room</li>
+            </ul>
+        </ul>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="section">
+        <h2>Features</h2>
+        <ul>
+            <li>Automatically generates 3D room labels</li>
+            <li>Uses room name and/or number</li>
+            <li>Places text at room center</li>
+            <li>Visible in 3D, plan, and section views</li>
+            <li>Supports large models</li>
+        </ul>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="section">
+        <h2>How It Works</h2>
+        <ul>
+            <li>Collects elements from <strong>OST_Rooms</strong></li>
+            <li>Retrieves room location (LocationPoint)</li>
+            <li>Places Generic Model family instance</li>
+            <li>Sets parameter value to Room Name</li>
+        </ul>
+    </div>
+
+    <!-- INSTALLATION -->
+    <div class="section">
+        <h2>Installation</h2>
+        <p><strong>Steps:</strong></p>
+        <ul>
+            <li>Copy the <strong>.addin</strong> file to:</li>
+        </ul>
+
+        <div class="code">
+            C:\ProgramData\Autodesk\Revit\Addins\2024
+        </div>
+
+        <ul>
+            <li>Copy the DLL file to the same folder</li>
+            <li>Restart Revit</li>
+        </ul>
+    </div>
+
+    <!-- FAMILY REQUIREMENTS -->
+    <div class="section">
+        <h2>Family Requirements</h2>
+        <ul>
+            <li>Category: Generic Model</li>
+            <li>Contains Model Text element</li>
+            <li>Text parameter linked to "RoomName"</li>
+        </ul>
+    </div>
+
+    <!-- KNOWN ISSUES -->
+    <div class="section">
+        <h2>Known Issues</h2>
+        <ul>
+            <li>Rooms without location are skipped</li>
+            <li>Unplaced rooms are ignored</li>
+            <li>Large models may affect performance</li>
+        </ul>
+    </div>
+
+    <!-- LIMITATIONS -->
+    <div class="section">
+        <h2>Limitations</h2>
+        <ul>
+            <li>Supports Rooms only (Spaces not included)</li>
+            <li>Requires valid room boundaries</li>
+        </ul>
+    </div>
+
+    <!-- TROUBLESHOOTING -->
+    <div class="section">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li>If no text appears, check if rooms are placed</li>
+            <li>Ensure family is loaded correctly</li>
+            <li>Verify model text visibility in view settings</li>
+        </ul>
+    </div>
+
+    <!-- CONTACT -->
+    <div class="section">
+        <h2>Contact</h2>
+        <p>
+            Developer: Your Name<br>
+            Email: your@email.com
+        </p>
+    </div>
+
+    <!-- VERSION -->
+    <div class="section">
+        <h2>Version History</h2>
+        <ul>
+            <li><strong>v1.0</strong> – Initial release</li>
+        </ul>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        © 2026 Your Company. All rights reserved.
+    </div>
+
+</body>
+</html>

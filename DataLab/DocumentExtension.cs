@@ -42,15 +42,15 @@ namespace DataLab
             return ds;
         }
 
-        public static void DoAction(this Document doc, Action action, string name)
-        {
-            using (var tx = new Transaction(doc, name))
-            {
-                tx.Start();
-                action.Invoke();
-                tx.Commit();
-            }
-        }
+        //public static void DoAction(this Document doc, Action action, string name)
+        //{
+        //    using (var tx = new Transaction(doc, name))
+        //    {
+        //        tx.Start();
+        //        action.Invoke();
+        //        tx.Commit();
+        //    }
+        //}
 
         public static IList<Level> GetLevel(this Document doc)
         {
@@ -149,6 +149,24 @@ namespace DataLab
             }
 
             return result;
+        }
+
+        public static IList<SpatialElement> GetRooms(this Document doc)
+        {
+            return new FilteredElementCollector(doc)
+                .OfClass(typeof(SpatialElement))
+                .WhereElementIsNotElementType()
+                .Cast<SpatialElement>()
+                .Where(x => x.Category != null && x.Category.Id.Value == (int)BuiltInCategory.OST_Rooms)
+                .ToList();
+        }
+
+        public static IList<Element> GetPhasing(this Document doc)
+        {
+            return new FilteredElementCollector(doc)
+                .OfClass(typeof(Phase))
+                .WhereElementIsNotElementType()
+                .ToList();
         }
     }
         

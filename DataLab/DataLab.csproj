@@ -17,6 +17,7 @@
 	  <Page Remove="Resources\Images\**" />
 	</ItemGroup>
 	<ItemGroup>
+	  <None Remove="Resources\3D Room Tag.rfa" />
 	  <None Remove="Resources\Door.png" />
 	  <None Remove="Resources\Helper\para.png" />
 	  <None Remove="Resources\Wall.png" />
@@ -38,6 +39,7 @@
 		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2026.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
 	</ItemGroup>
 	<ItemGroup>
+	  <EmbeddedResource Include="Resources\3D Room Tag.rfa" />
 	  <EmbeddedResource Include="Resources\Door.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </EmbeddedResource>
