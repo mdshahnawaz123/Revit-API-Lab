@@ -55,9 +55,14 @@ namespace B_Lab.RevitApp
                     "para_Filter_BTN", "Parameter\nFilter", dll,
                     "RevitUI.Command.ParamCommand");
 
+                var roomBtn = new PushButtonData(
+                    "room_3D_Tag_BTN", "3D Room\nTag", dll,
+                    "RevitUI.Command.Room3DTag");
+
                 // ── Add to panels ─────────────────────────────────────────────
                 panel.AddStackedItems(mepBtn, dwBtn);
-                var paraButton = panel1.AddItem(paraBtn) as PushButton; // ✅ capture reference
+                var paraButton = panel1.AddItem(paraBtn) as PushButton; 
+                var roomButton = panel1.AddItem(roomBtn) as PushButton; 
 
                 // ── Help file paths ───────────────────────────────────────────
                 string mepHelpPath = Path.Combine(_assemblyFolder!, "Helper", "master-opening-sleeves-help.html");
@@ -105,6 +110,15 @@ namespace B_Lab.RevitApp
                     // ✅ F1 contextual help pointing to ParameterFilterHelp.html
                     if (paraHelp != null)
                         paraButton.SetContextualHelp(paraHelp);
+                }
+
+                // ── Setup Room 3D Tag button (panel1) ─────────────────────────
+                if (roomButton != null)
+                {
+                    var img = ImageUtils.GetEmbeddedImage("DataLab.Resources.Wall.png");
+                    roomButton.Image = img;
+                    roomButton.LargeImage = img;
+                    roomButton.ToolTip = "3D Room Tag - Create and sync 3D tags for rooms in Host and Linked models.";
                 }
 
                 return Result.Succeeded;

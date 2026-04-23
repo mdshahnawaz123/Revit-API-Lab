@@ -168,6 +168,14 @@ namespace DataLab
                 .WhereElementIsNotElementType()
                 .ToList();
         }
+
+        public static IList<Workset> GetWorksets(this Document doc)
+        {
+            return new FilteredWorksetCollector(doc)
+                .OfKind(WorksetKind.UserWorkset)
+                .ToWorksets()
+                .ToList();
+        }
     }
         
 }

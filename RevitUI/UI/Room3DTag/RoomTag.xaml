@@ -1,19 +1,20 @@
-﻿<Window x:Class="RevitUI.UI.Room3DTag.RoomTag"
+<Window x:Class="RevitUI.UI.Room3DTag.RoomTag"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:RevitUI.UI.Room3DTag"
         mc:Ignorable="d"
-        Title="Engipedia 3D Room Tags"
-        Height="400" Width="800"
+        Title="BIM Digital Design"
+        Height="600" Width="960"
         WindowStartupLocation="CenterScreen"
         Background="#F0F0F0"
         FontFamily="Segoe UI"
-        FontSize="12">
+        FontSize="12"
+        ResizeMode="NoResize">
 
     <Window.Resources>
-        <!-- Base Button Style -->
+
         <Style x:Key="BaseButton" TargetType="Button">
             <Setter Property="Height" Value="26"/>
             <Setter Property="Padding" Value="10,0"/>
@@ -34,10 +35,10 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Opacity" Value="0.85"/>
                             </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
+                            <Trigger Property="IsPressed"   Value="True">
                                 <Setter Property="Opacity" Value="0.7"/>
                             </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
+                            <Trigger Property="IsEnabled"   Value="False">
                                 <Setter Property="Opacity" Value="0.4"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -46,231 +47,88 @@
             </Setter>
         </Style>
 
-        <!-- Default Gray Button -->
         <Style x:Key="GrayButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
             <Setter Property="Background" Value="#E1E1E1"/>
             <Setter Property="BorderBrush" Value="#ADADAD"/>
             <Setter Property="Foreground" Value="#1A1A1A"/>
         </Style>
 
-        <!-- Blue Button -->
-        <Style x:Key="BlueButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
-            <Setter Property="Background" Value="#0078D4"/>
-            <Setter Property="BorderBrush" Value="#005A9E"/>
-            <Setter Property="Foreground" Value="White"/>
-        </Style>
-
-        <!-- Red/Danger Button -->
         <Style x:Key="RedButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
-            <Setter Property="Background" Value="#E1E1E1"/>
-            <Setter Property="BorderBrush" Value="#ADADAD"/>
+            <Setter Property="Background" Value="#FDECEA"/>
+            <Setter Property="BorderBrush" Value="#E57373"/>
             <Setter Property="Foreground" Value="#C00000"/>
         </Style>
 
-        <!-- Run Button -->
-        <Style x:Key="RunButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
-            <Setter Property="Background" Value="#E1E1E1"/>
-            <Setter Property="BorderBrush" Value="#ADADAD"/>
-            <Setter Property="Foreground" Value="#1A1A1A"/>
-            <Setter Property="Width" Value="80"/>
-            <Setter Property="Height" Value="28"/>
+        <Style x:Key="BlueButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+            <Setter Property="Background" Value="#E3F2FD"/>
+            <Setter Property="BorderBrush" Value="#64B5F6"/>
+            <Setter Property="Foreground" Value="#1565C0"/>
         </Style>
 
-        <!-- Section Header TextBlock -->
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize"   Value="13"/>
             <Setter Property="Foreground" Value="#1A1A1A"/>
-            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="Margin"     Value="0,0,0,6"/>
         </Style>
 
-        <!-- ComboBox Style -->
         <Style x:Key="StdCombo" TargetType="ComboBox">
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Height"                   Value="24"/>
+            <Setter Property="FontSize"                 Value="11.5"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#ADADAD"/>
+            <Setter Property="Background"               Value="White"/>
+            <Setter Property="BorderBrush"              Value="#ADADAD"/>
         </Style>
 
-        <!-- DataGrid Style -->
-        <Style x:Key="StdGrid" TargetType="DataGrid">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#ADADAD"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="RowBackground" Value="White"/>
-            <Setter Property="AlternatingRowBackground" Value="#F7F7F7"/>
-            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-            <Setter Property="HorizontalGridLinesBrush" Value="#E0E0E0"/>
-            <Setter Property="FontSize" Value="11.5"/>
-            <Setter Property="CanUserAddRows" Value="False"/>
-            <Setter Property="CanUserDeleteRows" Value="False"/>
-            <Setter Property="AutoGenerateColumns" Value="False"/>
-            <Setter Property="SelectionMode" Value="Single"/>
-            <Setter Property="IsReadOnly" Value="True"/>
-            <Setter Property="HeadersVisibility" Value="Column"/>
-        </Style>
-
-        <!-- Spinner Button style (for +/-) -->
-        <Style x:Key="SpinButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
-            <Setter Property="Width" Value="22"/>
-            <Setter Property="Height" Value="22"/>
-            <Setter Property="Background" Value="#E1E1E1"/>
-            <Setter Property="BorderBrush" Value="#ADADAD"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Foreground" Value="#1A1A1A"/>
-            <Setter Property="Padding" Value="0"/>
-        </Style>
     </Window.Resources>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <!-- Title bar -->
-            <RowDefinition Height="46"/>
-            <!-- Main content -->
-            <RowDefinition Height="*"/>
-            <!-- Bottom status bar -->
-            <RowDefinition Height="38"/>
-        </Grid.RowDefinitions>
+    <!--
+        DockPanel is the correct layout for "header + footer + fill":
+        - Title bar  → DockPanel.Dock="Top"
+        - Status bar → DockPanel.Dock="Bottom"   (MUST be declared before the fill child)
+        - Main grid  → fills remaining space automatically (LastChildFill=True default)
+    -->
+    <DockPanel LastChildFill="True">
 
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!--  TITLE BAR                                                  -->
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <Border Grid.Row="0" Background="#FAFAFA" BorderBrush="#D0D0D0" BorderThickness="0,0,0,1">
-            <Grid Margin="12,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Icon + Title -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Tag icon approximation -->
-                    <Border Width="30" Height="30" Background="#E8F0FE" CornerRadius="4"
-                            BorderBrush="#90B4F5" BorderThickness="1" Margin="0,0,8,0">
-                        <TextBlock Text="3D" FontWeight="Bold" FontSize="10"
-                                   Foreground="#1A56C4"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <TextBlock Text="BIM Digital Design 3D Room Tags" FontSize="15" FontWeight="SemiBold"
-                               Foreground="#1A1A1A" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Grid>
+        <!-- ══════════════════════════════════════════════════ -->
+        <!--  TITLE BAR                                         -->
+        <!-- ══════════════════════════════════════════════════ -->
+        <Border DockPanel.Dock="Top"
+                Background="#FAFAFA"
+                BorderBrush="#D0D0D0"
+                BorderThickness="0,0,0,1"
+                Height="46">
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        Margin="12,0">
+                <Border Width="30" Height="30"
+                        Background="#E8F0FE"
+                        CornerRadius="4"
+                        BorderBrush="#90B4F5"
+                        BorderThickness="1"
+                        Margin="0,0,8,0">
+                    <TextBlock Text="3D"
+                               FontWeight="Bold" FontSize="10"
+                               Foreground="#1A56C4"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="BIM Digital Design 3D Room Tags"
+                           FontSize="15" FontWeight="SemiBold"
+                           Foreground="#1A1A1A"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
         </Border>
 
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!--  MAIN CONTENT                                               -->
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <Grid Grid.Row="1" Margin="12,10,12,6">
-            <Grid.ColumnDefinitions>
-                <!-- Left/center content -->
-                <ColumnDefinition Width="*"/>
-                <!-- Right panel -->
-                <ColumnDefinition Width="260"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- LEFT + CENTER -->
-            <StackPanel Grid.Column="0" Margin="0,0,16,0">
-
-                <!-- ── Section: Specify what to create ───────────────── -->
-                <TextBlock Text="Specify what to create" Style="{StaticResource SectionHeader}"/>
-
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="30"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="26"/>
-                        <RowDefinition Height="26"/>
-                        <RowDefinition Height="30"/>
-                        <RowDefinition Height="30"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Row 0 -->
-                    <CheckBox Grid.Row="0" Grid.Column="0" Content="Create 3D Room Tags"
-                              IsChecked="True" VerticalAlignment="Center" FontSize="12"/>
-
-                    <!-- Row 2: Phase combo -->
-                    <ComboBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
-                              Style="{StaticResource StdCombo}" Width="200"
-                              HorizontalAlignment="Left" Margin="0,2,0,2"
-                              Name="PhaseComboBox">
-                    </ComboBox>
-                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Place Elements in this Phase"
-                               VerticalAlignment="Center" FontSize="11.5" Foreground="#444" Margin="8,0,0,0"/>
-
-                    <!-- Row 3: Workset combo -->
-                    <ComboBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
-                              Style="{StaticResource StdCombo}" Width="200"
-                              HorizontalAlignment="Left" Margin="0,2,0,2"
-                              Name="WorksetComboBox">
-                    </ComboBox>
-                    <TextBlock Grid.Row="3" Grid.Column="2" Text="Place Elements in this Workset"
-                               VerticalAlignment="Center" FontSize="11.5" Foreground="#444" Margin="8,0,0,0"/>
-                </Grid>
-
-                <Separator Background="#D0D0D0" Margin="0,2,0,10"/>
-
-                <!-- ── Section: 3D Room Tag Options ──────────────────── -->
-                <TextBlock Text="3D Room Tag Options" Style="{StaticResource SectionHeader}"/>
-
-                <Grid Margin="0,0,0,6">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="28"/>
-                        <RowDefinition Height="26"/>
-                    </Grid.RowDefinitions>
-
-                    <ComboBox Grid.Row="0" Grid.Column="0"
-                              Style="{StaticResource StdCombo}" Width="280"
-                              HorizontalAlignment="Left" Margin="0,0,8,0"
-                              Name="RoomTagTypeComboBox">
-                    </ComboBox>
-                    <TextBlock Grid.Row="0" Grid.Column="1"
-                               Text="Use this Generic Model Family &amp; Type"
-                               VerticalAlignment="Center" FontSize="11.5" Foreground="#444"/>
-
-                    <CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                              Content="Update existing 3D tag instances of the selected type while preserving their manual positions"
-                              IsChecked="True" VerticalAlignment="Center" FontSize="11.5"/>
-                </Grid>
-
-                <Separator Background="#D0D0D0" Margin="0,4,0,10"/>
-
-                
-
-                <Separator Background="#D0D0D0" Margin="0,4,0,10"/>
-
-            </StackPanel>
-
-            <!-- RIGHT PANEL -->
-            <StackPanel Grid.Column="1" VerticalAlignment="Top">
-
-                <!-- Delete All Existing 3D Tags -->
-                <Button Style="{StaticResource RedButton}"
-                        HorizontalAlignment="Stretch" Margin="0,0,0,4"
-                        Height="28"
-                        Click="BtnDlt_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🗑 " FontSize="12"/>
-                        <TextBlock Text="Delete All Existing 3D Tags" FontSize="11.5"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </Grid>
-
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!--  BOTTOM STATUS BAR                                          -->
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <Border Grid.Row="2" Background="#FAFAFA"
-                BorderBrush="#D0D0D0" BorderThickness="0,1,0,0">
+        <!-- ══════════════════════════════════════════════════ -->
+        <!--  BOTTOM STATUS BAR                                 -->
+        <!--  IMPORTANT: Declare Bottom dock BEFORE fill child  -->
+        <!-- ══════════════════════════════════════════════════ -->
+        <Border DockPanel.Dock="Bottom"
+                Background="#FAFAFA"
+                BorderBrush="#D0D0D0"
+                BorderThickness="0,1,0,0"
+                Height="44">
             <Grid Margin="12,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -281,17 +139,353 @@
 
                 <TextBlock Grid.Column="0"
                            Text="To run, select at least one checkbox or choose an item from the list"
-                           FontSize="11" Foreground="#666" VerticalAlignment="Center"/>
+                           FontSize="11" Foreground="#666"
+                           VerticalAlignment="Center"/>
 
-                <Button Grid.Column="2" Style="{StaticResource GrayButton}"
-                        Content="Close" Width="70" Margin="0,0,6,0"
+                <Button Grid.Column="1"
+                        Style="{StaticResource GrayButton}"
+                        Content="Close" Width="70"
+                        Margin="0,0,6,0"
                         Click="BtnClose_Click"/>
 
-                <Button Grid.Column="3" Style="{StaticResource GrayButton}"
+                <Button Grid.Column="2"
+                        Style="{StaticResource BlueButton}"
+                        Width="80"
+                        Margin="0,0,6,0"
+                        Click="BtnSync_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔄 " FontSize="11"/>
+                        <TextBlock Text="Sync" FontSize="11.5"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="3"
+                        Style="{StaticResource GrayButton}"
                         Content="Run" Width="70"
                         Click="BtnRun_Click"/>
             </Grid>
         </Border>
-    </Grid>
-</Window>
 
+        <!-- ══════════════════════════════════════════════════ -->
+        <!--  MAIN CONTENT  (fills remaining space)             -->
+        <!-- ══════════════════════════════════════════════════ -->
+        <Grid Margin="12,10,12,8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- ── TOP ROW: existing controls ─────────────── -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="220"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- ── LEFT PANEL ──────────────────────────────── -->
+                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+
+                    <!-- Specify what to create -->
+                    <TextBlock Text="Specify what to create"
+                               Style="{StaticResource SectionHeader}"/>
+
+                    <CheckBox x:Name="ChkCreate3DRoomTags"
+                              Content="Create 3D Room Tags"
+                              IsChecked="True"
+                              FontSize="12"
+                              Margin="0,0,0,10"/>
+
+                    <!-- Phase row -->
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="PhaseComboBox"
+                                  Grid.Column="0"
+                                  Style="{StaticResource StdCombo}"
+                                  DisplayMemberPath="Name"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="Place Elements in this Phase"
+                                   VerticalAlignment="Center"
+                                   FontSize="11.5" Foreground="#444"
+                                   Margin="8,0,0,0"/>
+                    </Grid>
+
+                    <!-- Workset row -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="WorksetComboBox"
+                                  Grid.Column="0"
+                                  Style="{StaticResource StdCombo}"
+                                  DisplayMemberPath="Name"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="Place Elements in this Workset"
+                                   VerticalAlignment="Center"
+                                   FontSize="11.5" Foreground="#444"
+                                   Margin="8,0,0,0"/>
+                    </Grid>
+
+                    <Separator Background="#D0D0D0" Margin="0,0,0,10"/>
+
+                    <!-- 3D Room Tag Options -->
+                    <TextBlock Text="3D Room Tag Options"
+                               Style="{StaticResource SectionHeader}"/>
+
+                    <!-- Tag type combo row -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="280"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="RoomTagTypeComboBox"
+                                  Grid.Column="0"
+                                  Style="{StaticResource StdCombo}"
+                                  DisplayMemberPath="Name"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="Use this Generic Model Family &amp; Type"
+                                   VerticalAlignment="Center"
+                                   FontSize="11.5" Foreground="#444"
+                                   Margin="8,0,0,0"/>
+                    </Grid>
+
+                    <CheckBox x:Name="ChkUpdateExisting"
+                              Content="Update existing 3D tag instances of the selected type while preserving their manual positions"
+                              IsChecked="True"
+                              FontSize="11.5"/>
+
+                    <Separator Background="#D0D0D0" Margin="0,10,0,0"/>
+
+                </StackPanel>
+
+                <!-- ── RIGHT PANEL ─────────────────────────────── -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Top">
+
+                    <Button x:Name="BtnDlt"
+                            Style="{StaticResource RedButton}"
+                            HorizontalAlignment="Stretch"
+                            Height="28"
+                            Margin="0,0,0,8"
+                            Click="BtnDlt_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🗑 " FontSize="12"/>
+                            <TextBlock Text="Delete All Existing 3D Tags" FontSize="11.5"/>
+                        </StackPanel>
+                    </Button>
+
+                    <CheckBox x:Name="ActiveViewCheckBox"
+                              Content="Active View"
+                              IsChecked="True"
+                              FontSize="11.5"
+                              Margin="4,0,0,4"
+                              Checked="OnDeleteOptionChanged"/>
+
+                    <CheckBox x:Name="AllModelsCheckBox"
+                              Content="All Models"
+                              IsChecked="False"
+                              FontSize="11.5"
+                              Margin="4,0,0,0"
+                              Checked="OnDeleteOptionChanged"/>
+
+                </StackPanel>
+            </Grid>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  ROOM / SPACE SOURCE MODELS DataGrid               -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <StackPanel Grid.Row="1" Margin="0,10,0,0">
+
+                <TextBlock Text="Select one or more Room/Space source models"
+                           Style="{StaticResource SectionHeader}"
+                           Margin="0,0,0,4"/>
+
+                <DataGrid x:Name="RoomSourceDataGrid"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          CanUserReorderColumns="False"
+                          CanUserSortColumns="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="All"
+                          SelectionMode="Single"
+                          SelectionUnit="FullRow"
+                          IsReadOnly="False"
+                          BorderBrush="#C0C0C0"
+                          BorderThickness="1"
+                          HorizontalGridLinesBrush="#E0E0E0"
+                          VerticalGridLinesBrush="#E0E0E0"
+                          Background="White"
+                          RowBackground="White"
+                          AlternatingRowBackground="#F5F9FF"
+                          FontSize="11"
+                          RowHeight="22"
+                          ColumnHeaderHeight="24"
+                          MinHeight="80"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Auto">
+
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#F0F0F0"/>
+                            <Setter Property="Foreground" Value="#1A1A1A"/>
+                            <Setter Property="FontSize"   Value="11"/>
+                            <Setter Property="FontWeight" Value="Normal"/>
+                            <Setter Property="Padding"    Value="4,2"/>
+                            <Setter Property="BorderBrush" Value="#C0C0C0"/>
+                            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Padding" Value="4,2"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#D6EBFF"/>
+                                    <Setter Property="Foreground" Value="#1A1A1A"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.CellStyle>
+
+                    <DataGrid.Columns>
+                        <!-- Select -->
+                        <DataGridCheckBoxColumn Header="Select"
+                                                Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                                Width="45"/>
+
+                        <!-- Model Name -->
+                        <DataGridTextColumn Header="Model Name"
+                                            Binding="{Binding ModelName}"
+                                            Width="120"
+                                            IsReadOnly="True"/>
+
+                        <!-- Category -->
+                        <DataGridTextColumn Header="Category"
+                                            Binding="{Binding Category}"
+                                            Width="70"
+                                            IsReadOnly="True"/>
+
+                        <!-- Volume Calc. On -->
+                        <DataGridCheckBoxColumn Header="Volume Calc. On"
+                                                Binding="{Binding VolumeCalcOn}"
+                                                Width="90"
+                                                IsReadOnly="True"/>
+
+                        <!-- Total Rooms/Spaces -->
+                        <DataGridTextColumn Header="Total Rooms/Spaces"
+                                            Binding="{Binding TotalRoomsSpaces}"
+                                            Width="105"
+                                            IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Placed Correctly -->
+                        <DataGridTextColumn Header="Placed Correctly"
+                                            Binding="{Binding PlacedCorrectly}"
+                                            Width="95"
+                                            IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="#2E7D32"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Redundant -->
+                        <DataGridTextColumn Header="Redundant"
+                                            Binding="{Binding Redundant}"
+                                            Width="70"
+                                            IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Not Placed -->
+                        <DataGridTextColumn Header="Not Placed"
+                                            Binding="{Binding NotPlaced}"
+                                            Width="70"
+                                            IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="#D32F2F"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Not Enclosed -->
+                        <DataGridTextColumn Header="Not Enclosed"
+                                            Binding="{Binding NotEnclosed}"
+                                            Width="80"
+                                            IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Ph. # -->
+                        <DataGridTextColumn Header="Ph. #"
+                                            Binding="{Binding PhaseNumber}"
+                                            Width="45"
+                                            IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="#D32F2F"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Phase -->
+                        <DataGridTextColumn Header="Phase"
+                                            Binding="{Binding Phase}"
+                                            Width="110"
+                                            IsReadOnly="True"/>
+
+                        <!-- Design Option -->
+                        <DataGridTextColumn Header="Design Option"
+                                            Binding="{Binding DesignOption}"
+                                            Width="*"
+                                            IsReadOnly="True"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Room source selection checkboxes -->
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <CheckBox x:Name="ChkHostModel"
+                              Content="Host Model"
+                              IsChecked="True"
+                              FontSize="11.5"
+                              Margin="0,0,20,0"
+                              Checked="OnSourceModelChanged"
+                              Unchecked="OnSourceCheckBoxChanged"/>
+
+                    <CheckBox x:Name="ChkLinkedModel"
+                              Content="Linked Model"
+                              IsChecked="False"
+                              FontSize="11.5"
+                              Margin="0,0,0,0"
+                              Checked="OnSourceModelChanged"
+                              Unchecked="OnSourceCheckBoxChanged"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+    </DockPanel>
+</Window>
