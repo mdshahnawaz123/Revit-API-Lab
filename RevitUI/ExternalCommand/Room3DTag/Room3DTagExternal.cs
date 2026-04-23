@@ -60,8 +60,7 @@ namespace RevitUI.ExternalCommand.Room3DTag
 
                 if (TagSymbolId != null && TagSymbolId != ElementId.InvalidElementId)
                 {
-                    var inst = doc.GetElement(TagSymbolId) as FamilyInstance;
-                    tagSymbol = inst?.Symbol;
+                    tagSymbol = doc.GetElement(TagSymbolId) as FamilySymbol;
                 }
 
                 // Fallback: find any symbol from the tag family
@@ -142,6 +141,18 @@ namespace RevitUI.ExternalCommand.Room3DTag
                             .OfType<Room>()
                             .Where(r => r.Area > 0 && r.Location != null)
                             .ToList();
+
+                        if (selectedPhase != null)
+                        {
+                            // Match linked phase by name since ElementIds differ between docs
+                            linkedRooms = linkedRooms.Where(r =>
+                            {
+                                var phParam = r.get_Parameter(BuiltInParameter.ROOM_PHASE);
+                                if (phParam == null) return false;
+                                var ph = linkDoc.GetElement(phParam.AsElementId());
+                                return ph != null && ph.Name == selectedPhase.Name;
+                            }).ToList();
+                        }
 
                         foreach (var room in linkedRooms)
                         {
