@@ -15,6 +15,7 @@ namespace B_Lab.RevitApp
         private const string? TAB_NAME = "BIM Digital Design";
         private const string? PANEL_NAME = "Opening";
         private const string? PANEL_NAME1 = "QC Panel";
+        private const string? PANEL_NAME2 = "Model";
 
         private static string? _assemblyFolder;
 
@@ -40,6 +41,11 @@ namespace B_Lab.RevitApp
                     .FirstOrDefault(p => p.Name == PANEL_NAME1)
                     ?? application.CreateRibbonPanel(TAB_NAME, PANEL_NAME1);
 
+                RibbonPanel panel2 = application
+                    .GetRibbonPanels(TAB_NAME)
+                    .FirstOrDefault(p => p.Name == PANEL_NAME2)
+                    ?? application.CreateRibbonPanel(TAB_NAME, PANEL_NAME2);
+
                 string dll = Path.Combine(_assemblyFolder!, "RevitUI.dll");
 
                 // ── Button Data ───────────────────────────────────────────────
@@ -62,7 +68,7 @@ namespace B_Lab.RevitApp
                 // ── Add to panels ─────────────────────────────────────────────
                 panel.AddStackedItems(mepBtn, dwBtn);
                 var paraButton = panel1.AddItem(paraBtn) as PushButton; 
-                var roomButton = panel1.AddItem(roomBtn) as PushButton; 
+                var roomButton = panel2.AddItem(roomBtn) as PushButton; 
 
                 // ── Help file paths ───────────────────────────────────────────
                 string mepHelpPath = Path.Combine(_assemblyFolder!, "Helper", "master-opening-sleeves-help.html");
@@ -112,12 +118,9 @@ namespace B_Lab.RevitApp
                         paraButton.SetContextualHelp(paraHelp);
                 }
 
-                // ── Setup Room 3D Tag button (panel1) ─────────────────────────
+                // ── Setup Room 3D Tag button (Model panel) ────────────────────
                 if (roomButton != null)
                 {
-                    var img = ImageUtils.GetEmbeddedImage("DataLab.Resources.Wall.png");
-                    roomButton.Image = img;
-                    roomButton.LargeImage = img;
                     roomButton.ToolTip = "3D Room Tag - Create and sync 3D tags for rooms in Host and Linked models.";
                 }
 

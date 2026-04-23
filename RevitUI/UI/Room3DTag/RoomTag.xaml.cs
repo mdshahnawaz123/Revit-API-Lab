@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -28,6 +29,14 @@ namespace RevitUI.UI.Room3DTag
     /// </summary>
     public partial class RoomTag : Window
     {
+        // ── Win32 singleton helpers ───────────────────────────────────────────
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        private static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
+        [DllImport("user32.dll")] private static extern bool IsWindow(IntPtr hWnd);
+        [DllImport("user32.dll")] private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr hWnd);
+        private const int SW_RESTORE = 9;
+
         private Document doc;
         private UIDocument uidoc;
         private ExternalEvent externalEvent;
@@ -42,9 +51,25 @@ namespace RevitUI.UI.Room3DTag
         public ObservableCollection<RoomSourceModel> RoomSourceModels { get; set; }
             = new ObservableCollection<RoomSourceModel>();
 
+        // ── Singleton factory ─────────────────────────────────────────────────
+        public static void GetOrCreate(Document doc, UIDocument uidoc)
+        {
+            const string title = "BIM Digital Design";
+            IntPtr hwnd = FindWindow(null, title);
+            if (hwnd != IntPtr.Zero && IsWindow(hwnd))
+            {
+                ShowWindow(hwnd, SW_RESTORE);
+                SetForegroundWindow(hwnd);
+                return;
+            }
+            new RoomTag(doc, uidoc).Show();
+        }
+
+        // ── Constructor ───────────────────────────────────────────────────────
         public RoomTag(Document doc, UIDocument uidoc)
         {
             InitializeComponent();
+            this.HideIcon();
             this.doc = doc;
             this.uidoc = uidoc;
             room3DTagExternal = new Room3DTagExternal();
@@ -57,6 +82,7 @@ namespace RevitUI.UI.Room3DTag
             externalEventSync = ExternalEvent.Create(syncTagHandler);
             info();
         }
+
 
         public void info()
         {
@@ -147,11 +173,7 @@ namespace RevitUI.UI.Room3DTag
         {
             if (ChkHostModel == null || ChkLinkedModel == null) return;
 
-            if (sender == ChkHostModel && ChkHostModel.IsChecked == true)
-                ChkLinkedModel.IsChecked = false;
-            else if (sender == ChkLinkedModel && ChkLinkedModel.IsChecked == true)
-                ChkHostModel.IsChecked = false;
-
+            // Both can be checked at the same time — no mutual exclusion
             LoadRoomSourceModels();
         }
 
@@ -335,7 +357,7 @@ namespace RevitUI.UI.Room3DTag
             // Update existing flag
             room3DTagExternal.UpdateExisting = ChkUpdateExisting.IsChecked == true;
 
-            // Tag family type (handler expects Symbol Id)
+            // Tag family type
             if (RoomTagTypeComboBox.SelectedItem is FamilySymbol selectedSymbol)
                 room3DTagExternal.TagSymbolId = selectedSymbol.Id;
             else
@@ -355,6 +377,15 @@ namespace RevitUI.UI.Room3DTag
 
         private void BtnSync_Click(object sender, RoutedEventArgs e)
         {
+            // Pass workset selection
+            if (WorksetComboBox.SelectedItem is Workset selectedWorkset)
+                syncTagHandler.SelectedWorksetId = selectedWorkset.Id.IntegerValue;
+            else
+                syncTagHandler.SelectedWorksetId = -1;
+
+            // Pass scope: Active View or All Models
+            syncTagHandler.ActiveViewOnly = ActiveViewCheckBox.IsChecked == true;
+
             externalEventSync.Raise();
         }
     }

@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DataLab.Extensions;
 using System;
@@ -100,10 +100,12 @@ namespace RevitUI.ExternalCommand.Room3DTag
                 if (confirm != TaskDialogResult.Yes) return;
 
                 // ── Delete in a single transaction ────────────────────────────────────
-                doc.DoAction(() =>
+                using (Transaction tx = new Transaction(doc, "Delete Existing 3D Room Tags"))
                 {
+                    tx.Start();
                     doc.Delete(uniqueIds);
-                }, "Delete Existing 3D Room Tags");
+                    tx.Commit();
+                }
 
                 TaskDialog.Show("Deleted Successfully",
                     $"Deleted {uniqueIds.Count} tag(s).\n\n{sb}");

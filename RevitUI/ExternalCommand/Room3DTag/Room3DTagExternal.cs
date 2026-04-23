@@ -15,28 +15,11 @@ namespace RevitUI.ExternalCommand.Room3DTag
 
         // ── Properties set by the UI before Raise() ──────────────────────────
 
-        /// <summary>ElementId of the Phase selected in PhaseComboBox.</summary>
         public ElementId SelectedPhaseId { get; set; }
-
-        /// <summary>Workset ID selected in WorksetComboBox (-1 = not set).</summary>
         public int SelectedWorksetId { get; set; } = -1;
-
-        /// <summary>
-        /// When true, update existing 3D tag instances of the selected type
-        /// (Name/Number) while preserving their manual positions.
-        /// When false, skip existing tags and only create missing ones.
-        /// </summary>
         public bool UpdateExisting { get; set; } = true;
-
-        /// <summary>
-        /// The FamilySymbol (type) of the "3D Room Tag (BDD)" family to place.
-        /// </summary>
         public ElementId TagSymbolId { get; set; }
-
-        /// <summary>Include rooms from the host model.</summary>
         public bool IncludeHostModel { get; set; } = true;
-
-        /// <summary>Include rooms from linked models.</summary>
         public bool IncludeLinkedModel { get; set; } = false;
 
         // ─────────────────────────────────────────────────────────────────────
@@ -44,14 +27,13 @@ namespace RevitUI.ExternalCommand.Room3DTag
         public void Execute(UIApplication app)
         {
             var uidoc = app.ActiveUIDocument;
-            var doc = uidoc.Document;
+            var doc = uidoc?.Document;
 
             try
             {
                 if (!IncludeHostModel && !IncludeLinkedModel)
                 {
-                    TaskDialog.Show("Info",
-                        "Please select at least one source:\n• Host Model\n• Linked Model");
+                    TaskDialog.Show("Info", "Please select at least one source:\n• Host Model\n• Linked Model");
                     return;
                 }
 
@@ -63,7 +45,6 @@ namespace RevitUI.ExternalCommand.Room3DTag
                     tagSymbol = doc.GetElement(TagSymbolId) as FamilySymbol;
                 }
 
-                // Fallback: find any symbol from the tag family
                 if (tagSymbol == null)
                 {
                     tagSymbol = new FilteredElementCollector(doc)
@@ -75,20 +56,15 @@ namespace RevitUI.ExternalCommand.Room3DTag
 
                 if (tagSymbol == null)
                 {
-                    TaskDialog.Show("Error",
-                        $"Family \"{TagFamilyName}\" not found in the project.\n" +
-                        "Please load it first.");
+                    TaskDialog.Show("Error", $"Family \"{TagFamilyName}\" not found in the project.\n" + "Please load it first.");
                     return;
                 }
 
-                // ── Resolve Phase ────────────────────────────────────────────
                 Phase selectedPhase = null;
                 if (SelectedPhaseId != null && SelectedPhaseId != ElementId.InvalidElementId)
                     selectedPhase = doc.GetElement(SelectedPhaseId) as Phase;
 
-                // ── Collect rooms from selected sources ──────────────────────
-                // Each entry: (Room, point in host coordinates, unique key)
-                var roomEntries = new List<(Room room, XYZ point, string roomKey)>();
+                var roomEntries = new List<(Room room, XYZ point, string roomKey, double elevation)>();
 
                 if (IncludeHostModel)
                 {
@@ -97,10 +73,9 @@ namespace RevitUI.ExternalCommand.Room3DTag
                         .WhereElementIsNotElementType()
                         .Cast<SpatialElement>()
                         .OfType<Room>()
-                        .Where(r => r.Area > 0 && r.Location != null)
+                        .Where(r => r.Location != null)
                         .ToList();
 
-                    // Filter by phase
                     if (selectedPhase != null)
                     {
                         hostRooms = hostRooms.Where(r =>
@@ -114,8 +89,8 @@ namespace RevitUI.ExternalCommand.Room3DTag
                     {
                         var loc = room.Location as LocationPoint;
                         if (loc == null) continue;
-                        // Key = "HOST_<elementId>" to ensure uniqueness
-                        roomEntries.Add((room, loc.Point, $"HOST_{room.Id.Value}"));
+                        double elev = room.Level?.Elevation ?? loc.Point.Z;
+                        roomEntries.Add((room, loc.Point, $"HOST_{room.Id.Value}", elev));
                     }
                 }
 
@@ -139,12 +114,11 @@ namespace RevitUI.ExternalCommand.Room3DTag
                             .WhereElementIsNotElementType()
                             .Cast<SpatialElement>()
                             .OfType<Room>()
-                            .Where(r => r.Area > 0 && r.Location != null)
+                            .Where(r => r.Location != null)
                             .ToList();
 
                         if (selectedPhase != null)
                         {
-                            // Match linked phase by name since ElementIds differ between docs
                             linkedRooms = linkedRooms.Where(r =>
                             {
                                 var phParam = r.get_Parameter(BuiltInParameter.ROOM_PHASE);
@@ -158,10 +132,9 @@ namespace RevitUI.ExternalCommand.Room3DTag
                         {
                             var loc = room.Location as LocationPoint;
                             if (loc == null) continue;
-                            // Transform linked point to host coordinates
                             XYZ hostPoint = transform.OfPoint(loc.Point);
-                            // Key = "LINK_<linkInstanceId>_<elementId>" to ensure uniqueness
-                            roomEntries.Add((room, hostPoint, $"LINK_{link.Id.Value}_{room.Id.Value}"));
+                            double elev = room.Level != null ? transform.OfPoint(new XYZ(0, 0, room.Level.Elevation)).Z : hostPoint.Z;
+                            roomEntries.Add((room, hostPoint, $"LINK_{link.Id.Value}_{room.Id.Value}", elev));
                         }
                     }
                 }
@@ -172,7 +145,6 @@ namespace RevitUI.ExternalCommand.Room3DTag
                     return;
                 }
 
-                // ── Collect existing tags and build RoomId lookup ─────────────
                 var existingTags = new FilteredElementCollector(doc)
                     .OfClass(typeof(FamilyInstance))
                     .OfCategory(BuiltInCategory.OST_GenericModel)
@@ -180,14 +152,12 @@ namespace RevitUI.ExternalCommand.Room3DTag
                     .Where(fi => fi.Symbol?.Family?.Name == TagFamilyName)
                     .ToList();
 
-                // Build a set of RoomId values that already have a tag placed
                 var taggedRoomIds = new HashSet<string>();
-                // Also build a lookup for update-existing logic
                 var tagByRoomId = new Dictionary<string, FamilyInstance>();
 
                 foreach (var tag in existingTags)
                 {
-                    var roomIdParam = tag.LookupParameter("RoomId");
+                    var roomIdParam = tag.GetParameters("RoomId").FirstOrDefault(p => !p.IsReadOnly) ?? tag.GetParameters("RoomId").FirstOrDefault();
                     if (roomIdParam != null)
                     {
                         string rid = "";
@@ -200,8 +170,6 @@ namespace RevitUI.ExternalCommand.Room3DTag
 
                         if (!string.IsNullOrEmpty(rid))
                         {
-                            // If it's a numeric-only key, we assume it's a host room ID
-                            // (since links require prefixed keys which numeric params can't store)
                             string normalizedRid = rid;
                             if (int.TryParse(rid, out _) && !rid.StartsWith("HOST_") && !rid.StartsWith("LINK_"))
                                 normalizedRid = "HOST_" + rid;
@@ -218,12 +186,13 @@ namespace RevitUI.ExternalCommand.Room3DTag
                 int skipped = 0;
                 var sb = new StringBuilder();
 
-                doc.DoAction(() =>
+                using (Transaction tx = new Transaction(doc, "Create / Update 3D Room Tags"))
                 {
-                    if (!tagSymbol.IsActive)
-                        tagSymbol.Activate();
+                    tx.Start();
 
-                    foreach (var (room, point, roomKey) in roomEntries)
+                    if (!tagSymbol.IsActive) tagSymbol.Activate();
+
+                    foreach (var (room, point, roomKey, elev) in roomEntries)
                     {
                         string roomName = room.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? "";
                         string roomNumber = room.get_Parameter(BuiltInParameter.ROOM_NUMBER)?.AsString() ?? "";
@@ -233,44 +202,80 @@ namespace RevitUI.ExternalCommand.Room3DTag
                         {
                             if (UpdateExisting && tagByRoomId.TryGetValue(roomKey, out var existingTag))
                             {
-                                SetTagParameters(existingTag, roomName, roomNumber);
+                                var existingNameParam = existingTag.GetParameters("Name").FirstOrDefault(p => !p.IsReadOnly);
+                                var existingNumberParam = existingTag.GetParameters("Number").FirstOrDefault(p => !p.IsReadOnly);
 
-                                if (SelectedWorksetId >= 0)
+                                string existingName = existingNameParam?.AsString() ?? "";
+                                string existingNumber = existingNumberParam?.AsString() ?? "";
+                                
+                                bool nameChanged = existingName != roomName;
+                                bool numberChanged = existingNumber != roomNumber;
+
+                                if (nameChanged || numberChanged)
                                 {
-                                    var wsParam = existingTag.get_Parameter(BuiltInParameter.ELEM_PARTITION_PARAM);
-                                    if (wsParam != null && !wsParam.IsReadOnly)
-                                        wsParam.Set(SelectedWorksetId);
-                                }
+                                    SetTagParameters(existingTag, roomName, roomNumber);
 
-                                updated++;
-                                sb.AppendLine($"  ✔ Updated: {roomNumber} | {roomName}");
+                                    if (SelectedWorksetId >= 0)
+                                    {
+                                        var wsParam = existingTag.get_Parameter(BuiltInParameter.ELEM_PARTITION_PARAM);
+                                        if (wsParam != null && !wsParam.IsReadOnly)
+                                            wsParam.Set(SelectedWorksetId);
+                                    }
+
+                                    updated++;
+                                    sb.AppendLine($"  ✔ Updated: {roomNumber} | {roomName}");
+                                }
+                                else
+                                {
+                                    skipped++;
+                                }
                             }
                             else
                             {
                                 skipped++;
-                                sb.AppendLine($"  ⏭ Skipped (exists): {roomNumber} | {roomName}");
                             }
                             continue;
                         }
 
                         // ── Place a new tag instance ─────────────────────────
-                        var newTag = doc.Create.NewFamilyInstance(
-                            point,
-                            tagSymbol,
-                            Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
+                        Level hostLevel = GetClosestLevel(doc, elev);
+                        FamilyInstance newTag = null;
+
+                        if (hostLevel != null)
+                        {
+                            newTag = doc.Create.NewFamilyInstance(
+                                point,
+                                tagSymbol,
+                                hostLevel,
+                                Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
+                        }
+                        else
+                        {
+                            newTag = doc.Create.NewFamilyInstance(
+                                point,
+                                tagSymbol,
+                                Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
+                        }
 
                         if (newTag == null) { skipped++; continue; }
 
                         // Store the room key so we can track this tag
-                        var roomIdParam = newTag.LookupParameter("RoomId");
-                        if (roomIdParam != null && !roomIdParam.IsReadOnly)
+                        var roomIdParam = newTag.GetParameters("RoomId").FirstOrDefault(p => !p.IsReadOnly);
+                        if (roomIdParam != null)
                         {
                             if (roomIdParam.StorageType == StorageType.String)
+                            {
                                 roomIdParam.Set(roomKey);
+                            }
                             else if (roomIdParam.StorageType == StorageType.Integer)
-                                roomIdParam.Set(room.Id.Value);
+                            {
+                                // Handle Revit 2024+ ElementId (long) cast to int for Parameter.Set
+                                roomIdParam.Set((int)room.Id.Value);
+                            }
                             else if (roomIdParam.StorageType == StorageType.Double)
+                            {
                                 roomIdParam.Set((double)room.Id.Value);
+                            }
                         }
 
                         SetTagParameters(newTag, roomName, roomNumber);
@@ -294,9 +299,10 @@ namespace RevitUI.ExternalCommand.Room3DTag
                         created++;
                         sb.AppendLine($"  + Created: {roomNumber} | {roomName}");
                     }
-                }, "Create / Update 3D Room Tags");
 
-                // ── Summary ──────────────────────────────────────────────────
+                    tx.Commit();
+                }
+
                 var summary = new StringBuilder();
                 summary.AppendLine($"Created:  {created}");
                 summary.AppendLine($"Updated:  {updated}");
@@ -309,22 +315,28 @@ namespace RevitUI.ExternalCommand.Room3DTag
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("Error", $"{ex.Message}\n\n{ex.StackTrace}");
+                TaskDialog.Show("Error", $"Exception in Room3DTagExternal.Execute:\n\n{ex.Message}\n\n{ex.StackTrace}");
             }
         }
 
-        /// <summary>
-        /// Sets the "Name" and "Number" instance parameters on a 3D Room Tag family instance.
-        /// </summary>
         private static void SetTagParameters(FamilyInstance tag, string name, string number)
         {
-            var nameParam = tag.LookupParameter("Name");
-            if (nameParam != null && !nameParam.IsReadOnly)
+            var nameParam = tag.GetParameters("Name").FirstOrDefault(p => !p.IsReadOnly);
+            if (nameParam != null)
                 nameParam.Set(name);
 
-            var numberParam = tag.LookupParameter("Number");
-            if (numberParam != null && !numberParam.IsReadOnly)
+            var numberParam = tag.GetParameters("Number").FirstOrDefault(p => !p.IsReadOnly);
+            if (numberParam != null)
                 numberParam.Set(number);
+        }
+
+        private static Level GetClosestLevel(Document doc, double elevation)
+        {
+            return new FilteredElementCollector(doc)
+                .OfClass(typeof(Level))
+                .Cast<Level>()
+                .OrderBy(l => Math.Abs(l.Elevation - elevation))
+                .FirstOrDefault();
         }
 
         public string GetName() => "Create / Update 3D Room Tags";

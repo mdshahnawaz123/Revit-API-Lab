@@ -1,14 +1,11 @@
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RevitUI.Command
 {
-    [Autodesk.Revit.Attributes.Transaction(Autodesk.Revit.Attributes.TransactionMode.Manual)]
+    [Transaction(TransactionMode.Manual)]
     public class Room3DTag : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -21,14 +18,14 @@ namespace RevitUI.Command
 
             try
             {
-                var frm = new RevitUI.UI.Room3DTag.RoomTag(doc, uidoc);
-                frm.Show();
+                RevitUI.UI.Room3DTag.RoomTag.GetOrCreate(doc, uidoc);
             }
             catch (Exception ex)
             {
                 message = ex.Message;
                 return Result.Failed;
             }
+
             return Result.Succeeded;
         }
     }
