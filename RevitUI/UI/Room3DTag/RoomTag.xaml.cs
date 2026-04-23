@@ -98,7 +98,7 @@ namespace RevitUI.UI.Room3DTag
                         {
                             if (stream != null)
                             {
-                                string tempPath = Path.Combine(Path.GetTempPath(), familyName + ".rfa");
+                                string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), familyName + ".rfa");
                                 using (FileStream fileStream = File.Create(tempPath))
                                 {
                                     stream.CopyTo(fileStream);
