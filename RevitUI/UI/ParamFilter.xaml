@@ -10,7 +10,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/RevitUI;component/UI/Styles.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/B_Lab_RevitUI;component/UI/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Label style -->

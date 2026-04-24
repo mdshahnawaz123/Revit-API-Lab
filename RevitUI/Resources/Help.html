@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Room 3D Text Generator - Help Document</title>
+    <title>BIM Digital Design - Room 3D Tag</title>
 
     <style>
         body {
@@ -14,46 +14,23 @@
 
         h1 {
             color: #2c3e50;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 5px;
         }
 
         h2 {
             color: #34495e;
-            margin-top: 30px;
-        }
-
-        p {
-            line-height: 1.6;
-        }
-
-        ul {
-            margin-left: 20px;
+            margin-top: 25px;
         }
 
         .section {
-            background: white;
+            background: #fff;
             padding: 20px;
             margin-bottom: 20px;
             border-radius: 6px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        .header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-            .header img {
-                width: 80px;
-                margin-right: 20px;
-            }
-
-        .footer {
-            margin-top: 40px;
-            font-size: 12px;
-            color: gray;
+        ul {
+            margin-left: 20px;
         }
 
         .code {
@@ -62,149 +39,106 @@
             border-radius: 4px;
             font-family: Consolas;
         }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: gray;
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- HEADER -->
-    <div class="header">
-        <img src="icon.png" alt="App Icon">
-        <div>
-            <h1>Room 3D Text Generator</h1>
-            <p><strong>Revit Add-in for Automatic 3D Room Labeling</strong></p>
-        </div>
-    </div>
+    <h1>BIM Digital Design – Room 3D Tag Generator</h1>
+    <p><strong>Autodesk Revit Add-in for Automatic 3D Room Labeling</strong></p>
 
-    <!-- DESCRIPTION -->
     <div class="section">
         <h2>Description</h2>
         <p>
-            The <strong>Room 3D Text Generator</strong> automatically creates 3D model text
-            for all rooms in your Revit project based on room names (and optionally numbers).
-        </p>
-        <p>
-            This enhances visualization in 3D views and helps with presentation,
-            coordination, and model readability.
+            The Room 3D Tag Generator automatically creates 3D text labels for rooms
+            in a Revit model using room names and/or numbers. It enhances model
+            readability, coordination, and presentation in 3D views.
         </p>
     </div>
 
-    <!-- GENERAL USAGE -->
     <div class="section">
-        <h2>General Usage Instructions</h2>
+        <h2>Key Features</h2>
         <ul>
-            <li>Open your Revit project.</li>
-            <li>Navigate to the <strong>Add-Ins</strong> tab.</li>
-            <li>Click <strong>Room 3D Text</strong>.</li>
-            <li>The tool will automatically:</li>
-            <ul>
-                <li>Collect all placed rooms</li>
-                <li>Read room names</li>
-                <li>Place 3D text at the center of each room</li>
-            </ul>
-        </ul>
-    </div>
-
-    <!-- FEATURES -->
-    <div class="section">
-        <h2>Features</h2>
-        <ul>
-            <li>Automatically generates 3D room labels</li>
+            <li>Automatic 3D room tag generation</li>
             <li>Uses room name and/or number</li>
-            <li>Places text at room center</li>
+            <li>Places tags at the center of rooms</li>
             <li>Visible in 3D, plan, and section views</li>
             <li>Supports large models</li>
         </ul>
     </div>
 
-    <!-- HOW IT WORKS -->
-    <div class="section">
-        <h2>How It Works</h2>
-        <ul>
-            <li>Collects elements from <strong>OST_Rooms</strong></li>
-            <li>Retrieves room location (LocationPoint)</li>
-            <li>Places Generic Model family instance</li>
-            <li>Sets parameter value to Room Name</li>
-        </ul>
-    </div>
-
-    <!-- INSTALLATION -->
     <div class="section">
         <h2>Installation</h2>
-        <p><strong>Steps:</strong></p>
         <ul>
-            <li>Copy the <strong>.addin</strong> file to:</li>
+            <li>Run the BIM Digital Design Setup (.exe)</li>
+            <li>Installer automatically detects Revit versions (2024–2027)</li>
+            <li>Copies required DLL and .addin files to correct locations</li>
+            <li>No manual configuration required</li>
         </ul>
+    </div>
 
+    <div class="section">
+        <h2>Installed File Locations</h2>
         <div class="code">
-            C:\ProgramData\Autodesk\Revit\Addins\2024
+            C:\ProgramData\Autodesk\Revit\Addins\2024<br>
+            C:\ProgramData\Autodesk\Revit\Addins\2025<br>
+            C:\ProgramData\Autodesk\Revit\Addins\2026<br>
+            C:\ProgramData\Autodesk\Revit\Addins\2027
         </div>
-
-        <ul>
-            <li>Copy the DLL file to the same folder</li>
-            <li>Restart Revit</li>
-        </ul>
     </div>
 
-    <!-- FAMILY REQUIREMENTS -->
     <div class="section">
-        <h2>Family Requirements</h2>
+        <h2>Usage</h2>
         <ul>
-            <li>Category: Generic Model</li>
-            <li>Contains Model Text element</li>
-            <li>Text parameter linked to "RoomName"</li>
+            <li>Open your Revit project</li>
+            <li>Navigate to the BIM Digital Design tab</li>
+            <li>Click "Room 3D Tag"</li>
+            <li>The tool automatically generates tags for all rooms</li>
         </ul>
     </div>
 
-    <!-- KNOWN ISSUES -->
     <div class="section">
-        <h2>Known Issues</h2>
+        <h2>Uninstallation</h2>
         <ul>
-            <li>Rooms without location are skipped</li>
-            <li>Unplaced rooms are ignored</li>
-            <li>Large models may affect performance</li>
+            <li>Use Windows "Add or Remove Programs"</li>
+            <li>All DLL, add-in, and dependency files are automatically removed</li>
+            <li>No manual cleanup required</li>
         </ul>
     </div>
 
-    <!-- LIMITATIONS -->
     <div class="section">
         <h2>Limitations</h2>
         <ul>
             <li>Supports Rooms only (Spaces not included)</li>
-            <li>Requires valid room boundaries</li>
+            <li>Requires valid room placement</li>
         </ul>
     </div>
 
-    <!-- TROUBLESHOOTING -->
     <div class="section">
         <h2>Troubleshooting</h2>
         <ul>
-            <li>If no text appears, check if rooms are placed</li>
-            <li>Ensure family is loaded correctly</li>
-            <li>Verify model text visibility in view settings</li>
+            <li>Ensure rooms are placed in the model</li>
+            <li>Verify required family is loaded</li>
+            <li>Check visibility settings in the view</li>
         </ul>
     </div>
 
-    <!-- CONTACT -->
     <div class="section">
-        <h2>Contact</h2>
+        <h2>Developer</h2>
         <p>
-            Developer: Mohammad Shahnawaz<br>
+            Mohammad Shahnawaz<br>
             Email: mdshahnawaz9570@gmail.com
         </p>
     </div>
 
-    <!-- VERSION -->
-    <div class="section">
-        <h2>Version History</h2>
-        <ul>
-            <li><strong>v1.0</strong> – Initial release</li>
-        </ul>
-    </div>
-
-    <!-- FOOTER -->
     <div class="footer">
-        © 2026 Your Company. All rights reserved.
+        © 2026 BIM Digital Design. All rights reserved.
     </div>
 
 </body>
