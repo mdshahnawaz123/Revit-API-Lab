@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:RevitUI.UI"
         Height="450" Width="500"
         Title="BIM Digital Design"
-        Icon="/DataLab;component/Resources/Door.png"
+        Icon="{x:Null}"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">
 

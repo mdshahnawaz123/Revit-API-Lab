@@ -141,6 +141,9 @@ namespace B_Lab.RevitApp
                         roomButton.SetContextualHelp(roomHelp);
                 }
 
+                // Check GitHub for updates asynchronously
+                BDDUpdater.CheckForUpdates(application);
+
                 return Result.Succeeded;
             }
             catch (Exception ex)

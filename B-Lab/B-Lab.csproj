@@ -10,9 +10,11 @@
 		<UseWPF>true</UseWPF>
 		<Prefer32Bit>false</Prefer32Bit>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<Version>1.0.0.0</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
 		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.7.0" />
@@ -56,10 +58,6 @@
 </RevitAddIns>]]></AddinContent>
 		</PropertyGroup>
 		
-		<WriteLinesToFile 
-			File="$(CommonApplicationData)\Autodesk\Revit\Addins\%(RevitVersion.Identity)\B-Lab.addin" 
-			Lines="$(AddinContent)" 
-			Overwrite="true" 
-			Encoding="UTF-8" />
+		<WriteLinesToFile File="$(CommonApplicationData)\Autodesk\Revit\Addins\%(RevitVersion.Identity)\B-Lab.addin" Lines="$(AddinContent)" Overwrite="true" Encoding="UTF-8" />
 	</Target>
 </Project>
