@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Windows.Media;
@@ -8,10 +8,10 @@ namespace DataLab.Resources
 {
     public static class ImageUtils
     {
-        public static ImageSource GetEmbeddedImage(string resourceName)
+        public static ImageSource GetEmbeddedImage(string resourceName, Assembly sourceAssembly = null)
         {
-            // ✅ Always load from THIS assembly (DataLab)
-            Assembly assembly = typeof(ImageUtils).Assembly;
+            // ✅ Load from provided assembly, or fallback to THIS assembly (DataLab)
+            Assembly assembly = sourceAssembly ?? typeof(ImageUtils).Assembly;
 
             using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             {

@@ -37,4 +37,16 @@
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\*.rfa" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Resources\3DTag.png" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\3DTag.png" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="Resources\Help.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>Helper\Help.html</Link>
+		</Content>
+	</ItemGroup>
 </Project>

@@ -73,6 +73,7 @@ namespace B_Lab.RevitApp
                 // ── Help file paths ───────────────────────────────────────────
                 string mepHelpPath = Path.Combine(_assemblyFolder!, "Helper", "master-opening-sleeves-help.html");
                 string paraHelpPath = Path.Combine(_assemblyFolder!, "Helper", "ParameterFilterHelp.html"); // ✅ F1 for ParamFilter
+                string roomHelpPath = Path.Combine(_assemblyFolder!, "Helper", "Help.html"); // ✅ F1 for Room 3D Tag
 
                 ContextualHelp? mepHelp = File.Exists(mepHelpPath)
                     ? new ContextualHelp(ContextualHelpType.Url, mepHelpPath)
@@ -80,6 +81,10 @@ namespace B_Lab.RevitApp
 
                 ContextualHelp? paraHelp = File.Exists(paraHelpPath)
                     ? new ContextualHelp(ContextualHelpType.Url, paraHelpPath)
+                    : null;
+
+                ContextualHelp? roomHelp = File.Exists(roomHelpPath)
+                    ? new ContextualHelp(ContextualHelpType.Url, roomHelpPath)
                     : null;
 
                 // ── Setup Opening panel buttons ───────────────────────────────
@@ -121,7 +126,19 @@ namespace B_Lab.RevitApp
                 // ── Setup Room 3D Tag button (Model panel) ────────────────────
                 if (roomButton != null)
                 {
+                    try 
+                    {
+                        Assembly revitUIAssembly = Assembly.LoadFrom(dll);
+                        var img = ImageUtils.GetEmbeddedImage("RevitUI.Resources.3DTag.png", revitUIAssembly);
+                        roomButton.Image = img;
+                        roomButton.LargeImage = img;
+                    }
+                    catch { /* Fallback if image fails to load */ }
+
                     roomButton.ToolTip = "3D Room Tag - Create and sync 3D tags for rooms in Host and Linked models.";
+
+                    if (roomHelp != null)
+                        roomButton.SetContextualHelp(roomHelp);
                 }
 
                 return Result.Succeeded;
