@@ -94,6 +94,19 @@ namespace RevitUI.ExternalCommand.Room3DTag
                     {
                         var loc = room.Location as LocationPoint;
                         if (loc == null) continue;
+
+                        if (ActiveViewOnly && uidoc.ActiveView.CropBoxActive)
+                        {
+                            var cropBox = uidoc.ActiveView.CropBox;
+                            var pView = cropBox.Transform.Inverse.OfPoint(loc.Point);
+                            if (pView.X < cropBox.Min.X || pView.X > cropBox.Max.X ||
+                                pView.Y < cropBox.Min.Y || pView.Y > cropBox.Max.Y ||
+                                pView.Z < cropBox.Min.Z || pView.Z > cropBox.Max.Z)
+                            {
+                                continue; // Skip rooms whose location point is outside the active view crop box
+                            }
+                        }
+
                         double elev = room.Level?.Elevation ?? loc.Point.Z;
                         roomEntries.Add((room, loc.Point, $"HOST_{room.Id.Value}", elev));
                     }
