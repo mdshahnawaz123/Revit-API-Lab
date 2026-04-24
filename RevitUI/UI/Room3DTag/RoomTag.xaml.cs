@@ -367,6 +367,9 @@ namespace RevitUI.UI.Room3DTag
             room3DTagExternal.IncludeHostModel = ChkHostModel.IsChecked == true;
             room3DTagExternal.IncludeLinkedModel = ChkLinkedModel.IsChecked == true;
 
+            // Scope
+            room3DTagExternal.ActiveViewOnly = ActiveViewCheckBox.IsChecked == true;
+
             externalEvent.Raise();
         }
 

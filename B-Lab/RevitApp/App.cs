@@ -46,7 +46,7 @@ namespace B_Lab.RevitApp
                     .FirstOrDefault(p => p.Name == PANEL_NAME2)
                     ?? application.CreateRibbonPanel(TAB_NAME, PANEL_NAME2);
 
-                string dll = Path.Combine(_assemblyFolder!, "RevitUI.dll");
+                string dll = Path.Combine(_assemblyFolder!, "B_Lab_RevitUI.dll");
 
                 // ── Button Data ───────────────────────────────────────────────
                 var mepBtn = new PushButtonData(

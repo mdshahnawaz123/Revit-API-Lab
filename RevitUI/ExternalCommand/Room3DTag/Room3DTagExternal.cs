@@ -21,6 +21,7 @@ namespace RevitUI.ExternalCommand.Room3DTag
         public ElementId TagSymbolId { get; set; }
         public bool IncludeHostModel { get; set; } = true;
         public bool IncludeLinkedModel { get; set; } = false;
+        public bool ActiveViewOnly { get; set; } = false;
 
         // ─────────────────────────────────────────────────────────────────────
 
@@ -68,7 +69,11 @@ namespace RevitUI.ExternalCommand.Room3DTag
 
                 if (IncludeHostModel)
                 {
-                    var hostRooms = new FilteredElementCollector(doc)
+                    var hostRoomsCollector = ActiveViewOnly
+                        ? new FilteredElementCollector(doc, uidoc.ActiveView.Id)
+                        : new FilteredElementCollector(doc);
+
+                    var hostRooms = hostRoomsCollector
                         .OfCategory(BuiltInCategory.OST_Rooms)
                         .WhereElementIsNotElementType()
                         .Cast<SpatialElement>()
@@ -133,6 +138,19 @@ namespace RevitUI.ExternalCommand.Room3DTag
                             var loc = room.Location as LocationPoint;
                             if (loc == null) continue;
                             XYZ hostPoint = transform.OfPoint(loc.Point);
+
+                            if (ActiveViewOnly && uidoc.ActiveView.CropBoxActive)
+                            {
+                                var cropBox = uidoc.ActiveView.CropBox;
+                                var pView = cropBox.Transform.Inverse.OfPoint(hostPoint);
+                                if (pView.X < cropBox.Min.X || pView.X > cropBox.Max.X ||
+                                    pView.Y < cropBox.Min.Y || pView.Y > cropBox.Max.Y ||
+                                    pView.Z < cropBox.Min.Z || pView.Z > cropBox.Max.Z)
+                                {
+                                    continue; // Skip rooms outside the active view crop box
+                                }
+                            }
+
                             double elev = room.Level != null ? transform.OfPoint(new XYZ(0, 0, room.Level.Elevation)).Z : hostPoint.Z;
                             roomEntries.Add((room, hostPoint, $"LINK_{link.Id.Value}_{room.Id.Value}", elev));
                         }
@@ -145,7 +163,11 @@ namespace RevitUI.ExternalCommand.Room3DTag
                     return;
                 }
 
-                var existingTags = new FilteredElementCollector(doc)
+                var existingTagsCollector = ActiveViewOnly
+                    ? new FilteredElementCollector(doc, uidoc.ActiveView.Id)
+                    : new FilteredElementCollector(doc);
+
+                var existingTags = existingTagsCollector
                     .OfClass(typeof(FamilyInstance))
                     .OfCategory(BuiltInCategory.OST_GenericModel)
                     .Cast<FamilyInstance>()
