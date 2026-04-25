@@ -1,23 +1,19 @@
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
+using Newtonsoft.Json.Linq;
+using System.Diagnostics;
 
 namespace B_Lab.RevitApp
 {
     public static class BDDUpdater
     {
-        // Reference to your new public GitHub repository for releases
-        // Replace 'BDD-Releases' with whatever you name your new repository!
-        private const string GITHUB_VERSION_URL = "https://raw.githubusercontent.com/mdshahnawaz123/BDD-Releases/main/version.txt";
-        
-        // Where the user should be taken to download the new setup file
-        private const string DOWNLOAD_URL = "https://github.com/mdshahnawaz123/BDD-Releases/releases/latest";
+        private const string GITHUB_API_URL = "https://api.github.com/repos/mdshahnawaz123/BDD-Releases/releases/latest";
+        private const string GITHUB_RELEASES_PAGE = "https://github.com/mdshahnawaz123/BDD-Releases/releases/latest";
 
-        /// <summary>
-        /// Checks GitHub for a newer version asynchronously and prompts the user if one is found.
-        /// </summary>
         public static void CheckForUpdates(UIControlledApplication app)
         {
             Task.Run(async () =>
@@ -26,48 +22,120 @@ namespace B_Lab.RevitApp
                 {
                     using (HttpClient client = new HttpClient())
                     {
-                        // Add a small delay so we don't bog down Revit during its initial startup
                         await Task.Delay(3000);
-
-                        // Disable caching to ensure we get the fresh version file
+                        client.DefaultRequestHeaders.Add("User-Agent", "BDD-Revit-Updater");
                         client.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue { NoCache = true };
                         
-                        string latestVersionStr = await client.GetStringAsync(GITHUB_VERSION_URL);
-                        latestVersionStr = latestVersionStr.Trim();
+                        string jsonResponse = await client.GetStringAsync(GITHUB_API_URL);
+                        JObject releaseInfo = JObject.Parse(jsonResponse);
+                        
+                        string tagName = releaseInfo["tag_name"]?.ToString();
+                        if (string.IsNullOrEmpty(tagName)) return;
 
-                        if (Version.TryParse(latestVersionStr, out Version latestVersion))
+                        if (tagName.StartsWith("v", StringComparison.OrdinalIgnoreCase))
+                        {
+                            tagName = tagName.Substring(1);
+                        }
+
+                        if (Version.TryParse(tagName, out Version latestVersion))
                         {
                             Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
 
                             if (latestVersion > currentVersion)
                             {
-                                // Update found! Schedule a UI notification on the main thread when Revit is idle.
-                                EventHandler<Autodesk.Revit.UI.Events.IdlingEventArgs> handler = null;
-                                handler = (sender, e) =>
+                                string downloadUrl = null;
+                                string assetName = null;
+                                var assets = releaseInfo["assets"] as JArray;
+                                if (assets != null)
                                 {
-                                    UIApplication uiApp = sender as UIApplication;
-                                    uiApp.Idling -= handler; // Unsubscribe so it only fires once
-
-                                    TaskDialog dialog = new TaskDialog("BIM Digital Design Update");
-                                    dialog.MainInstruction = "A new version of BIM Digital Design Tools is available!";
-                                    dialog.MainContent = $"Current version: {currentVersion}\nLatest version: {latestVersion}\n\nWould you like to download the update now?";
-                                    dialog.CommonButtons = TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No;
-                                    dialog.DefaultButton = TaskDialogResult.Yes;
-                                    
-                                    if (dialog.Show() == TaskDialogResult.Yes)
+                                    foreach (var asset in assets)
                                     {
-                                        System.Diagnostics.Process.Start(DOWNLOAD_URL);
+                                        string name = asset["name"]?.ToString();
+                                        if (name != null && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            downloadUrl = asset["browser_download_url"]?.ToString();
+                                            assetName = name;
+                                            break;
+                                        }
                                     }
-                                };
+                                }
 
-                                app.Idling += handler;
+                                ScheduleUpdatePrompt(app, currentVersion, latestVersion, downloadUrl, assetName);
                             }
                         }
                     }
                 }
                 catch (Exception)
                 {
-                    // Fail silently if offline or repo is unavailable
+                    // Fail silently
+                }
+            });
+        }
+
+        private static void ScheduleUpdatePrompt(UIControlledApplication app, Version current, Version latest, string downloadUrl, string assetName)
+        {
+            EventHandler<Autodesk.Revit.UI.Events.IdlingEventArgs> handler = null;
+            handler = (sender, e) =>
+            {
+                UIApplication uiApp = sender as UIApplication;
+                uiApp.Idling -= handler;
+
+                TaskDialog dialog = new TaskDialog("BIM Digital Design Update");
+                dialog.MainInstruction = "A new version of BIM Digital Design Tools is available!";
+                
+                if (!string.IsNullOrEmpty(downloadUrl))
+                {
+                    dialog.MainContent = $"Current version: {current}\nLatest version: {latest}\n\nWould you like to automatically download and install the update now?\n\nNOTE: The download will happen in the background. Once the installer pops up, please completely close Revit before clicking 'Install'.";
+                    dialog.CommonButtons = TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No;
+                    dialog.DefaultButton = TaskDialogResult.Yes;
+
+                    if (dialog.Show() == TaskDialogResult.Yes)
+                    {
+                        DownloadAndRunInstaller(downloadUrl, assetName);
+                    }
+                }
+                else
+                {
+                    dialog.MainContent = $"Current version: {current}\nLatest version: {latest}\n\nNo installer (.exe) was found attached to this release on GitHub. Would you like to go to the releases page to check for manual downloads?";
+                    dialog.CommonButtons = TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No;
+                    dialog.DefaultButton = TaskDialogResult.Yes;
+
+                    if (dialog.Show() == TaskDialogResult.Yes)
+                    {
+                        Process.Start(GITHUB_RELEASES_PAGE);
+                    }
+                }
+            };
+
+            app.Idling += handler;
+        }
+
+        private static void DownloadAndRunInstaller(string downloadUrl, string assetName)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    string tempPath = Path.Combine(Path.GetTempPath(), "BDDUpdater");
+                    if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
+                    
+                    string exePath = Path.Combine(tempPath, assetName);
+                    
+                    if (File.Exists(exePath)) File.Delete(exePath);
+
+                    using (HttpClient client = new HttpClient())
+                    {
+                        client.DefaultRequestHeaders.Add("User-Agent", "BDD-Revit-Updater");
+                        byte[] fileBytes = await client.GetByteArrayAsync(downloadUrl);
+                        File.WriteAllBytes(exePath, fileBytes);
+                    }
+
+                    Process.Start(exePath);
+                }
+                catch (Exception)
+                {
+                    // If background download fails, at least open the release page
+                    Process.Start(GITHUB_RELEASES_PAGE);
                 }
             });
         }
