@@ -1,5 +1,0 @@
-﻿C:\Users\RE&DBIM\source\repos\Revit-API-Lab\RevitUI\ExternalCommand\Opening\CreateOpeningHandler.cs(423,36): error CS0103: The name 'PlaceSleevesAtWallIntersection' does not exist in the current context [C:\Users\RE&DBIM\source\repos\Revit-API-Lab\RevitUI\RevitUI_m2ij5oil_wpftmp.csproj]
-C:\Users\RE&DBIM\source\repos\Revit-API-Lab\RevitUI\ExternalCommand\Opening\CreateOpeningHandler.cs(435,21): error CS0103: The name 'PlaceSleevesAtWallIntersection' does not exist in the current context [C:\Users\RE&DBIM\source\repos\Revit-API-Lab\RevitUI\RevitUI_m2ij5oil_wpftmp.csproj]
-C:\Users\RE&DBIM\source\repos\Revit-API-Lab\RevitUI\ExternalCommand\Opening\CreateOpeningHandler.cs(423,36): error CS0103: The name 'PlaceSleevesAtWallIntersection' does not exist in the current context [C:\Users\RE&DBIM\source\repos\Revit-API-Lab\RevitUI\RevitUI_m2ij5oil_wpftmp.csproj]
-C:\Users\RE&DBIM\source\repos\Revit-API-Lab\RevitUI\ExternalCommand\Opening\CreateOpeningHandler.cs(435,21): error CS0103: The name 'PlaceSleevesAtWallIntersection' does not exist in the current context [C:\Users\RE&DBIM\source\repos\Revit-API-Lab\RevitUI\RevitUI_m2ij5oil_wpftmp.csproj]
-    2 Error(s)

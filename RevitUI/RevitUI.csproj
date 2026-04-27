@@ -39,9 +39,14 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <None Remove="Resources\3DTag.png" />
+	  <None Remove="Resources\BDD.png" />
 	</ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\3DTag.png" />
+	  <EmbeddedResource Include="Resources\BDD.png" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Resource Include="Resources\BDD.png" />
 	</ItemGroup>
 	<ItemGroup>
 		<Content Include="Resources\Help.html">

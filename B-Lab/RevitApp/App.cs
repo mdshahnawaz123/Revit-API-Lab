@@ -65,10 +65,15 @@ namespace B_Lab.RevitApp
                     "room_3D_Tag_BTN", "3D Room\nTag", dll,
                     "RevitUI.Command.Room3DTag");
 
+                var loadingBtn = new PushButtonData(
+                    "structural_loading_BTN", "Structural\nLoading", dll,
+                    "RevitUI.Command.LoadingDigram");
+
                 // ── Add to panels ─────────────────────────────────────────────
                 panel.AddStackedItems(mepBtn, dwBtn);
                 var paraButton = panel1.AddItem(paraBtn) as PushButton; 
                 var roomButton = panel2.AddItem(roomBtn) as PushButton; 
+                var loadingButton = panel2.AddItem(loadingBtn) as PushButton; 
 
                 // ── Help file paths ───────────────────────────────────────────
                 string mepHelpPath = Path.Combine(_assemblyFolder!, "Helper", "master-opening-sleeves-help.html");
@@ -143,6 +148,21 @@ namespace B_Lab.RevitApp
 
                 // Check GitHub for updates asynchronously
                 BDDUpdater.CheckForUpdates(application);
+
+                // ── Setup Loading Diagram button (Model panel) ────────────────────
+                if (loadingButton != null)
+                {
+                    try 
+                    {
+                        Assembly revitUIAssembly = Assembly.LoadFrom(dll);
+                        var img = ImageUtils.GetEmbeddedImage("RevitUI.Resources.BDD.png", revitUIAssembly);
+                        loadingButton.Image = img;
+                        loadingButton.LargeImage = img;
+                    }
+                    catch { /* Fallback if image fails to load */ }
+
+                    loadingButton.ToolTip = "Structural Loading - Manage loading diagrams.";
+                }
 
                 return Result.Succeeded;
             }

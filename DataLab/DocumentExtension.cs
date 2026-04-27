@@ -176,6 +176,15 @@ namespace DataLab
                 .ToWorksets()
                 .ToList();
         }
+
+        public static IList<DetailLine> GetDetailLines(this Document doc)
+        {
+            return new FilteredElementCollector(doc)
+                .OfClass(typeof(DetailLine))
+                .WhereElementIsElementType()
+                .Cast<DetailLine>()
+                .ToList();
+        }
     }
         
 }
