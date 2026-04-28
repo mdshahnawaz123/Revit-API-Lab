@@ -42,6 +42,12 @@ namespace RevitUI.UI.LoadingDigram
         private RevitUI.ExternalCommand.Loading.WallLineStyleHandler _wallLineStyleHandler;
         private ExternalEvent _wallLineStyleEvent;
 
+        private RevitUI.ExternalCommand.Loading.RoomFilledRegionHandler _roomFilledRegionHandler;
+        private ExternalEvent _roomFilledRegionEvent;
+
+        private RevitUI.ExternalCommand.Loading.LoadingLegendHandler _legendHandler;
+        private ExternalEvent _legendEvent;
+
         public StructuralLoading(Document doc, UIDocument uidoc)
         {
             InitializeComponent();
@@ -58,6 +64,12 @@ namespace RevitUI.UI.LoadingDigram
 
             _wallLineStyleHandler = new RevitUI.ExternalCommand.Loading.WallLineStyleHandler();
             _wallLineStyleEvent = ExternalEvent.Create(_wallLineStyleHandler);
+
+            _roomFilledRegionHandler = new RevitUI.ExternalCommand.Loading.RoomFilledRegionHandler();
+            _roomFilledRegionEvent = ExternalEvent.Create(_roomFilledRegionHandler);
+
+            _legendHandler = new RevitUI.ExternalCommand.Loading.LoadingLegendHandler();
+            _legendEvent = ExternalEvent.Create(_legendHandler);
         }
 
         private void RefreshRooms()
@@ -128,7 +140,21 @@ namespace RevitUI.UI.LoadingDigram
 
         private void CreateFilled(object sender, RoutedEventArgs e)
         {
+            if (_roomFilledRegionHandler != null && _roomFilledRegionEvent != null)
+            {
+                var viewModels = RoomListBox.ItemsSource as List<SelectionItemViewModel>;
+                if (viewModels != null)
+                {
+                    var selectedRooms = viewModels
+                        .Where(vm => vm.IsChecked)
+                        .SelectMany(vm => vm.Elements)
+                        .ToList();
 
+                    _roomFilledRegionHandler.SelectedRooms = selectedRooms;
+                    _roomFilledRegionHandler.IsHostModelOption = HostModelOption.IsChecked == true;
+                    _roomFilledRegionEvent.Raise();
+                }
+            }
         }
 
         private void CreateWallLine(object sender, RoutedEventArgs e)
@@ -147,6 +173,14 @@ namespace RevitUI.UI.LoadingDigram
                     _wallLineStyleHandler.SelectedWalls = selectedWalls;
                     _wallLineStyleEvent.Raise();
                 }
+            }
+        }
+
+        private void CreateLegend(object sender, RoutedEventArgs e)
+        {
+            if (_legendHandler != null && _legendEvent != null)
+            {
+                _legendEvent.Raise();
             }
         }
 
