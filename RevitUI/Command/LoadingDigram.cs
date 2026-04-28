@@ -21,7 +21,7 @@ namespace RevitUI.Command
 
             try
             {
-                RevitUI.UI.WindowExtensions.ShowSingleton(() => new RevitUI.UI.LoadingDigram.StructuralLoading(doc, uidoc), hideIcon: false);
+                RevitUI.UI.WindowExtensions.ShowSingleton(() => new RevitUI.UI.LoadingDigram.StructuralLoading(doc, uidoc), hideIcon: true);
             }
             catch (Exception ex)
             {

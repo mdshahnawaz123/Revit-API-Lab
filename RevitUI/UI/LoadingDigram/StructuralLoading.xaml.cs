@@ -184,5 +184,24 @@ namespace RevitUI.UI.LoadingDigram
             }
         }
 
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F1)
+            {
+                string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string assemblyDirectory = System.IO.Path.GetDirectoryName(assemblyLocation);
+                string helpPath = System.IO.Path.Combine(assemblyDirectory, "Helper", "StructuralLoadingHelp.html");
+
+                if (System.IO.File.Exists(helpPath))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = helpPath,
+                        UseShellExecute = true
+                    });
+                }
+                e.Handled = true;
+            }
+        }
     }
 }

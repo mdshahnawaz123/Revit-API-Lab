@@ -5,7 +5,9 @@
         Background="#F3F4F6"
         FontFamily="Segoe UI"
         FontSize="13"
-        Height="700" Width="480">
+        Height="700" Width="480"
+        Icon="{x:Null}"
+        KeyDown="Window_KeyDown">
 
     <DockPanel>
 

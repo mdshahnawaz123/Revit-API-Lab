@@ -79,6 +79,7 @@ namespace B_Lab.RevitApp
                 string mepHelpPath = Path.Combine(_assemblyFolder!, "Helper", "master-opening-sleeves-help.html");
                 string paraHelpPath = Path.Combine(_assemblyFolder!, "Helper", "ParameterFilterHelp.html"); // ✅ F1 for ParamFilter
                 string roomHelpPath = Path.Combine(_assemblyFolder!, "Helper", "Help.html"); // ✅ F1 for Room 3D Tag
+                string loadingHelpPath = Path.Combine(_assemblyFolder!, "Helper", "StructuralLoadingHelp.html"); // ✅ F1 for Loading
 
                 ContextualHelp? mepHelp = File.Exists(mepHelpPath)
                     ? new ContextualHelp(ContextualHelpType.Url, mepHelpPath)
@@ -90,6 +91,10 @@ namespace B_Lab.RevitApp
 
                 ContextualHelp? roomHelp = File.Exists(roomHelpPath)
                     ? new ContextualHelp(ContextualHelpType.Url, roomHelpPath)
+                    : null;
+
+                ContextualHelp? loadingHelp = File.Exists(loadingHelpPath)
+                    ? new ContextualHelp(ContextualHelpType.Url, loadingHelpPath)
                     : null;
 
                 // ── Setup Opening panel buttons ───────────────────────────────
@@ -162,6 +167,9 @@ namespace B_Lab.RevitApp
                     catch { /* Fallback if image fails to load */ }
 
                     loadingButton.ToolTip = "Structural Loading - Manage loading diagrams.";
+
+                    if (loadingHelp != null)
+                        loadingButton.SetContextualHelp(loadingHelp);
                 }
 
                 return Result.Succeeded;

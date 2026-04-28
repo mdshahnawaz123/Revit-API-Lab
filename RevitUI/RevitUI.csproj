@@ -53,5 +53,9 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 			<Link>Helper\Help.html</Link>
 		</Content>
+		<Content Include="Resources\StructuralLoadingHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>Helper\StructuralLoadingHelp.html</Link>
+		</Content>
 	</ItemGroup>
 </Project>

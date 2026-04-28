@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structural Loading Diagram Help</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }
+        h1 { color: #2563EB; border-bottom: 2px solid #2563EB; padding-bottom: 10px; }
+        h2 { color: #1E40AF; margin-top: 30px; }
+        .feature-box { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        code { background: #e5e7eb; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
+        .tip { background: #dcfce7; border-left: 4px solid #22c55e; padding: 10px; margin: 20px 0; }
+        img { max-width: 100%; border-radius: 4px; margin: 10px 0; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Structural Loading Diagram Tool</h1>
+    <p>Automate the creation of structural loading diagrams in your Revit views. This tool allows you to visualize room types and wall types with color-coded filled regions and detail lines.</p>
+
+    <div class="feature-box">
+        <h2>Key Features</h2>
+        <ul>
+            <li><strong>Room Loading:</strong> Automatically generates color-coded <code>FilledRegion</code> elements based on room boundaries. Each room type is assigned a unique hatch pattern and color.</li>
+            <li><strong>Wall Loading:</strong> Creates <code>DetailLine</code> elements along wall location curves. Line styles are automatically generated and colored based on the wall type name.</li>
+            <li><strong>Intelligent Updates:</strong> The tool detects changes in room boundaries or wall lengths. If no changes are detected, existing elements are skipped to maintain performance.</li>
+            <li><strong>Linked Model Support:</strong> Process rooms and walls directly from linked models with automatic coordinate transformation.</li>
+            <li><strong>Legend Creation:</strong> Generate a visual legend at a picked point to explain the color coding for both rooms and walls.</li>
+        </ul>
+    </div>
+
+    <h2>How to Use</h2>
+    <ol>
+        <li><strong>Select Source:</strong> Choose between "Host Model" or "Linked Model".</li>
+        <li><strong>Sync Elements:</strong> Click <strong>Room Sync</strong> or <strong>Wall Sync</strong> to populate the lists with elements from the active view.</li>
+        <li><strong>Select Items:</strong> Check the boxes for the rooms or walls you want to include in the diagram.</li>
+        <li><strong>Generate:</strong> Click <strong>Create Region</strong> or <strong>Create Line</strong> to generate the graphics.</li>
+        <li><strong>Add Legend:</strong> Click <strong>Create Legend</strong> and pick a point in the view to place the visual key.</li>
+    </ol>
+
+    <div class="tip">
+        <strong>Tip:</strong> Press <strong>F1</strong> while the window is open to return to this help page at any time.
+    </div>
+
+    <footer>
+        <p>&copy; 2026 BIM Digital Design - Structural Loading Automation</p>
+    </footer>
+</body>
+</html>
