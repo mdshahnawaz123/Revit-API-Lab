@@ -22,6 +22,8 @@ namespace RevitUI.ExternalCommand.AutoCadExport
         public List<ElementId> SelectedViewIds { get; set; } = new List<ElementId>();
         public string ExportPath { get; set; }
         public ExportMode Mode { get; set; }
+        public ACADVersion Version { get; set; } = ACADVersion.R2018;
+        public bool MergeLayers { get; set; } = true;
 
         public void Execute(UIApplication app)
         {
@@ -37,9 +39,9 @@ namespace RevitUI.ExternalCommand.AutoCadExport
 
                     // ── 1. Setup Export Options ─────────────────────────────────
                     DWGExportOptions options = new DWGExportOptions();
-                    options.FileVersion = ACADVersion.R2018;
+                    options.FileVersion = Version;
                     // MergedViews = true flattens title block + drawing into Model Space
-                    options.MergedViews = (Mode != ExportMode.SeparateFiles);
+                    options.MergedViews = MergeLayers;
 
                     // ── 2. Execute Export ───────────────────────────────────────
                     bool success = doc.Export(ExportPath, "BDD_Export", SelectedViewIds, options);
@@ -201,6 +203,13 @@ namespace RevitUI.ExternalCommand.AutoCadExport
             {
                 sw.WriteLine("(setvar \"FILEDIA\" 0)");
                 sw.WriteLine("(setvar \"CMDECHO\" 0)");
+
+                if (MergeLayers)
+                {
+                    // Bind all Xrefs if they exist
+                    sw.WriteLine("(command \"-XREF\" \"B\" \"*\")");
+                }
+
                 sw.WriteLine("MODEL");
 
                 // 1. Insert everything into Model Space first (Side-by-side)
@@ -285,6 +294,12 @@ namespace RevitUI.ExternalCommand.AutoCadExport
             {
                 sw.WriteLine("(setvar \"FILEDIA\" 0)");
                 sw.WriteLine("(setvar \"CMDECHO\" 0)");
+
+                if (MergeLayers)
+                {
+                    sw.WriteLine("(command \"-XREF\" \"B\" \"*\")");
+                }
+
                 sw.WriteLine("MODEL");
                 
                 double xOffset = 0;
@@ -326,6 +341,12 @@ namespace RevitUI.ExternalCommand.AutoCadExport
             {
                 sw.WriteLine("(setvar \"FILEDIA\" 0)");
                 sw.WriteLine("(setvar \"CMDECHO\" 0)");
+
+                if (MergeLayers)
+                {
+                    sw.WriteLine("(command \"-XREF\" \"B\" \"*\")");
+                }
+
                 sw.WriteLine("MODEL");
                 
                 double xOffset = 0;

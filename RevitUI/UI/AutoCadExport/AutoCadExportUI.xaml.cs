@@ -14,6 +14,7 @@ namespace RevitUI.UI.AutoCadExport
         private readonly ExternalEvent _externalEvent;
         private readonly AutoCadExportHandler _handler;
         public ObservableCollection<ViewSelectionItem> Views { get; set; }
+        private ObservableCollection<ViewSelectionItem> _filteredViews;
 
         public AutoCadExportUI(UIApplication app, ExternalEvent externalEvent, AutoCadExportHandler handler)
         {
@@ -34,10 +35,56 @@ namespace RevitUI.UI.AutoCadExport
                 .ToList();
 
             Views = new ObservableCollection<ViewSelectionItem>(sheets);
-            ViewListBox.ItemsSource = Views;
+            _filteredViews = new ObservableCollection<ViewSelectionItem>(sheets);
+            ViewListBox.ItemsSource = _filteredViews;
 
             // Default path
             PathTxt.Text = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        }
+
+        private void SearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            string filter = SearchBox.Text.ToLower();
+            if (string.IsNullOrWhiteSpace(filter))
+            {
+                _filteredViews = new ObservableCollection<ViewSelectionItem>(Views);
+            }
+            else
+            {
+                var filtered = Views.Where(v => v.Name.ToLower().Contains(filter)).ToList();
+                _filteredViews = new ObservableCollection<ViewSelectionItem>(filtered);
+            }
+            ViewListBox.ItemsSource = _filteredViews;
+        }
+
+        private void MoveUp_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = ViewListBox.SelectedItem as ViewSelectionItem;
+            if (selected == null) return;
+
+            int index = Views.IndexOf(selected);
+            if (index > 0)
+            {
+                Views.Move(index, index - 1);
+                // Refresh filtered view to match
+                SearchBox_TextChanged(null, null);
+                ViewListBox.SelectedItem = selected;
+            }
+        }
+
+        private void MoveDown_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = ViewListBox.SelectedItem as ViewSelectionItem;
+            if (selected == null) return;
+
+            int index = Views.IndexOf(selected);
+            if (index < Views.Count - 1)
+            {
+                Views.Move(index, index + 1);
+                // Refresh filtered view to match
+                SearchBox_TextChanged(null, null);
+                ViewListBox.SelectedItem = selected;
+            }
         }
 
         private void Browse_Click(object sender, RoutedEventArgs e)
@@ -72,17 +119,34 @@ namespace RevitUI.UI.AutoCadExport
             else if (ModeSingleLayout.IsChecked == true) mode = ExportMode.SingleLayout;
             else if (ModeSeparateFiles.IsChecked == true) mode = ExportMode.SeparateFiles;
 
+            // Get selected version
+            ACADVersion version = ACADVersion.R2018;
+            if (VersionCombo.SelectedIndex == 1) version = ACADVersion.R2013;
+            else if (VersionCombo.SelectedIndex == 2) version = ACADVersion.R2010;
+
             _handler.SelectedViewIds = selected;
             _handler.ExportPath = PathTxt.Text;
             _handler.Mode = mode;
+            _handler.Version = version;
+            _handler.MergeLayers = MergeLayersCheck.IsChecked ?? true;
             
             StatusText.Text = $"Exporting {selected.Count} sheets...";
+            ExportProgressBar.Visibility = Visibility.Visible;
+            ExportBtn.IsEnabled = false;
+
             _externalEvent.Raise();
         }
 
         public void UpdateStatus(string msg)
         {
-            StatusText.Text = msg;
+            Dispatcher.Invoke(() => {
+                StatusText.Text = msg;
+                if (msg.Contains("Done") || msg.Contains("failed") || msg.Contains("Error"))
+                {
+                    ExportProgressBar.Visibility = Visibility.Collapsed;
+                    ExportBtn.IsEnabled = true;
+                }
+            });
         }
 
         private void SelectAll_Click(object sender, RoutedEventArgs e)

@@ -11,119 +11,177 @@
         Topmost="True"
         ResizeMode="NoResize">
 
+    <Window.Resources>
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Background" Value="#E5E7EB"/>
+            <Setter Property="Foreground" Value="#374151"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="6"/>
+                </Style>
+            </Style.Resources>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#D1D5DB"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1D4ED8"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
     <DockPanel>
         <!-- HEADER -->
         <Border DockPanel.Dock="Top" Background="#1E293B" Padding="20">
             <StackPanel>
-                <TextBlock Text="Export Multiple Sheets to DWG" FontSize="20" FontWeight="SemiBold" Foreground="White"/>
-                <TextBlock Text="Smart Revit-to-DWG export with multiple layout modes" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                <TextBlock Text="AutoCAD Export Pro" FontSize="22" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Batch export Revit sheets to multiple layouts" Foreground="#94A3B8" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 
-        <!-- BUTTON BAR -->
-        <Border DockPanel.Dock="Bottom" Background="White" Padding="15" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0">
-            <Button x:Name="ExportBtn" 
-                    Content="Export to DWG" 
-                    Background="#2563EB" 
-                    Foreground="White" 
-                    Height="42" 
-                    FontSize="14"
-                    FontWeight="SemiBold"
-                    Click="Export_Click">
-                <Button.Resources>
-                    <Style TargetType="Border">
-                        <Setter Property="CornerRadius" Value="8"/>
-                    </Style>
-                </Button.Resources>
-            </Button>
+        <!-- FOOTER / EXPORT BUTTON -->
+        <Border DockPanel.Dock="Bottom" Background="White" Padding="20" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0">
+            <StackPanel>
+                <ProgressBar x:Name="ExportProgressBar" Height="10" Margin="0,0,0,15" Visibility="Collapsed" IsIndeterminate="True" Background="#F3F4F6" Foreground="#2563EB"/>
+                <Button x:Name="ExportBtn" 
+                        Content="Start Export Process" 
+                        Style="{StaticResource PrimaryButton}"
+                        Height="45" 
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Click="Export_Click"/>
+            </StackPanel>
         </Border>
 
         <!-- STATUS BAR -->
-        <StatusBar DockPanel.Dock="Bottom" Background="#E5E7EB" Padding="6,2">
-            <TextBlock x:Name="StatusText" Text="Ready" Foreground="#374151"/>
+        <StatusBar DockPanel.Dock="Bottom" Background="#F9FAFB" Padding="10,5" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0">
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#10B981" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="StatusText" Text="Ready" Foreground="#4B5563" FontSize="12"/>
+                </StackPanel>
+            </StatusBarItem>
         </StatusBar>
 
         <!-- MAIN CONTENT -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="20">
 
-                <!-- ═══════ EXPORT PATH ═══════ -->
-                <Border Background="White" CornerRadius="10" Padding="15" Margin="0,0,0,12" BorderBrush="#E5E7EB" BorderThickness="1">
+                <!-- 1. EXPORT SETTINGS -->
+                <TextBlock Text="Settings" FontSize="14" FontWeight="Bold" Margin="0,0,0,10" Foreground="#1F2937"/>
+                <Border Background="White" CornerRadius="10" Padding="15" Margin="0,0,0,20" BorderBrush="#E5E7EB" BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="Export Path" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <!-- Path -->
+                        <TextBlock Text="Destination Folder" FontWeight="SemiBold" FontSize="12" Foreground="#6B7280" Margin="0,0,0,8"/>
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="PathTxt" IsReadOnly="True" Padding="10" Background="#F9FAFB" BorderBrush="#E5E7EB" VerticalContentAlignment="Center"/>
+                            <Button Grid.Column="1" Content="Browse" Click="Browse_Click" Style="{StaticResource ModernButton}" Margin="8,0,0,0"/>
+                        </Grid>
+
+                        <!-- Options Row -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Version -->
+                            <StackPanel Margin="0,0,10,0">
+                                <TextBlock Text="AutoCAD Version" FontWeight="SemiBold" FontSize="12" Foreground="#6B7280" Margin="0,0,0,8"/>
+                                <ComboBox x:Name="VersionCombo" Padding="8,5" BorderBrush="#E5E7EB">
+                                    <ComboBoxItem Content="AutoCAD 2018" IsSelected="True"/>
+                                    <ComboBoxItem Content="AutoCAD 2013"/>
+                                    <ComboBoxItem Content="AutoCAD 2010"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <!-- Merge Layers -->
+                            <StackPanel Margin="10,0,0,0">
+                                <TextBlock Text="Post-Processing" FontWeight="SemiBold" FontSize="12" Foreground="#6B7280" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="MergeLayersCheck" IsChecked="True" Content="Merge Xrefs/Layers" VerticalContentAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 2. EXPORT MODE -->
+                <TextBlock Text="Export Mode" FontSize="14" FontWeight="Bold" Margin="0,0,0,10" Foreground="#1F2937"/>
+                <Border Background="White" CornerRadius="10" Padding="15" Margin="0,0,0,20" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <UniformGrid Columns="2">
+                        <RadioButton x:Name="ModeMultiLayout" IsChecked="True" GroupName="ExportMode" Margin="0,5">
+                            <TextBlock Text="Multiple Layouts" ToolTip="Each sheet = Layout tab"/>
+                        </RadioButton>
+                        <RadioButton x:Name="ModeModelSpace" GroupName="ExportMode" Margin="0,5">
+                            <TextBlock Text="Model Space" ToolTip="Side-by-side in Model Space"/>
+                        </RadioButton>
+                        <RadioButton x:Name="ModeSingleLayout" GroupName="ExportMode" Margin="0,5">
+                            <TextBlock Text="Single Layout" ToolTip="All on one Layout tab"/>
+                        </RadioButton>
+                        <RadioButton x:Name="ModeSeparateFiles" GroupName="ExportMode" Margin="0,5">
+                            <TextBlock Text="Separate Files" ToolTip="Individual DWGs"/>
+                        </RadioButton>
+                    </UniformGrid>
+                </Border>
+
+                <!-- 3. SHEET SELECTION -->
+                <TextBlock Text="Sheet Selection" FontSize="14" FontWeight="Bold" Margin="0,0,0,10" Foreground="#1F2937"/>
+                <Border Background="White" CornerRadius="10" Padding="15" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <StackPanel>
+                        <!-- Search & Selection -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="SearchBox" Padding="8,5" BorderBrush="#E5E7EB" Tag="Search sheets..." TextChanged="SearchBox_TextChanged"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+                                <Button Content="All" Click="SelectAll_Click" Style="{StaticResource ModernButton}" Padding="8,4" FontSize="11"/>
+                                <Button Content="None" Click="SelectNone_Click" Style="{StaticResource ModernButton}" Padding="8,4" FontSize="11" Margin="5,0,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- List & Reordering -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Name="PathTxt" IsReadOnly="True" Padding="8" Background="#F9FAFB" BorderBrush="#E5E7EB"/>
-                            <Button Grid.Column="1" Content="Browse" Click="Browse_Click" Padding="12,0" Margin="5,0,0,0" Background="#E5E7EB" BorderBrush="#D1D5DB"/>
-                        </Grid>
-                    </StackPanel>
-                </Border>
+                            
+                            <ListBox x:Name="ViewListBox" Height="250" Background="#F9FAFB" BorderBrush="#E5E7EB" SelectionMode="Extended">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
 
-                <!-- ═══════ EXPORT MODE ═══════ -->
-                <Border Background="White" CornerRadius="10" Padding="15" Margin="0,0,0,12" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="Export Mode" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                        <Border Height="1" Background="#E5E7EB" Margin="0,0,0,10"/>
-
-                        <!-- Option 1 -->
-                        <RadioButton x:Name="ModeMultiLayout" IsChecked="True" GroupName="ExportMode" Margin="0,0,0,8">
-                            <StackPanel>
-                                <TextBlock Text="Multiple Layouts" FontWeight="Medium"/>
-                                <TextBlock Text="Each sheet becomes a separate Layout tab in one DWG" Foreground="#6B7280" FontSize="11"/>
-                            </StackPanel>
-                        </RadioButton>
-
-                        <!-- Option 2 -->
-                        <RadioButton x:Name="ModeModelSpace" GroupName="ExportMode" Margin="0,0,0,8">
-                            <StackPanel>
-                                <TextBlock Text="Model Space with Title Blocks" FontWeight="Medium"/>
-                                <TextBlock Text="All sheets placed side-by-side in Model Space" Foreground="#6B7280" FontSize="11"/>
-                            </StackPanel>
-                        </RadioButton>
-
-                        <!-- Option 3 -->
-                        <RadioButton x:Name="ModeSingleLayout" GroupName="ExportMode" Margin="0,0,0,8">
-                            <StackPanel>
-                                <TextBlock Text="Single Layout" FontWeight="Medium"/>
-                                <TextBlock Text="All sheets combined into one Layout tab" Foreground="#6B7280" FontSize="11"/>
-                            </StackPanel>
-                        </RadioButton>
-
-                        <!-- Option 4 -->
-                        <RadioButton x:Name="ModeSeparateFiles" GroupName="ExportMode">
-                            <StackPanel>
-                                <TextBlock Text="Separate DWG Files" FontWeight="Medium"/>
-                                <TextBlock Text="Each sheet exported as an individual DWG file" Foreground="#6B7280" FontSize="11"/>
-                            </StackPanel>
-                        </RadioButton>
-                    </StackPanel>
-                </Border>
-
-                <!-- ═══════ SHEET SELECTION ═══════ -->
-                <Border Background="White" CornerRadius="10" Padding="15" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,10">
-                            <TextBlock Text="Select Sheets" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="All" Click="SelectAll_Click" Padding="8,2" Background="Transparent" BorderThickness="0" Foreground="#2563EB" Cursor="Hand"/>
-                                <TextBlock Text="|" Foreground="#D1D5DB" VerticalAlignment="Center" Margin="4,0"/>
-                                <Button Content="None" Click="SelectNone_Click" Padding="8,2" Background="Transparent" BorderThickness="0" Foreground="#2563EB" Cursor="Hand"/>
+                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                <Button Content="▲" Click="MoveUp_Click" Style="{StaticResource ModernButton}" Margin="0,0,0,5" ToolTip="Move Up"/>
+                                <Button Content="▼" Click="MoveDown_Click" Style="{StaticResource ModernButton}" ToolTip="Move Down"/>
                             </StackPanel>
                         </Grid>
-                        
-                        <ListBox x:Name="ViewListBox" Height="200" Background="#F9FAFB" BorderBrush="#E5E7EB">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="4">
-                                        <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding Name}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
                     </StackPanel>
                 </Border>
 
