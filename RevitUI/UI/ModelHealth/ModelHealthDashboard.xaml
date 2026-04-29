@@ -1,0 +1,155 @@
+<Window x:Class="RevitUI.UI.ModelHealth.ModelHealthDashboard"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BIM Digital Design - Model Health"
+        Background="#F9FAFB"
+        FontFamily="Segoe UI"
+        FontSize="13"
+        Height="550" Width="450"
+        Icon="{x:Null}"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        ResizeMode="NoResize">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- HEADER -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="Model Health Dashboard"
+                       FontSize="22"
+                       FontWeight="SemiBold"
+                       Foreground="#111827"/>
+            <TextBlock Text="Performance metrics and QC summary"
+                       Foreground="#6B7280"
+                       Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <!-- SCORE SECTION -->
+        <Border Grid.Row="1" 
+                Background="White" 
+                CornerRadius="12" 
+                Padding="20" 
+                Margin="0,0,0,20"
+                BorderBrush="#E5E7EB"
+                BorderThickness="1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Grid Width="100" Height="100">
+                    <Ellipse Stroke="#E5E7EB" StrokeThickness="8"/>
+                    <Ellipse x:Name="ScoreRing" Stroke="#10B981" StrokeThickness="8" StrokeDashArray="100" StrokeDashOffset="100"/>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock x:Name="ScoreText" Text="--" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="SCORE" FontSize="10" Foreground="#9CA3AF" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+                
+                <StackPanel Margin="30,0,0,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="HealthStatus" Text="Scanning..." FontSize="18" FontWeight="Medium" Foreground="#10B981"/>
+                    <TextBlock Text="Overall Model Status" Foreground="#6B7280"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- METRICS GRID -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <UniformGrid Columns="2">
+                
+                <!-- WARNINGS -->
+                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Warnings" Foreground="#6B7280" FontSize="11"/>
+                        <TextBlock x:Name="WarningCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="Active issues" Foreground="#9CA3AF" FontSize="10"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- IN-PLACE -->
+                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="In-Place Families" Foreground="#6B7280" FontSize="11"/>
+                        <TextBlock x:Name="InPlaceCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0" Foreground="#EF4444"/>
+                        <TextBlock Text="Performance impact" Foreground="#9CA3AF" FontSize="10"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- CAD IMPORTS -->
+                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="CAD Imports" Foreground="#6B7280" FontSize="11"/>
+                        <TextBlock x:Name="CadCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0" Foreground="#F59E0B"/>
+                        <TextBlock Text="Imported DWGs" Foreground="#9CA3AF" FontSize="10"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- REDUNDANT ROOMS -->
+                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Redundant Rooms" Foreground="#6B7280" FontSize="11"/>
+                        <TextBlock x:Name="RoomCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="Not placed/enclosed" Foreground="#9CA3AF" FontSize="10"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ORPHANED VIEWS -->
+                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Orphaned Views" Foreground="#6B7280" FontSize="11"/>
+                        <TextBlock x:Name="ViewCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="Not on sheets" Foreground="#9CA3AF" FontSize="10"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- LINKS -->
+                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Linked Models" Foreground="#6B7280" FontSize="11"/>
+                        <TextBlock x:Name="LinkCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="Revit/IFC Links" Foreground="#9CA3AF" FontSize="10"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- GROUPS -->
+                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Groups" Foreground="#6B7280" FontSize="11"/>
+                        <TextBlock x:Name="GroupCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="Total definitions" Foreground="#9CA3AF" FontSize="10"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- UNUSED FILTERS -->
+                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Unused Filters" Foreground="#6B7280" FontSize="11"/>
+                        <TextBlock x:Name="FilterCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="View filter cleanup" Foreground="#9CA3AF" FontSize="10"/>
+                    </StackPanel>
+                </Border>
+
+            </UniformGrid>
+        </ScrollViewer>
+
+        <!-- FOOTER / ACTION -->
+        <StackPanel Grid.Row="3" Margin="0,20,0,0">
+            <Button x:Name="RefreshBtn" 
+                    Content="Scan Model Now" 
+                    Background="#2563EB" 
+                    Foreground="White" 
+                    Height="40" 
+                    FontWeight="SemiBold"
+                    Click="Refresh_Click">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="8"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+        </StackPanel>
+
+    </Grid>
+</Window>

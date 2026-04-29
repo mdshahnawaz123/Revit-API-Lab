@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoCAD Batch Export Help</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; }
+        .header { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { margin: 0; font-size: 24px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { color: #2980b9; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 10px; }
+        code { background: #eee; padding: 2px 5px; border-radius: 3px; font-family: Consolas, monospace; }
+        .highlight { color: #e67e22; font-weight: bold; }
+        .footer { text-align: center; font-size: 0.9em; color: #7f8c8d; margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 AutoCAD Batch Export (BDD)</h1>
+        <p>Professional CAD coordination and automated merge pipeline.</p>
+    </div>
+
+    <div class="card">
+        <h2>Overview</h2>
+        <p>This tool automates the consolidation of exported Revit sheets into professional AutoCAD deliverables. It eliminates manual file manipulation by using an automated merge engine.</p>
+    </div>
+
+    <div class="card">
+        <h2>Export Modes</h2>
+        <ul>
+            <li><strong>Multiple Layouts:</strong> Each Revit sheet becomes its own Layout tab in a single master DWG. The tool automatically re-centers viewports to match shifted Model Space geometry.</li>
+            <li><strong>Model Space:</strong> All sheets are placed side-by-side in Model Space with title blocks, separated by a 100,000 unit gap to avoid overlaps.</li>
+            <li><strong>Single Layout:</strong> All sheets are combined into a single master Layout tab.</li>
+            <li><strong>Separate Files:</strong> Standard export where each sheet is a standalone DWG file.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>How it Works</h2>
+        <ol>
+            <li>Select the desired <strong>Export Mode</strong>.</li>
+            <li>Pick the destination folder.</li>
+            <li>Select the sheets/views you wish to export.</li>
+            <li>Click <strong>Export to DWG</strong>.</li>
+        </ol>
+        <p><span class="highlight">Note:</span> The tool will automatically look for <code>accoreconsole.exe</code> to perform a headless merge in the background. If not found, it will fallback to the full AutoCAD application.</p>
+    </div>
+
+    <div class="card">
+        <h2>Output</h2>
+        <p>The final combined file will be saved as <code>Combined CAD.dwg</code> in your selected folder.</p>
+    </div>
+
+    <div class="footer">
+        <p>BIM Digital Design - Efficiency through Automation</p>
+    </div>
+</body>
+</html>

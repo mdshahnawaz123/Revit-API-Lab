@@ -40,10 +40,19 @@
 	<ItemGroup>
 	  <None Remove="Resources\3DTag.png" />
 	  <None Remove="Resources\BDD.png" />
+	  <None Remove="Resources\cad.png" />
+	  <None Remove="Resources\ModelHealth.png" />
+	  <None Remove="Resources\StructuralLoading.png" />
+	  <None Remove="Resources\StructuralLoadingIcon.png" />
 	</ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\3DTag.png" />
 	  <EmbeddedResource Include="Resources\BDD.png" />
+	  <EmbeddedResource Include="Resources\cad.png" />
+	  <EmbeddedResource Include="Resources\ModelHealth.png" />
+	  <EmbeddedResource Include="Resources\StructuralLoading.png" />
+	  <EmbeddedResource Include="Resources\StructuralLoadingIcon.png" />
+	  <EmbeddedResource Include="Resources\StructuralLoadingPreview.png" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Resource Include="Resources\BDD.png" />
@@ -56,6 +65,10 @@
 		<Content Include="Resources\StructuralLoadingHelp.html">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 			<Link>Helper\StructuralLoadingHelp.html</Link>
+		</Content>
+		<Content Include="Resources\AutoCadExportHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>Helper\AutoCadExportHelp.html</Link>
 		</Content>
 	</ItemGroup>
 </Project>

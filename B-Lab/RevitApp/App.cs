@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using RevitUI.ExternalCommand.Opening;
+using System.Windows.Media;
 
 namespace B_Lab.RevitApp
 {
@@ -16,6 +17,7 @@ namespace B_Lab.RevitApp
         private const string? PANEL_NAME = "Opening";
         private const string? PANEL_NAME1 = "QC Panel";
         private const string? PANEL_NAME2 = "Model";
+        private const string? PANEL_NAME3 = "Export";
 
         private static string? _assemblyFolder;
 
@@ -46,6 +48,11 @@ namespace B_Lab.RevitApp
                     .FirstOrDefault(p => p.Name == PANEL_NAME2)
                     ?? application.CreateRibbonPanel(TAB_NAME, PANEL_NAME2);
 
+                RibbonPanel panel3 = application
+                    .GetRibbonPanels(TAB_NAME)
+                    .FirstOrDefault(p => p.Name == PANEL_NAME3)
+                    ?? application.CreateRibbonPanel(TAB_NAME, PANEL_NAME3);
+
                 string dll = Path.Combine(_assemblyFolder!, "B_Lab_RevitUI.dll");
 
                 // ── Button Data ───────────────────────────────────────────────
@@ -61,25 +68,53 @@ namespace B_Lab.RevitApp
                     "para_Filter_BTN", "Parameter\nFilter", dll,
                     "RevitUI.Command.ParamCommand");
 
+                var healthBtn = new PushButtonData(
+                    "BDD_ModelHealth_BTN", "Model\nHealth", dll,
+                    "RevitUI.Command.ModelHealthCommand");
+
                 var roomBtn = new PushButtonData(
                     "room_3D_Tag_BTN", "3D Room\nTag", dll,
                     "RevitUI.Command.Room3DTag");
 
                 var loadingBtn = new PushButtonData(
-                    "structural_loading_BTN", "Structural\nLoading", dll,
+                    "BDD_StructuralLoading_BTN_V3", "Structural\nLoading", dll,
                     "RevitUI.Command.LoadingDigram");
 
+                var exportBtn = new PushButtonData(
+                    "BDD_AutoCadExport_BTN", "AutoCAD\nExport", dll,
+                    "RevitUI.Command.AutoCadExportCommand");
+
                 // ── Add to panels ─────────────────────────────────────────────
-                panel.AddStackedItems(mepBtn, dwBtn);
-                var paraButton = panel1.AddItem(paraBtn) as PushButton; 
-                var roomButton = panel2.AddItem(roomBtn) as PushButton; 
-                var loadingButton = panel2.AddItem(loadingBtn) as PushButton; 
+                var existingPanelItems = panel.GetItems();
+                var existingPanel1Items = panel1.GetItems();
+                var existingPanel2Items = panel2.GetItems();
+
+                if (!existingPanelItems.Any(i => i.Name == "MEP_Opening_BTN"))
+                {
+                    panel.AddStackedItems(mepBtn, dwBtn);
+                }
+
+                var paraButton = existingPanel1Items.FirstOrDefault(i => i.Name == "para_Filter_BTN") as PushButton 
+                    ?? panel1.AddItem(paraBtn) as PushButton; 
+
+                var healthButton = existingPanel1Items.FirstOrDefault(i => i.Name == "BDD_ModelHealth_BTN") as PushButton 
+                    ?? panel1.AddItem(healthBtn) as PushButton; 
+
+                var roomButton = existingPanel2Items.FirstOrDefault(i => i.Name == "room_3D_Tag_BTN") as PushButton 
+                    ?? panel2.AddItem(roomBtn) as PushButton; 
+
+                var loadingButton = existingPanel2Items.FirstOrDefault(i => i.Name == "BDD_StructuralLoading_BTN_V3") as PushButton 
+                    ?? panel2.AddItem(loadingBtn) as PushButton; 
+
+                var exportButton = panel3.GetItems().FirstOrDefault(i => i.Name == "BDD_AutoCadExport_BTN") as PushButton 
+                    ?? panel3.AddItem(exportBtn) as PushButton; 
 
                 // ── Help file paths ───────────────────────────────────────────
                 string mepHelpPath = Path.Combine(_assemblyFolder!, "Helper", "master-opening-sleeves-help.html");
                 string paraHelpPath = Path.Combine(_assemblyFolder!, "Helper", "ParameterFilterHelp.html"); // ✅ F1 for ParamFilter
                 string roomHelpPath = Path.Combine(_assemblyFolder!, "Helper", "Help.html"); // ✅ F1 for Room 3D Tag
                 string loadingHelpPath = Path.Combine(_assemblyFolder!, "Helper", "StructuralLoadingHelp.html"); // ✅ F1 for Loading
+                string cadHelpPath = Path.Combine(_assemblyFolder!, "Helper", "AutoCadExportHelp.html"); // ✅ F1 for AutoCAD Export
 
                 ContextualHelp? mepHelp = File.Exists(mepHelpPath)
                     ? new ContextualHelp(ContextualHelpType.Url, mepHelpPath)
@@ -95,6 +130,10 @@ namespace B_Lab.RevitApp
 
                 ContextualHelp? loadingHelp = File.Exists(loadingHelpPath)
                     ? new ContextualHelp(ContextualHelpType.Url, loadingHelpPath)
+                    : null;
+
+                ContextualHelp? cadHelp = File.Exists(cadHelpPath)
+                    ? new ContextualHelp(ContextualHelpType.Url, cadHelpPath)
                     : null;
 
                 // ── Setup Opening panel buttons ───────────────────────────────
@@ -133,6 +172,17 @@ namespace B_Lab.RevitApp
                         paraButton.SetContextualHelp(paraHelp);
                 }
 
+                // ── Setup Model Health button (panel1) ────────────────────────
+                if (healthButton != null)
+                {
+                    var uiAssembly = typeof(RevitUI.Command.ModelHealthCommand).Assembly;
+                    var img = ImageUtils.GetEmbeddedImage("RevitUI.Resources.ModelHealth.png", uiAssembly);
+                    healthButton.Image = img;
+                    healthButton.LargeImage = img;
+                    healthButton.ToolTip = "Model Health Dashboard - Monitor model performance, warnings, and CAD imports.";
+                    healthButton.LongDescription = "This dashboard provides a real-time 'Health Score' for your model by scanning for performance bottlenecks such as excessive warnings, in-place families, and unpurged CAD imports.";
+                }
+
                 // ── Setup Room 3D Tag button (Model panel) ────────────────────
                 if (roomButton != null)
                 {
@@ -159,17 +209,44 @@ namespace B_Lab.RevitApp
                 {
                     try 
                     {
-                        Assembly revitUIAssembly = Assembly.LoadFrom(dll);
-                        var img = ImageUtils.GetEmbeddedImage("RevitUI.Resources.BDD.png", revitUIAssembly);
+                        var uiAssembly = typeof(RevitUI.Command.LoadingDigram).Assembly;
+                        var img = ImageUtils.GetEmbeddedImage("RevitUI.Resources.StructuralLoadingIcon.png", uiAssembly);
                         loadingButton.Image = img;
                         loadingButton.LargeImage = img;
+                        loadingButton.ToolTipImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.StructuralLoadingPreview.png", uiAssembly);
                     }
                     catch { /* Fallback if image fails to load */ }
 
-                    loadingButton.ToolTip = "Structural Loading - Manage loading diagrams.";
+                    loadingButton.ToolTip = "Structural Loading Diagram - Automate and sync structural load visualizations.";
+                    loadingButton.LongDescription = "This tool automates the generation of structural loading diagrams by mapping wall types to distinct detail line styles. " +
+                        "It features a smart sync system that updates geometry as walls move and a cleanup utility to remove outdated or orphaned lines, ensuring your analysis diagrams stay accurate and professional.";
 
                     if (loadingHelp != null)
                         loadingButton.SetContextualHelp(loadingHelp);
+                }
+
+                // ── Setup AutoCAD Export button (panel3) ──────────────────────
+                if (exportButton != null)
+                {
+                    try 
+                    {
+                        var uiAssembly = typeof(RevitUI.Command.AutoCadExportCommand).Assembly;
+                        ImageSource? img = null;
+                        try { img = ImageUtils.GetEmbeddedImage("RevitUI.Resources.cad.png", uiAssembly); }
+                        catch { img = ImageUtils.GetEmbeddedImage("B_Lab_RevitUI.Resources.cad.png", uiAssembly); }
+
+                        exportButton.Image = img;
+                        exportButton.LargeImage = img;
+                    }
+                    catch { /* Fallback if image fails */ }
+
+                    exportButton.ToolTip = "AutoCAD Batch Export - Export and merge multiple views to DWG.";
+                    exportButton.LongDescription = "This professional tool automates the delivery of CAD packages by consolidating Revit sheets into a single, coordinated master file. " +
+                        "It features a high-performance merge engine that supports Multiple Layouts (with automated viewport centering), Model Space grids, and Single Layout modes. " +
+                        "By eliminating manual file manipulation, it ensures your AutoCAD deliverables are consistent, professional, and ready for submission.";
+
+                    if (cadHelp != null)
+                        exportButton.SetContextualHelp(cadHelp);
                 }
 
                 return Result.Succeeded;

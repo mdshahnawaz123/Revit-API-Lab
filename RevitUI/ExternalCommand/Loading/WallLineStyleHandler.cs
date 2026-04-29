@@ -22,11 +22,56 @@ namespace RevitUI.ExternalCommand.Loading
 
             try
             {
+                var uniqueWallTypes = SelectedWalls.OfType<Wall>().Select(w => w.WallType.Name).Distinct().ToList();
+                var selectedWallTypeStyles = uniqueWallTypes.Select(wt => "WallStyle_" + wt).ToHashSet();
+                View activeView = doc.ActiveView;
+
+                // Pre-collect existing lines to check for cleanup
+                var existingCurvesInView = new FilteredElementCollector(doc, activeView.Id)
+                    .OfClass(typeof(CurveElement))
+                    .Where(x => x is DetailCurve)
+                    .Cast<DetailCurve>()
+                    .ToList();
+
+                var linesToCleanup = existingCurvesInView.Where(dc => 
+                {
+                    if (!dc.IsValidObject) return false;
+                    var p = dc.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS) ?? dc.LookupParameter("Comments");
+                    if (p == null || !p.AsString().StartsWith("WallLoading:")) return false;
+                    
+                    // Check if style name matches any selected wall type style
+                    return selectedWallTypeStyles.Contains(dc.LineStyle.Name);
+                }).ToList();
+
+                bool shouldDelete = false;
+                if (linesToCleanup.Any())
+                {
+                    TaskDialog td = new TaskDialog("Existing Wall Lines Found");
+                    td.MainInstruction = $"Found {linesToCleanup.Count} existing lines matching the selected wall types.";
+                    td.MainContent = "Would you like to delete these existing lines and create new ones? \n\n" +
+                                     "Yes: Delete all existing lines for these types and create fresh ones.\n" +
+                                     "No: Keep existing lines and only update them (standard behavior).\n" +
+                                     "Cancel: Abort the operation.";
+                    td.CommonButtons = TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No | TaskDialogCommonButtons.Cancel;
+                    td.DefaultButton = TaskDialogResult.Yes;
+
+                    var result = td.Show();
+                    if (result == TaskDialogResult.Cancel) return;
+                    shouldDelete = (result == TaskDialogResult.Yes);
+                }
+
                 using (Transaction tx = new Transaction(doc, "Create/Update Detail Lines for Walls"))
                 {
                     tx.Start();
 
-                    var uniqueWallTypes = SelectedWalls.OfType<Wall>().Select(w => w.WallType.Name).Distinct().ToList();
+                    if (shouldDelete)
+                    {
+                        foreach (var line in linesToCleanup)
+                        {
+                            if (line.IsValidObject) doc.Delete(line.Id);
+                        }
+                    }
+
                     Category linesCat = doc.Settings.Categories.get_Item(BuiltInCategory.OST_Lines);
                     Dictionary<string, GraphicsStyle> lineStyles = new Dictionary<string, GraphicsStyle>();
 
@@ -48,13 +93,6 @@ namespace RevitUI.ExternalCommand.Loading
                         lineStyles[wallType] = subCat.GetGraphicsStyle(GraphicsStyleType.Projection);
                         colorIndex++;
                     }
-
-                    View activeView = doc.ActiveView;
-                    var existingCurvesInView = new FilteredElementCollector(doc, activeView.Id)
-                        .OfClass(typeof(CurveElement))
-                        .Where(x => x is DetailCurve)
-                        .Cast<DetailCurve>()
-                        .ToList();
 
                     foreach (var wall in SelectedWalls.OfType<Wall>())
                     {
