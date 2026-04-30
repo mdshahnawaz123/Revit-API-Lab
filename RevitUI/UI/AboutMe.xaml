@@ -1,0 +1,76 @@
+<Window x:Class="RevitUI.UI.AboutMe"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="About the Developer" Height="450" Width="400"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="Transparent"
+        AllowsTransparency="True"
+        WindowStyle="None">
+    
+    <Border CornerRadius="20" Background="#1A1A1A" BorderBrush="#333" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header / Close Button -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="15">
+                <Button Content="✕" Click="BtnClose_Click" Background="Transparent" Foreground="Gray" BorderThickness="0" FontSize="18" Cursor="Hand"/>
+            </StackPanel>
+
+            <!-- Content -->
+            <StackPanel Grid.Row="1" Margin="30,0,30,30" VerticalAlignment="Center">
+                <!-- Profile Circle -->
+                <Border Width="100" Height="100" CornerRadius="50" BorderBrush="#007ACC" BorderThickness="3" HorizontalAlignment="Center" Margin="0,0,0,20">
+                    <Grid>
+                        <TextBlock Text="MS" Foreground="White" FontSize="40" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.5"/>
+                    </Grid>
+                </Border>
+
+                <TextBlock Text="Mohd Shahnawaz" Foreground="White" FontSize="26" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                <TextBlock Text="Revit API Developer &amp; Expo City Dubai BIM Specialist" Foreground="#007ACC" FontSize="14" HorizontalAlignment="Center" Margin="0,0,0,25"/>
+
+                <Separator Background="#333" Margin="0,0,0,25"/>
+
+                <!-- Info Lines -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Email:" Foreground="Gray" FontSize="13" Width="80"/>
+                    <TextBlock Grid.Column="1" Text="mdshahnawaz9570@gmail.com" Foreground="White" FontSize="14" FontWeight="Medium"/>
+                </Grid>
+
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Phone:" Foreground="Gray" FontSize="13" Width="80"/>
+                    <TextBlock Grid.Column="1" Text="+971 55 8570 5701" Foreground="White" FontSize="14" FontWeight="Medium" x:Name="TxtPhone"/>
+                </Grid>
+
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Education:" Foreground="Gray" FontSize="13" Width="80"/>
+                    <TextBlock Grid.Column="1" Text="Master of Structural Engineering" Foreground="White" FontSize="14" FontWeight="Medium" TextWrapping="Wrap" x:Name="TxtQual"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- Footer -->
+            <Border Grid.Row="2" Background="#222" CornerRadius="0,0,20,20" Padding="15">
+                <TextBlock Text="Empowering BIM with Automation" Foreground="#555" FontSize="11" HorizontalAlignment="Center" FontStyle="Italic"/>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

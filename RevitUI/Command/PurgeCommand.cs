@@ -1,15 +1,15 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitUI.UI.Export;
+using RevitUI.UI.Purge;
 using System;
 
 namespace RevitUI.Command
 {
     [Transaction(TransactionMode.Manual)]
-    public class AutoCadExportCommand : IExternalCommand
+    public class PurgeCommand : IExternalCommand
     {
-        public static ExportDashboard Instance;
+        public static PurgeDashboard Instance;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -21,10 +21,10 @@ namespace RevitUI.Command
                     return Result.Succeeded;
                 }
 
-                var handler = new ExportHandler();
+                var handler = new PurgeHandler();
                 var externalEvent = ExternalEvent.Create(handler);
                 
-                Instance = new ExportDashboard(externalEvent, handler);
+                Instance = new PurgeDashboard(externalEvent, handler);
                 Instance.Show();
 
                 return Result.Succeeded;

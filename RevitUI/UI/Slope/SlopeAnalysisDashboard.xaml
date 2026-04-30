@@ -1,0 +1,50 @@
+<Window x:Class="RevitUI.UI.Slope.SlopeAnalysisDashboard"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="B-Lab Slope Analysis" Height="400" Width="350"
+        WindowStartupLocation="CenterScreen" Topmost="True"
+        Background="#1A1A1A" AllowsTransparency="True" WindowStyle="None">
+    
+    <Border CornerRadius="15" BorderBrush="#333" BorderThickness="1">
+        <Grid Margin="25">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,25">
+                <Grid>
+                    <TextBlock Text="SLOPE ANALYSIS" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                    <Button Content="✕" Click="BtnClose_Click" HorizontalAlignment="Right" Background="Transparent" Foreground="Gray" BorderThickness="0" Cursor="Hand" FontSize="16"/>
+                </Grid>
+                <TextBlock Text="Analyze &amp; Visualize Surface Slopes" Foreground="#007ACC" FontSize="12"/>
+            </StackPanel>
+
+            <!-- Content -->
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="Analysis Targets" Foreground="Gray" FontSize="11" Margin="0,0,0,10"/>
+                
+                <CheckBox x:Name="ChkFloors" Content="Floors" Foreground="White" IsChecked="True" Margin="0,0,0,10"/>
+                <CheckBox x:Name="ChkRoofs" Content="Roofs" Foreground="White" IsChecked="True" Margin="0,0,0,10"/>
+                <CheckBox x:Name="ChkTopo" Content="Topography" Foreground="White" IsChecked="True" Margin="0,0,0,20"/>
+
+                <Separator Background="#333" Margin="0,0,0,20"/>
+
+                <TextBlock Text="Color Visualization" Foreground="Gray" FontSize="11" Margin="0,0,0,10"/>
+                <RadioButton x:Name="RbNone" Content="No Coloring (Data Only)" Foreground="White" IsChecked="True" Margin="0,0,0,8"/>
+                <RadioButton x:Name="RbHeatMap" Content="Apply Heat-Map (Red = Steep)" Foreground="White" Margin="0,0,0,8"/>
+            </StackPanel>
+
+            <!-- Action -->
+            <Button Grid.Row="2" Content="START ANALYSIS" Height="45" Background="#007ACC" Foreground="White" FontWeight="Bold" Click="BtnRun_Click">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="8"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+        </Grid>
+    </Border>
+</Window>

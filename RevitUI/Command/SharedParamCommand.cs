@@ -1,15 +1,15 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitUI.UI.Export;
+using RevitUI.UI.SharedParam;
 using System;
 
 namespace RevitUI.Command
 {
     [Transaction(TransactionMode.Manual)]
-    public class AutoCadExportCommand : IExternalCommand
+    public class SharedParamCommand : IExternalCommand
     {
-        public static ExportDashboard Instance;
+        public static SharedParamDashboard Instance;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -21,10 +21,13 @@ namespace RevitUI.Command
                     return Result.Succeeded;
                 }
 
-                var handler = new ExportHandler();
+                var dashboard = new SharedParamDashboard(null, null);
+                var handler = new SharedParamHandler(dashboard);
                 var externalEvent = ExternalEvent.Create(handler);
-                
-                Instance = new ExportDashboard(externalEvent, handler);
+
+                // Re-create with proper references
+                dashboard.Close();
+                Instance = new SharedParamDashboard(externalEvent, handler);
                 Instance.Show();
 
                 return Result.Succeeded;

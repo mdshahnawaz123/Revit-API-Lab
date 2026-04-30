@@ -4,6 +4,7 @@ using System.Windows.Media;
 using Autodesk.Revit.UI;
 using RevitUI.Command;
 using RevitUI.ExternalCommand.ModelHealth;
+using RevitUI.UI;
 
 namespace RevitUI.UI.ModelHealth
 {
@@ -15,6 +16,7 @@ namespace RevitUI.UI.ModelHealth
         public ModelHealthDashboard(ExternalEvent externalEvent, ModelHealthHandler handler)
         {
             InitializeComponent();
+            this.HideIcon();
             _externalEvent = externalEvent;
             _handler = handler;
             

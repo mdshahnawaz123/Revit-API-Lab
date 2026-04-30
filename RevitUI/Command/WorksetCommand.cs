@@ -1,15 +1,15 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitUI.UI.Export;
+using RevitUI.UI.Worksets;
 using System;
 
 namespace RevitUI.Command
 {
     [Transaction(TransactionMode.Manual)]
-    public class AutoCadExportCommand : IExternalCommand
+    public class WorksetCommand : IExternalCommand
     {
-        public static ExportDashboard Instance;
+        public static WorksetDashboard Instance;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -21,10 +21,10 @@ namespace RevitUI.Command
                     return Result.Succeeded;
                 }
 
-                var handler = new ExportHandler();
+                var handler = new WorksetHandler();
                 var externalEvent = ExternalEvent.Create(handler);
                 
-                Instance = new ExportDashboard(externalEvent, handler);
+                Instance = new WorksetDashboard(externalEvent, handler);
                 Instance.Show();
 
                 return Result.Succeeded;

@@ -131,7 +131,7 @@ namespace RevitUI.UI.AutoCadExport
             _handler.MergeLayers = MergeLayersCheck.IsChecked ?? true;
             
             StatusText.Text = $"Exporting {selected.Count} sheets...";
-            ExportProgressBar.Visibility = Visibility.Visible;
+            ExportProgressBar.Visibility = System.Windows.Visibility.Visible;
             ExportBtn.IsEnabled = false;
 
             _externalEvent.Raise();
@@ -143,7 +143,7 @@ namespace RevitUI.UI.AutoCadExport
                 StatusText.Text = msg;
                 if (msg.Contains("Done") || msg.Contains("failed") || msg.Contains("Error"))
                 {
-                    ExportProgressBar.Visibility = Visibility.Collapsed;
+                    ExportProgressBar.Visibility = System.Windows.Visibility.Collapsed;
                     ExportBtn.IsEnabled = true;
                 }
             });

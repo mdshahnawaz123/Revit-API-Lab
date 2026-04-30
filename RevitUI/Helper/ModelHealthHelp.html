@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Model Health Help</title>
+<style>body{font-family:Segoe UI,sans-serif;max-width:700px;margin:40px auto;padding:20px;background:#1a1a1a;color:#ddd}
+h1{color:#007ACC}h2{color:#0ea5e9;border-bottom:1px solid #333;padding-bottom:5px}
+code{background:#222;padding:2px 6px;border-radius:3px}
+.tip{background:#222;border-left:3px solid #007ACC;padding:10px 15px;margin:10px 0;border-radius:4px}</style>
+</head><body>
+<h1>Model Health Dashboard</h1>
+<p>The Model Health Dashboard provides a real-time health score for your Revit model by analyzing key quality metrics.</p>
+<h2>Metrics Analyzed</h2>
+<ul>
+<li><strong>Warnings</strong> — Total Revit warnings in the model</li>
+<li><strong>In-Place Families</strong> — Count of in-place families (performance impact)</li>
+<li><strong>Groups</strong> — Number of model/detail groups</li>
+<li><strong>CAD Imports</strong> — Imported DWG/DXF files</li>
+<li><strong>Redundant Rooms</strong> — Rooms with area = 0</li>
+<li><strong>Orphaned Views</strong> — Views not placed on sheets</li>
+<li><strong>Revit Links</strong> — Number of linked models</li>
+<li><strong>Unused Filters</strong> — Filters not applied to any view</li>
+</ul>
+<h2>Health Score</h2>
+<div class="tip">Score > 80 = Excellent | 50-80 = Attention Needed | < 50 = Critical</div>
+<h2>Usage</h2>
+<ol><li>Click <strong>Model Health</strong> in the QC Panel</li><li>The dashboard scans the model automatically</li><li>Click <strong>Refresh</strong> to re-scan after making changes</li></ol>
+</body></html>

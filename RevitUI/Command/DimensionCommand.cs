@@ -1,15 +1,15 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitUI.UI.Export;
+using RevitUI.UI.Dimensioning;
 using System;
 
 namespace RevitUI.Command
 {
     [Transaction(TransactionMode.Manual)]
-    public class AutoCadExportCommand : IExternalCommand
+    public class DimensionCommand : IExternalCommand
     {
-        public static ExportDashboard Instance;
+        public static DimensionDashboard Instance;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -18,13 +18,14 @@ namespace RevitUI.Command
                 if (Instance != null)
                 {
                     Instance.Activate();
+                    Instance.WindowState = System.Windows.WindowState.Normal;
                     return Result.Succeeded;
                 }
 
-                var handler = new ExportHandler();
+                var handler = new DimensionHandler();
                 var externalEvent = ExternalEvent.Create(handler);
                 
-                Instance = new ExportDashboard(externalEvent, handler);
+                Instance = new DimensionDashboard(externalEvent, handler);
                 Instance.Show();
 
                 return Result.Succeeded;

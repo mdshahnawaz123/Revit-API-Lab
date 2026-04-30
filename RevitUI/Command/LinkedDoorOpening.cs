@@ -27,9 +27,8 @@ namespace RevitUI.Command
                 var openingHandler = new LinkedDoorWindowOpeningHandler();
                 var openingEvent = ExternalEvent.Create(openingHandler);
 
-                // Pass both into the window
-                var window = new DoorOpening(scanEvent, scanHandler, openingEvent, openingHandler);
-                window.Show();
+                // Pass both into the window using the singleton helper
+                WindowExtensions.ShowSingleton(() => new DoorOpening(scanEvent, scanHandler, openingEvent, openingHandler));
             }
             catch (Exception ex)
             {

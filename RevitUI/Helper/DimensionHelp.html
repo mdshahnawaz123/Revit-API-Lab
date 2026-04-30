@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Dimension Automation Help</title>
+<style>body{font-family:Segoe UI,sans-serif;max-width:700px;margin:40px auto;padding:20px;background:#1a1a1a;color:#ddd}
+h1{color:#007ACC}h2{color:#0ea5e9;border-bottom:1px solid #333;padding-bottom:5px}
+.tip{background:#222;border-left:3px solid #007ACC;padding:10px 15px;margin:10px 0;border-radius:4px}</style>
+</head><body>
+<h1>Dimension Automation</h1>
+<p>Automatically place dimensions across your model using intelligent detection algorithms.</p>
+<h2>Modes Available</h2>
+<ul>
+<li><strong>Grid to Grid</strong> — Detects parallel grids (vertical and horizontal) and places continuous dimensions along each group with a configurable offset distance.</li>
+<li><strong>Wall Openings</strong> — Scans all walls in the active view, detects parallel faces, and places thickness dimensions automatically.</li>
+<li><strong>MEP Sleeves</strong> — Finds Opening/Sleeve families and dimensions them to the nearest grid line and structural column.</li>
+<li><strong>Room Boundary</strong> — (Coming Soon) Center-to-center room boundary dimensioning.</li>
+</ul>
+<h2>Offset Distance</h2>
+<div class="tip">The offset value (in mm) controls how far the dimension line is placed from the grid/wall. Default: 1000mm.</div>
+<h2>Usage</h2>
+<ol><li>Open a plan view with visible grids/walls</li><li>Click <strong>Dimension Auto</strong> in the Model panel</li><li>Select a mode and click <strong>Run Automation</strong></li></ol>
+</body></html>

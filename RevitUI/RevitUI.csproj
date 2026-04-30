@@ -44,6 +44,16 @@
 	  <None Remove="Resources\ModelHealth.png" />
 	  <None Remove="Resources\StructuralLoading.png" />
 	  <None Remove="Resources\StructuralLoadingIcon.png" />
+  <None Remove="Resources\Dimension.png" />
+  <None Remove="Resources\Slope.png" />
+  <None Remove="Resources\Interop.png" />
+  <None Remove="Resources\Workset.png" />
+  <None Remove="Resources\Purge.png" />
+  <None Remove="Resources\Export.png" />
+  <None Remove="Resources\MEPOpening.png" />
+  <None Remove="Resources\DoorOpening.png" />
+  <None Remove="Resources\About.png" />
+  <None Remove="Resources\SharedParam.png" />
 	</ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\3DTag.png" />
@@ -53,6 +63,16 @@
 	  <EmbeddedResource Include="Resources\StructuralLoading.png" />
 	  <EmbeddedResource Include="Resources\StructuralLoadingIcon.png" />
 	  <EmbeddedResource Include="Resources\StructuralLoadingPreview.png" />
+  <EmbeddedResource Include="Resources\Dimension.png" />
+  <EmbeddedResource Include="Resources\Slope.png" />
+  <EmbeddedResource Include="Resources\Interop.png" />
+  <EmbeddedResource Include="Resources\Workset.png" />
+  <EmbeddedResource Include="Resources\Purge.png" />
+  <EmbeddedResource Include="Resources\Export.png" />
+  <EmbeddedResource Include="Resources\MEPOpening.png" />
+  <EmbeddedResource Include="Resources\DoorOpening.png" />
+  <EmbeddedResource Include="Resources\About.png" />
+  <EmbeddedResource Include="Resources\SharedParam.png" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Resource Include="Resources\BDD.png" />
@@ -69,6 +89,32 @@
 		<Content Include="Resources\AutoCadExportHelp.html">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 			<Link>Helper\AutoCadExportHelp.html</Link>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="Helper\ModelHealthHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Helper\DimensionHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Helper\SlopeHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Helper\InteropHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Helper\WorksetHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Helper\PurgeHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+				<Content Include="Helper\SharedParamHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Helper\AboutHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 </Project>

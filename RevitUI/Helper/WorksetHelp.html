@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Workset Automator Help</title>
+<style>body{font-family:Segoe UI,sans-serif;max-width:700px;margin:40px auto;padding:20px;background:#1a1a1a;color:#ddd}
+h1{color:#007ACC}h2{color:#0ea5e9;border-bottom:1px solid #333;padding-bottom:5px}
+.tip{background:#222;border-left:3px solid #007ACC;padding:10px 15px;margin:10px 0;border-radius:4px}</style>
+</head><body>
+<h1>Smart Workset Automator</h1>
+<p>Bulk-assign elements to their correct worksets based on category mapping. Adapts to your project's unique workset naming convention.</p>
+<h2>How It Works</h2>
+<ol>
+<li>The tool scans the model and lists all element categories currently in use</li>
+<li>It retrieves all User Worksets from your project</li>
+<li>You map each category to a target workset using the dropdown</li>
+<li>Click <strong>Apply to Model</strong> to move all matching elements</li>
+</ol>
+<h2>Important Notes</h2>
+<div class="tip">
+<strong>Workshared models only</strong> — This tool requires the model to be workshared.<br>
+<strong>"No Change"</strong> — Select this to skip a category.<br>
+<strong>Read-only elements</strong> — Elements you don't own will be skipped automatically.
+</div>
+<h2>Example Mapping</h2>
+<ul>
+<li>Walls → AR_Structure</li>
+<li>Ducts → MEP_Ventilation</li>
+<li>Pipes → MEP_Plumbing</li>
+<li>Structural Columns → STR_Frame</li>
+</ul>
+</body></html>

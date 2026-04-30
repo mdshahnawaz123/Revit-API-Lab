@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Shared Parameter Manager Help</title>
+<style>body{font-family:Segoe UI,sans-serif;max-width:700px;margin:40px auto;padding:20px;background:#1a1a1a;color:#ddd}
+h1{color:#007ACC}h2{color:#0ea5e9;border-bottom:1px solid #333;padding-bottom:5px}
+.tip{background:#222;border-left:3px solid #007ACC;padding:10px 15px;margin:10px 0;border-radius:4px}</style>
+</head><body>
+<h1>Shared Parameter Manager</h1>
+<p>Bulk-apply shared parameters from your .txt file to multiple Revit categories in one operation.</p>
+<h2>How To Use</h2>
+<ol>
+<li><strong>Browse</strong> — Select your shared parameter .txt file</li>
+<li><strong>Load</strong> — Click Load to read all parameter groups and definitions</li>
+<li><strong>Select Parameters</strong> — Check the parameters you want to add (use search to filter)</li>
+<li><strong>Select Categories</strong> — Check the categories to bind to (Select All / Clear All available)</li>
+<li><strong>Choose Binding</strong> — Instance (per-element) or Type (per-type)</li>
+<li><strong>Choose Group</strong> — Where the parameter appears in Properties (Identity Data, Dimensions, etc.)</li>
+<li><strong>Apply</strong> — Click Apply to Project</li>
+</ol>
+<h2>Important Notes</h2>
+<div class="tip">
+<strong>Already Existing:</strong> Parameters that already exist in the project will be skipped automatically.<br>
+<strong>Instance vs Type:</strong> Instance parameters can hold different values per element. Type parameters share values across all instances of the same type.
+</div>
+</body></html>

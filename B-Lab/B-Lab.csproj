@@ -39,25 +39,4 @@
 		</Content>
 	</ItemGroup>
 
-	<Target Name="CreateAddinManifest" AfterTargets="Build">
-		<ItemGroup>
-			<RevitVersion Include="2024" Condition="'$(TargetFramework)' == 'net48'" />
-			<RevitVersion Include="2025;2026;2027" Condition="'$(TargetFramework)' == 'net8.0-windows'" />
-		</ItemGroup>
-		<PropertyGroup>
-			<AddinContent><![CDATA[<?xml version="1.0" encoding="utf-8"?>
-<RevitAddIns>
-  <AddIn Type="Application">
-    <Name>B-Lab AddIn</Name>
-    <Assembly>$(TargetDir)B-Lab.dll</Assembly>
-    <ClientId>0d9c15ae-c9e1-4120-b490-d46c3fc9b9ef</ClientId>
-    <FullClassName>B_Lab.RevitApp.App</FullClassName>
-    <VendorId>ADSK</VendorId>
-    <VendorDescription>Autodesk, www.autodesk.com</VendorDescription>
-  </AddIn>
-</RevitAddIns>]]></AddinContent>
-		</PropertyGroup>
-		
-		<WriteLinesToFile File="$(CommonApplicationData)\Autodesk\Revit\Addins\%(RevitVersion.Identity)\B-Lab.addin" Lines="$(AddinContent)" Overwrite="true" Encoding="UTF-8" />
-	</Target>
 </Project>
