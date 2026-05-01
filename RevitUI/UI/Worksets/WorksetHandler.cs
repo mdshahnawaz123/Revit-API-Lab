@@ -8,7 +8,20 @@ namespace RevitUI.UI.Worksets
 {
     public class WorksetHandler : IExternalEventHandler
     {
-        public bool ApplyMapping { get; set; } = false;
+        public enum RequestTypeEnum
+        {
+            None,
+            FetchInitialData,
+            FetchTypes,
+            FetchElements,
+            AssignWorkset
+        }
+
+        public RequestTypeEnum RequestType { get; set; } = RequestTypeEnum.None;
+        public string SelectedCategory { get; set; }
+        public string SelectedType { get; set; }
+        public string TargetWorkset { get; set; }
+        public bool AssignToAll { get; set; }
 
         public void Execute(UIApplication app)
         {
@@ -19,93 +32,139 @@ namespace RevitUI.UI.Worksets
                 return;
             }
 
-            if (ApplyMapping)
+            try
             {
-                ProcessMapping(doc);
+                switch (RequestType)
+                {
+                    case RequestTypeEnum.FetchInitialData:
+                        FetchInitialData(doc);
+                        break;
+                    case RequestTypeEnum.FetchTypes:
+                        FetchTypes(doc);
+                        break;
+                    case RequestTypeEnum.FetchElements:
+                        FetchElements(doc);
+                        break;
+                    case RequestTypeEnum.AssignWorkset:
+                        AssignWorkset(doc);
+                        break;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                FetchProjectData(doc);
+                TaskDialog.Show("Error", "Handler Error: " + ex.Message);
+            }
+            finally
+            {
+                RequestType = RequestTypeEnum.None;
             }
         }
 
-        private void FetchProjectData(Document doc)
+        private void FetchInitialData(Document doc)
         {
-            // 1. Get all project worksets (User created only)
             var worksets = new FilteredWorksetCollector(doc)
                 .OfKind(WorksetKind.UserWorkset)
                 .Select(w => w.Name)
                 .OrderBy(n => n)
                 .ToList();
 
-            // 2. Get all categories present in the model
             var categories = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
                 .Where(e => e.Category != null)
                 .Select(e => e.Category.Name)
                 .Distinct()
                 .OrderBy(n => n)
-                .Select(n => new WorksetMapping { CategoryName = n, TargetWorkset = "No Change" })
                 .ToList();
 
-            worksets.Insert(0, "No Change");
-
-            // Update UI
             RevitUI.Command.WorksetCommand.Instance?.Dispatcher.Invoke(() =>
             {
-                RevitUI.Command.WorksetCommand.Instance.LoadData(categories, worksets);
+                RevitUI.Command.WorksetCommand.Instance.UpdateInitialData(categories, worksets);
             });
         }
 
-        private void ProcessMapping(Document doc)
+        private void FetchTypes(Document doc)
         {
-            var ui = RevitUI.Command.WorksetCommand.Instance;
-            if (ui == null) return;
+            if (string.IsNullOrEmpty(SelectedCategory)) return;
 
-            var mappings = ui.Mappings.Where(m => m.TargetWorkset != "No Change").ToList();
-            if (mappings.Count == 0) return;
+            var types = new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType()
+                .Where(e => e.Category?.Name == SelectedCategory)
+                .Select(e => doc.GetElement(e.GetTypeId())?.Name)
+                .Where(n => n != null)
+                .Distinct()
+                .OrderBy(n => n)
+                .ToList();
 
-            using (Transaction trans = new Transaction(doc, "Smart Workset Automator"))
+            RevitUI.Command.WorksetCommand.Instance?.Dispatcher.Invoke(() =>
             {
-                trans.Start();
-                try
-                {
-                    int totalChanged = 0;
-                    foreach (var map in mappings)
-                    {
-                        var targetWorkset = new FilteredWorksetCollector(doc)
-                            .OfKind(WorksetKind.UserWorkset)
-                            .FirstOrDefault(w => w.Name == map.TargetWorkset);
-
-                        if (targetWorkset == null) continue;
-
-                        var elements = new FilteredElementCollector(doc)
-                            .WhereElementIsNotElementType()
-                            .Where(e => e.Category?.Name == map.CategoryName)
-                            .ToList();
-
-                        foreach (var elem in elements)
-                        {
-                            Parameter param = elem.get_Parameter(BuiltInParameter.ELEM_PARTITION_PARAM);
-                            if (param != null && !param.IsReadOnly)
-                            {
-                                param.Set(targetWorkset.Id.IntegerValue);
-                                totalChanged++;
-                            }
-                        }
-                    }
-                    trans.Commit();
-                    TaskDialog.Show("B-Lab", $"Successfully moved {totalChanged} elements to their target worksets.");
-                    ApplyMapping = false;
-                }
-                catch (Exception ex)
-                {
-                    trans.RollBack();
-                    TaskDialog.Show("Error", ex.Message);
-                }
-            }
+                RevitUI.Command.WorksetCommand.Instance.UpdateElementTypes(types);
+            });
         }
 
-        public string GetName() => "Smart Workset Handler";
+        private void FetchElements(Document doc)
+        {
+            if (string.IsNullOrEmpty(SelectedCategory) || string.IsNullOrEmpty(SelectedType)) return;
+
+            var elements = new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType()
+                .Where(e => e.Category?.Name == SelectedCategory && doc.GetElement(e.GetTypeId())?.Name == SelectedType)
+                .Select(e => new ElementData
+                {
+                    Id = e.Id.ToString(),
+                    TypeName = doc.GetElement(e.GetTypeId())?.Name,
+                    WorksetName = doc.GetWorksetTable().GetWorkset(e.WorksetId).Name
+                })
+                .ToList();
+
+            RevitUI.Command.WorksetCommand.Instance?.Dispatcher.Invoke(() =>
+            {
+                RevitUI.Command.WorksetCommand.Instance.UpdateElements(elements);
+            });
+        }
+
+        private void AssignWorkset(Document doc)
+        {
+            var workset = new FilteredWorksetCollector(doc)
+                .OfKind(WorksetKind.UserWorkset)
+                .FirstOrDefault(w => w.Name == TargetWorkset);
+
+            if (workset == null) return;
+
+            var collector = new FilteredElementCollector(doc).WhereElementIsNotElementType();
+            
+            if (AssignToAll)
+            {
+                collector.Where(e => e.Category?.Name == SelectedCategory);
+            }
+            else
+            {
+                collector.Where(e => e.Category?.Name == SelectedCategory && doc.GetElement(e.GetTypeId())?.Name == SelectedType);
+            }
+
+            var elements = collector.ToList();
+
+            using (Transaction t = new Transaction(doc, "Assign Workset"))
+            {
+                t.Start();
+                int count = 0;
+                foreach (var e in elements)
+                {
+                    Parameter p = e.get_Parameter(BuiltInParameter.ELEM_PARTITION_PARAM);
+                    if (p != null && !p.IsReadOnly)
+                    {
+                        p.Set(workset.Id.IntegerValue);
+                        count++;
+                    }
+                }
+                t.Commit();
+                TaskDialog.Show("Success", $"Assigned {count} elements to workset '{TargetWorkset}'.");
+            }
+
+            // Refresh the element list in UI
+            FetchElements(doc);
+        }
+
+        public string GetName() => "Workset Police Handler";
     }
 }
+

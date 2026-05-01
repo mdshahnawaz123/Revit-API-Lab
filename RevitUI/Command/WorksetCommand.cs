@@ -2,6 +2,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitUI.UI.Worksets;
+using RevitUI.UI;
 using System;
 
 namespace RevitUI.Command
@@ -15,6 +16,11 @@ namespace RevitUI.Command
         {
             try
             {
+                if (!UI.LoginGuard.IsAuthorized())
+                {
+                    return Result.Cancelled;
+                }
+
                 if (Instance != null)
                 {
                     Instance.Activate();
@@ -25,6 +31,7 @@ namespace RevitUI.Command
                 var externalEvent = ExternalEvent.Create(handler);
                 
                 Instance = new WorksetDashboard(externalEvent, handler);
+                Instance.Closed += (s, e) => Instance = null; // Reset on close
                 Instance.Show();
 
                 return Result.Succeeded;

@@ -2,6 +2,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitUI.UI.SharedParam;
+using RevitUI.UI;
 using System;
 
 namespace RevitUI.Command
@@ -15,19 +16,23 @@ namespace RevitUI.Command
         {
             try
             {
+                if (!UI.LoginGuard.IsAuthorized())
+                {
+                    return Result.Cancelled;
+                }
+
                 if (Instance != null)
                 {
                     Instance.Activate();
                     return Result.Succeeded;
                 }
 
-                var dashboard = new SharedParamDashboard(null, null);
-                var handler = new SharedParamHandler(dashboard);
+                var handler = new SharedParamHandler(null);
                 var externalEvent = ExternalEvent.Create(handler);
-
-                // Re-create with proper references
-                dashboard.Close();
+                
                 Instance = new SharedParamDashboard(externalEvent, handler);
+                Instance.Closed += (s, e) => Instance = null; // Reset on close
+                handler.SetDashboard(Instance);
                 Instance.Show();
 
                 return Result.Succeeded;

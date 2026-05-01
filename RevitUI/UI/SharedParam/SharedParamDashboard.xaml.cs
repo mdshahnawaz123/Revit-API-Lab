@@ -13,25 +13,57 @@ namespace RevitUI.UI.SharedParam
         private readonly SharedParamHandler _handler;
         private List<CheckBox> _paramCheckboxes = new List<CheckBox>();
         private List<CheckBox> _categoryCheckboxes = new List<CheckBox>();
+        private readonly string _historyFilePath;
 
         public SharedParamDashboard(ExternalEvent externalEvent, SharedParamHandler handler)
         {
             InitializeComponent();
-            this.HideIcon();
             _externalEvent = externalEvent;
             _handler = handler;
 
+            _historyFilePath = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "B-Lab", "Revit", "SharedParamHistory.txt");
+
+            LoadHistory();
+            _externalEvent = externalEvent;
+            _handler = handler;
+
+            // Set Revit as owner to prevent native dialogs from going behind this window
+            var revitProcess = System.Diagnostics.Process.GetCurrentProcess();
+            new System.Windows.Interop.WindowInteropHelper(this).Owner = revitProcess.MainWindowHandle;
+
+            this.HideIcon();
+
             // Populate built-in parameter groups
+            CmbGroup.Items.Add("General");
             CmbGroup.Items.Add("Identity Data");
             CmbGroup.Items.Add("Dimensions");
             CmbGroup.Items.Add("Construction");
-            CmbGroup.Items.Add("Structural");
+            CmbGroup.Items.Add("Graphics");
+            CmbGroup.Items.Add("Phasing");
             CmbGroup.Items.Add("Mechanical");
+            CmbGroup.Items.Add("Mechanical - Flow");
+            CmbGroup.Items.Add("Mechanical - Loads");
             CmbGroup.Items.Add("Electrical");
+            CmbGroup.Items.Add("Electrical - Lighting");
+            CmbGroup.Items.Add("Electrical - Loads");
             CmbGroup.Items.Add("Plumbing");
+            CmbGroup.Items.Add("Structural");
+            CmbGroup.Items.Add("Structural Analysis");
             CmbGroup.Items.Add("Energy Analysis");
+            CmbGroup.Items.Add("Fire Protection");
+            CmbGroup.Items.Add("Materials and Finishes");
+            CmbGroup.Items.Add("IFC Parameters");
             CmbGroup.Items.Add("Other");
             CmbGroup.SelectedIndex = 0;
+
+            // Populate data types for new parameters
+            PopulateDataTypes();
+
+            // Initial load of existing project shared parameters
+            _handler.Mode = SharedParamMode.FetchExisting;
+            _externalEvent.Raise();
         }
 
         public void LoadCategories(List<string> categories)
@@ -53,6 +85,44 @@ namespace RevitUI.UI.SharedParam
             }
         }
 
+        private void LoadHistory()
+        {
+            try
+            {
+                if (System.IO.File.Exists(_historyFilePath))
+                {
+                    var lines = System.IO.File.ReadAllLines(_historyFilePath)
+                                      .Where(l => !string.IsNullOrWhiteSpace(l) && System.IO.File.Exists(l))
+                                      .Distinct()
+                                      .ToList();
+                    foreach (var line in lines) CmbFileHistory.Items.Add(line);
+                    if (CmbFileHistory.Items.Count > 0) CmbFileHistory.SelectedIndex = 0;
+                }
+            }
+            catch { }
+        }
+
+        private void SaveToHistory(string path)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path) || !System.IO.File.Exists(path)) return;
+
+                var items = CmbFileHistory.Items.Cast<object>().Select(i => i.ToString()).ToList();
+                if (!items.Contains(path))
+                {
+                    CmbFileHistory.Items.Insert(0, path);
+                    CmbFileHistory.SelectedIndex = 0;
+                }
+
+                var dir = System.IO.Path.GetDirectoryName(_historyFilePath);
+                if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
+
+                System.IO.File.WriteAllLines(_historyFilePath, CmbFileHistory.Items.Cast<object>().Select(i => i.ToString()));
+            }
+            catch { }
+        }
+
         private void BtnBrowse_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new Microsoft.Win32.OpenFileDialog
@@ -62,34 +132,87 @@ namespace RevitUI.UI.SharedParam
             };
             if (dlg.ShowDialog() == true)
             {
-                TxtFilePath.Text = dlg.FileName;
-                TxtFilePath.Foreground = System.Windows.Media.Brushes.White;
+                CmbFileHistory.Text = dlg.FileName;
+                BtnLoad_Click(null, null);
             }
         }
 
         private void BtnLoad_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(TxtFilePath.Text) || TxtFilePath.Text.Contains("Select a"))
+            string path = CmbFileHistory.Text;
+            if (string.IsNullOrEmpty(path) || !System.IO.File.Exists(path) || path.Contains("Select a"))
             {
-                MessageBox.Show("Please select a shared parameter file first.", "B-Lab");
+                MessageBox.Show("Please select a valid shared parameter file first.", "B-Lab");
                 return;
             }
 
-            _handler.SharedParamFilePath = TxtFilePath.Text;
+            SaveToHistory(path);
+            _handler.SharedParamFilePath = path;
             _handler.Mode = SharedParamMode.LoadFile;
             _externalEvent.Raise();
 
             TxtStatus.Text = "Loading parameters...";
         }
 
-        public void PopulateParameters(List<SharedParamInfo> parameters)
+        private void TxtSearchCat_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ParamList.Children.Clear();
-            _paramCheckboxes.Clear();
+            string filter = TxtSearchCat.Text.ToLower().Trim();
+            foreach (var cb in _categoryCheckboxes)
+            {
+                bool matches = string.IsNullOrEmpty(filter) || cb.Content.ToString().ToLower().Contains(filter);
+                cb.Visibility = matches ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void BtnSelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var cb in _categoryCheckboxes)
+            {
+                if (cb.Visibility == Visibility.Visible)
+                    cb.IsChecked = true;
+            }
+        }
+
+        private void BtnClearAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var cb in _categoryCheckboxes)
+            {
+                if (cb.Visibility == Visibility.Visible)
+                    cb.IsChecked = false;
+            }
+        }
+
+        private void BtnHelp_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string helpPath = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "Resources", "SharedParamHelp.html");
+
+                if (System.IO.File.Exists(helpPath))
+                    System.Diagnostics.Process.Start(helpPath);
+                else
+                    MessageBox.Show("Help file not found.", "B-Lab");
+            }
+            catch { }
+        }
+
+        public void PopulateParameters(List<SharedParamInfo> parameters, bool clearExisting = true)
+        {
+            if (clearExisting)
+            {
+                ParamList.Children.Clear();
+                _paramCheckboxes.Clear();
+            }
 
             string currentGroup = "";
             foreach (var p in parameters.OrderBy(x => x.Group).ThenBy(x => x.Name))
             {
+                // Avoid duplicates
+                if (_paramCheckboxes.Any(cb => (cb.Tag as SharedParamInfo)?.Guid == p.Guid))
+                    continue;
+
                 if (p.Group != currentGroup)
                 {
                     currentGroup = p.Group;
@@ -112,13 +235,6 @@ namespace RevitUI.UI.SharedParam
 
                 var sp = new StackPanel { Orientation = Orientation.Horizontal };
                 sp.Children.Add(new TextBlock { Text = p.Name, Foreground = System.Windows.Media.Brushes.White, FontSize = 12 });
-                sp.Children.Add(new TextBlock
-                {
-                    Text = $"  ({p.DataType})",
-                    Foreground = System.Windows.Media.Brushes.Gray,
-                    FontSize = 10,
-                    VerticalAlignment = VerticalAlignment.Center
-                });
                 cb.Content = sp;
 
                 _paramCheckboxes.Add(cb);
@@ -136,16 +252,6 @@ namespace RevitUI.UI.SharedParam
                 if (cb.Tag is SharedParamInfo info)
                     cb.Visibility = info.Name.ToLower().Contains(query) ? Visibility.Visible : Visibility.Collapsed;
             }
-        }
-
-        private void BtnSelectAll_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (var cb in _categoryCheckboxes) cb.IsChecked = true;
-        }
-
-        private void BtnClearAll_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (var cb in _categoryCheckboxes) cb.IsChecked = false;
         }
 
         private void BtnApply_Click(object sender, RoutedEventArgs e)
@@ -179,6 +285,63 @@ namespace RevitUI.UI.SharedParam
 
             _externalEvent.Raise();
             TxtStatus.Text = $"Applying {selectedParams.Count} params to {selectedCategories.Count} categories...";
+        }
+
+        private void PopulateDataTypes()
+        {
+            CmbNewParamType.Items.Add("Text");
+            CmbNewParamType.Items.Add("Multiline Text");
+            CmbNewParamType.Items.Add("Integer");
+            CmbNewParamType.Items.Add("Number");
+            CmbNewParamType.Items.Add("Length");
+            CmbNewParamType.Items.Add("Area");
+            CmbNewParamType.Items.Add("Volume");
+            CmbNewParamType.Items.Add("Angle");
+            CmbNewParamType.Items.Add("Slope");
+            CmbNewParamType.Items.Add("Currency");
+            CmbNewParamType.Items.Add("URL");
+            CmbNewParamType.Items.Add("Material");
+            CmbNewParamType.Items.Add("Fill Pattern");
+            CmbNewParamType.Items.Add("Image");
+            CmbNewParamType.Items.Add("YesNo");
+            CmbNewParamType.SelectedIndex = 0;
+        }
+
+        private void BtnShowCreateForm_Click(object sender, RoutedEventArgs e)
+        {
+            CreateParamForm.Visibility = CreateParamForm.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void BtnCancelCreate_Click(object sender, RoutedEventArgs e)
+        {
+            CreateParamForm.Visibility = Visibility.Collapsed;
+        }
+
+        private void BtnCreateParam_Click(object sender, RoutedEventArgs e)
+        {
+            string rawNames = TxtNewParamName.Text;
+            var names = rawNames.Split(new[] { '\r', '\n', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(n => n.Trim())
+                                .Where(n => !string.IsNullOrEmpty(n))
+                                .ToList();
+            
+            string typeStr = CmbNewParamType.SelectedItem?.ToString();
+
+            if (names.Count == 0)
+            {
+                MessageBox.Show("Please enter at least one parameter name.", "B-Lab");
+                return;
+            }
+
+            _handler.NewParamNames = names;
+            _handler.NewParamTypeStr = typeStr;
+            _handler.IsNewParamShared = RbNewSharedParam.IsChecked == true;
+            _handler.Mode = SharedParamMode.CreateNew;
+            _externalEvent.Raise();
+
+            CreateParamForm.Visibility = Visibility.Collapsed;
+            TxtNewParamName.Clear();
+            TxtStatus.Text = $"Creating {names.Count} parameters...";
         }
 
         private void BtnClose_Click(object sender, RoutedEventArgs e)
