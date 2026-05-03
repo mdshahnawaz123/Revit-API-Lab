@@ -14,7 +14,7 @@ namespace RevitUI.Command
             try
             {
                 // Use the singleton helper to show the window
-                WindowExtensions.ShowSingleton(() => new AboutMe(), hideIcon: false);
+                WindowExtensions.ShowSingleton(() => new RevitUI.UI.About.AboutDashboard(commandData.Application), hideIcon: false);
                 return Result.Succeeded;
             }
             catch (Exception ex)

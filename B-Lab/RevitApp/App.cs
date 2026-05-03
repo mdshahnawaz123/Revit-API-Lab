@@ -40,8 +40,8 @@ namespace B_Lab.RevitApp
                 string dll = Path.Combine(_assemblyFolder!, "B_Lab_RevitUI.dll");
 
                 // ── Button Data ───────────────────────────────────────────────
-                var mepBtn = new PushButtonData("MEP_Opening_BTN", "MEP\nOpening", dll, "RevitUI.Command.LinkedDoorOpening");
-                var dwBtn = new PushButtonData("DW_Opening_BTN", "Door/Window\nOpening", dll, "RevitUI.Command.LinkedDoorOpeningManual");
+                var mepBtn = new PushButtonData("MEP_Opening_BTN", "MEP\nOpening", dll, "RevitUI.Command.OpeningCommand");
+                var dwBtn = new PushButtonData("DW_Opening_BTN", "Door/Window\nOpening", dll, "RevitUI.Command.LinkedDoorOpening");
                 var paraBtn = new PushButtonData("BDD_ParameterFilter_BTN_V3", "Parameter\nFilter", dll, "RevitUI.Command.ParamCommand");
                 var healthBtn = new PushButtonData("BDD_ModelHealth_BTN_V3", "Model\nHealth", dll, "RevitUI.Command.ModelHealthCommand");
                 var worksetBtn = new PushButtonData("BDD_Workset_BTN", "Workset\nAuto", dll, "RevitUI.Command.WorksetCommand");
@@ -53,6 +53,7 @@ namespace B_Lab.RevitApp
                 var interopBtn = new PushButtonData("BDD_Interop_BTN", "Interop\nDashboard", dll, "RevitUI.Command.InteropCommand");
                 var exportBtn = new PushButtonData("BDD_AutoCadExport_BTN", "Master\nExport", dll, "RevitUI.Command.AutoCadExportCommand");
                 var sharedBtn = new PushButtonData("BDD_SharedParam_BTN", "Shared\nParam", dll, "RevitUI.Command.SharedParamCommand");
+                var roomSheetBtn = new PushButtonData("BDD_RoomSheet_BTN", "Room\nSheet", dll, "RevitUI.Command.RoomSheetCommand");
                 var aboutBtn = new PushButtonData("BDD_AboutMe_BTN", "About\nDeveloper", dll, "RevitUI.Command.AboutMeCommand");
 
                 // ── Add Buttons ───────────────────────────────────────────────
@@ -74,6 +75,7 @@ namespace B_Lab.RevitApp
                 var interopButton = GetOrAddButton(panel2, interopBtn);
                 
                 var exportButton = GetOrAddButton(panel3, exportBtn);
+                var roomSheetButton = GetOrAddButton(panel3, roomSheetBtn);
                 var aboutButton = GetOrAddButton(panel5, aboutBtn);
 
                 // ── Icons ─────────────────────────────────────────────────────
@@ -94,7 +96,8 @@ namespace B_Lab.RevitApp
                     worksetButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Workset.png", uiAssembly);
                     purgeButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Purge.png", uiAssembly);
                     exportButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Export.png", uiAssembly);
-                    aboutButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.About.png", uiAssembly);
+                    roomSheetButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Export.png", uiAssembly); // Reusing export icon for now
+                    aboutButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.BDD_Main.png", uiAssembly);
                     sharedButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.SharedParam.png", uiAssembly);
                 } catch { }
 
@@ -110,6 +113,7 @@ namespace B_Lab.RevitApp
                 SetHelp(slopeButton, "SlopeHelp.html");
                 SetHelp(interopButton, "InteropHelp.html");
                 SetHelp(exportButton, "AutoCadExportHelp.html");
+                SetHelp(roomSheetButton, "AutoCadExportHelp.html");
                 SetHelp(sharedButton, "SharedParamHelp.html");
                 SetHelp(aboutButton, "AboutHelp.html");
 

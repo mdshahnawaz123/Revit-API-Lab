@@ -1,0 +1,10 @@
+global using TaskDialog = Autodesk.Revit.UI.TaskDialog;
+global using MessageBox = System.Windows.MessageBox;
+global using Brushes = System.Windows.Media.Brushes;
+global using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
+global using Orientation = System.Windows.Controls.Orientation;
+global using CheckBox = System.Windows.Controls.CheckBox;
+global using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+global using Binding = Autodesk.Revit.DB.Binding;
+global using View = Autodesk.Revit.DB.View;
+global using Color = Autodesk.Revit.DB.Color;

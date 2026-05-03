@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace RevitUI.UI.SharedParam
 {
-    public enum SharedParamMode { LoadFile, Apply, FetchExisting, CreateNew }
+    public enum SharedParamMode { LoadFile, Apply, FetchExisting, CreateNew, ExportCsv, ImportCsv }
 
     public class SharedParamHandler : IExternalEventHandler
     {
@@ -21,6 +21,7 @@ namespace RevitUI.UI.SharedParam
         public List<string> NewParamNames { get; set; } = new List<string>();
         public string NewParamTypeStr { get; set; }
         public bool IsNewParamShared { get; set; }
+        public string CsvFilePath { get; set; }
 
         private SharedParamDashboard _dashboard;
 
@@ -53,6 +54,12 @@ namespace RevitUI.UI.SharedParam
                         break;
                     case SharedParamMode.Apply:
                         ApplyParameters(app, doc);
+                        break;
+                    case SharedParamMode.ExportCsv:
+                        ExportToCsv(doc);
+                        break;
+                    case SharedParamMode.ImportCsv:
+                        ImportFromCsv(app, doc);
                         break;
                 }
             }
@@ -345,6 +352,98 @@ namespace RevitUI.UI.SharedParam
             }
             catch { }
             return "Unknown";
+        }
+
+        private void ExportToCsv(Document doc)
+        {
+            if (string.IsNullOrEmpty(CsvFilePath)) return;
+
+            // Get all current parameters from the dashboard
+            var parameters = new List<SharedParamInfo>();
+            _dashboard.Dispatcher.Invoke(() =>
+            {
+                parameters = _dashboard.GetLoadedParameters();
+            });
+
+            if (parameters.Count == 0)
+            {
+                TaskDialog.Show("Error", "No parameters loaded to export.");
+                return;
+            }
+
+            try
+            {
+                using (StreamWriter sw = new StreamWriter(CsvFilePath))
+                {
+                    sw.WriteLine("Name,Group,DataType,Guid");
+                    foreach (var p in parameters)
+                    {
+                        sw.WriteLine($"{EscapeCsv(p.Name)},{EscapeCsv(p.Group)},{EscapeCsv(p.DataType)},{p.Guid}");
+                    }
+                }
+                TaskDialog.Show("Export Complete", $"Successfully exported {parameters.Count} parameters to CSV.");
+            }
+            catch (Exception ex)
+            {
+                TaskDialog.Show("Export Error", ex.Message);
+            }
+        }
+
+        private void ImportFromCsv(UIApplication app, Document doc)
+        {
+            if (string.IsNullOrEmpty(CsvFilePath) || !File.Exists(CsvFilePath)) return;
+
+            try
+            {
+                var lines = File.ReadAllLines(CsvFilePath).Skip(1); // Skip header
+                int imported = 0;
+                
+                // We'll use the first shared parameter file loaded or the active one
+                string sharedFile = app.Application.SharedParametersFilename;
+                if (string.IsNullOrEmpty(sharedFile) || !File.Exists(sharedFile))
+                {
+                    TaskDialog.Show("Error", "Please load a Shared Parameter File (.txt) first to define where to import.");
+                    return;
+                }
+
+                DefinitionFile defFile = app.Application.OpenSharedParameterFile();
+                if (defFile == null) return;
+
+                foreach (var line in lines)
+                {
+                    var parts = line.Split(',');
+                    if (parts.Length < 3) continue;
+
+                    string name = parts[0].Trim();
+                    string groupName = parts[1].Trim();
+                    string typeStr = parts[2].Trim();
+
+                    DefinitionGroup group = defFile.Groups.get_Item(groupName) ?? defFile.Groups.Create(groupName);
+                    if (group.Definitions.get_Item(name) != null) continue;
+
+                    var specId = GetSpecTypeId(typeStr);
+                    ExternalDefinitionCreationOptions options = new ExternalDefinitionCreationOptions(name, specId);
+                    group.Definitions.Create(options);
+                    imported++;
+                }
+
+                LoadSharedParameterFile(app, doc);
+                TaskDialog.Show("Import Complete", $"Successfully imported {imported} parameters from CSV.");
+            }
+            catch (Exception ex)
+            {
+                TaskDialog.Show("Import Error", ex.Message);
+            }
+        }
+
+        private string EscapeCsv(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            if (text.Contains(",") || text.Contains("\"") || text.Contains("\n"))
+            {
+                return "\"" + text.Replace("\"", "\"\"") + "\"";
+            }
+            return text;
         }
 
         private ForgeTypeId GetGroupTypeId(string groupName)

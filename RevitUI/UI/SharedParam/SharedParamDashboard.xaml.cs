@@ -142,7 +142,7 @@ namespace RevitUI.UI.SharedParam
             string path = CmbFileHistory.Text;
             if (string.IsNullOrEmpty(path) || !System.IO.File.Exists(path) || path.Contains("Select a"))
             {
-                MessageBox.Show("Please select a valid shared parameter file first.", "B-Lab");
+                MessageBox.Show(this, "Please select a valid shared parameter file first.", "B-Lab");
                 return;
             }
 
@@ -193,7 +193,7 @@ namespace RevitUI.UI.SharedParam
                 if (System.IO.File.Exists(helpPath))
                     System.Diagnostics.Process.Start(helpPath);
                 else
-                    MessageBox.Show("Help file not found.", "B-Lab");
+                    MessageBox.Show(this, "Help file not found.", "B-Lab");
             }
             catch { }
         }
@@ -209,8 +209,10 @@ namespace RevitUI.UI.SharedParam
             string currentGroup = "";
             foreach (var p in parameters.OrderBy(x => x.Group).ThenBy(x => x.Name))
             {
-                // Avoid duplicates
-                if (_paramCheckboxes.Any(cb => (cb.Tag as SharedParamInfo)?.Guid == p.Guid))
+                // Avoid duplicates using Guid, but allow multiple 'N/A' GUIDs for non-shared project parameters
+                if (p.Guid != "N/A" && _paramCheckboxes.Any(cb => (cb.Tag as SharedParamInfo)?.Guid == p.Guid && (cb.Tag as SharedParamInfo)?.Group == p.Group))
+                    continue;
+                if (p.Guid == "N/A" && _paramCheckboxes.Any(cb => (cb.Tag as SharedParamInfo)?.Name == p.Name && (cb.Tag as SharedParamInfo)?.Group == p.Group))
                     continue;
 
                 if (p.Group != currentGroup)
@@ -254,6 +256,44 @@ namespace RevitUI.UI.SharedParam
             }
         }
 
+        public List<SharedParamInfo> GetLoadedParameters()
+        {
+            return _paramCheckboxes.Select(cb => cb.Tag as SharedParamInfo).Where(info => info != null).ToList();
+        }
+
+        private void BtnExportCsv_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "CSV Files (*.csv)|*.csv",
+                Title = "Export Parameters to CSV",
+                FileName = "RevitSharedParameters.csv"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                _handler.CsvFilePath = dlg.FileName;
+                _handler.Mode = SharedParamMode.ExportCsv;
+                _externalEvent.Raise();
+            }
+        }
+
+        private void BtnImportCsv_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "CSV Files (*.csv)|*.csv",
+                Title = "Import Parameters from CSV"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                _handler.CsvFilePath = dlg.FileName;
+                _handler.Mode = SharedParamMode.ImportCsv;
+                _externalEvent.Raise();
+            }
+        }
+
         private void BtnApply_Click(object sender, RoutedEventArgs e)
         {
             var selectedParams = _paramCheckboxes
@@ -268,12 +308,12 @@ namespace RevitUI.UI.SharedParam
 
             if (selectedParams.Count == 0)
             {
-                MessageBox.Show("Please select at least one parameter.", "B-Lab");
+                MessageBox.Show(this, "Please select at least one parameter.", "B-Lab");
                 return;
             }
             if (selectedCategories.Count == 0)
             {
-                MessageBox.Show("Please select at least one category.", "B-Lab");
+                MessageBox.Show(this, "Please select at least one category.", "B-Lab");
                 return;
             }
 
@@ -329,7 +369,7 @@ namespace RevitUI.UI.SharedParam
 
             if (names.Count == 0)
             {
-                MessageBox.Show("Please enter at least one parameter name.", "B-Lab");
+                MessageBox.Show(this, "Please enter at least one parameter name.", "B-Lab");
                 return;
             }
 

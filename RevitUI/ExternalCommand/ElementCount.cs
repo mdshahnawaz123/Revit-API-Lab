@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.UI;
+using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace RevitUI.ExternalCommand
             }
             catch(Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                TaskDialog.Show("Error", ex.Message);
             }
         }
 

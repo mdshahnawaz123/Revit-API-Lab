@@ -186,7 +186,7 @@ namespace RevitUI.UI
                 
                 _isUpdatingHosts = false;
 
-                MessageBox.Show(
+                MessageBox.Show(this,
                     "Please generate Wall sleeves separately from Floor/Ceiling sleeves!\n\n" +
                     "Wall sleeves point horizontally, while floor sleeves point vertically, " +
                     "meaning you MUST select a distinctly oriented Family from the dropdown for each type.", 
@@ -360,8 +360,8 @@ namespace RevitUI.UI
             CheckBoxCeil.IsChecked == true ||
             CheckBoxBeam.IsChecked == true;
 
-        private static void Warn(string msg) =>
-            MessageBox.Show(msg, "Selection Required",
+        private void Warn(string msg) =>
+            MessageBox.Show(this, msg, "Selection Required",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 }

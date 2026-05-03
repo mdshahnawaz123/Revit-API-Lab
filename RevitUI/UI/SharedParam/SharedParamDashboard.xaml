@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Shared Parameter Manager" Height="700" Width="900"
         WindowStartupLocation="CenterScreen"
-        Background="#1A1A1A" AllowsTransparency="True" WindowStyle="None">
+        Background="#0B192C" AllowsTransparency="True" WindowStyle="None">
 
     <Window.Resources>
         <Style TargetType="CheckBox">
@@ -218,8 +218,11 @@
                         
                         <Grid Grid.Row="0" Margin="0,0,0,12">
                             <TextBlock Text="PARAMETERS" Foreground="#007ACC" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
-                            <Button Content="+ Create New" HorizontalAlignment="Right" Style="{StaticResource SecondaryButton}" 
-                                    Padding="8,2" FontSize="10" Click="BtnShowCreateForm_Click"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="Export CSV" Style="{StaticResource SecondaryButton}" Padding="8,2" FontSize="10" Margin="0,0,5,0" Click="BtnExportCsv_Click"/>
+                                <Button Content="Import CSV" Style="{StaticResource SecondaryButton}" Padding="8,2" FontSize="10" Margin="0,0,5,0" Click="BtnImportCsv_Click"/>
+                                <Button Content="+ Create New" Style="{StaticResource SecondaryButton}" Padding="8,2" FontSize="10" Click="BtnShowCreateForm_Click"/>
+                            </StackPanel>
                         </Grid>
 
                         <!-- New Parameter Form (Initially Hidden) -->

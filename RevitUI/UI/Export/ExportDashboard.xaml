@@ -1,7 +1,7 @@
 <Window x:Class="RevitUI.UI.Export.ExportDashboard"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="B-Lab Master Export" Height="520" Width="400"
+        Title="B-Lab Master Export" Height="650" Width="400"
         WindowStartupLocation="CenterScreen" Topmost="True"
         Background="#1A1A1A" AllowsTransparency="True" WindowStyle="None">
     
@@ -25,7 +25,8 @@
             <!-- Options -->
             <StackPanel Grid.Row="1">
                 <TextBlock Text="Export Formats" Foreground="Gray" FontSize="11" Margin="0,0,0,10"/>
-                <CheckBox x:Name="ChkPdf" Content="PDF Documents (.pdf)" Foreground="White" IsChecked="True" Margin="0,0,0,12"/>
+                <CheckBox x:Name="ChkPdf" Content="PDF Documents (.pdf)" Foreground="White" IsChecked="True" Margin="0,0,0,5"/>
+                <CheckBox x:Name="ChkCombinePdf" Content="Combine into Single PDF" Foreground="Gray" Margin="25,0,0,12" FontSize="11" IsChecked="False"/>
                 <CheckBox x:Name="ChkCad" Content="AutoCAD DWG (.dwg)" Foreground="White" IsChecked="True" Margin="0,0,0,12"/>
                 <CheckBox x:Name="ChkNwc" Content="Navisworks NWC (.nwc)" Foreground="White" IsChecked="True" Margin="0,0,0,12"/>
                 <CheckBox x:Name="ChkIfc" Content="IFC 4 (.ifc)" Foreground="Gray" IsEnabled="False" Margin="0,0,0,12"/>
@@ -40,10 +41,14 @@
                 <Separator Background="#333" Margin="0,15,0,15"/>
                 
                 <TextBlock Text="Output Folder" Foreground="Gray" FontSize="11" Margin="0,0,0,5"/>
-                <Grid>
+                <Grid Margin="0,0,0,15">
                     <TextBox x:Name="TxtPath" Height="30" Background="#222" Foreground="White" VerticalContentAlignment="Center" Padding="5,0" BorderThickness="1" BorderBrush="#444"/>
                     <Button Content="..." Width="30" Height="30" HorizontalAlignment="Right" Background="#333" Foreground="White" Click="BtnBrowse_Click"/>
                 </Grid>
+
+                <TextBlock Text="Naming System (PDF/DWG)" Foreground="Gray" FontSize="11" Margin="0,0,0,5"/>
+                <TextBox x:Name="TxtNamingFormat" Text="{}{ProjectNumber}_{SheetNumber}_{SheetName}" Height="30" Background="#222" Foreground="White" VerticalContentAlignment="Center" Padding="5,0" BorderThickness="1" BorderBrush="#444"/>
+                <TextBlock Text="Tags: {ProjectNumber}, {SheetNumber}, {SheetName}, {Date}" Foreground="#555" FontSize="9" Margin="0,2,0,0"/>
             </StackPanel>
 
             <!-- Action Button -->

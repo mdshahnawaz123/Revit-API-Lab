@@ -38,6 +38,8 @@ namespace RevitUI.UI.Export
             _handler.ExportPdf = ChkPdf.IsChecked == true;
             _handler.ExportCad = ChkCad.IsChecked == true;
             _handler.ExportNwc = ChkNwc.IsChecked == true;
+            _handler.CombinePdf = ChkCombinePdf.IsChecked == true;
+            _handler.NamingFormat = TxtNamingFormat.Text;
 
             _externalEvent.Raise();
             TaskDialog.Show("B-Lab Export", "Master Export started in background. Please wait for completion message.");

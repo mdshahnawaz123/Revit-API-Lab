@@ -34,7 +34,7 @@ namespace RevitUI.UI
         {
             if (DoorCheckBox.IsChecked != true && WindowCheckBox.IsChecked != true)
             {
-                MessageBox.Show("Please select at least Door or Window.", "Warning");
+                MessageBox.Show(this, "Please select at least Door or Window.", "Warning");
                 return;
             }
 
@@ -64,13 +64,13 @@ namespace RevitUI.UI
         {
             if (_scanHandler.Results == null || _scanHandler.Results.Count == 0)
             {
-                MessageBox.Show("No elements found. Please scan first.", "Warning");
+                MessageBox.Show(this, "No elements found. Please scan first.", "Warning");
                 return;
             }
 
             if (DoorCheckBox.IsChecked != true && WindowCheckBox.IsChecked != true)
             {
-                MessageBox.Show("Please select at least Door or Window.", "Warning");
+                MessageBox.Show(this, "Please select at least Door or Window.", "Warning");
                 return;
             }
 

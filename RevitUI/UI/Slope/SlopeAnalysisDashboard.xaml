@@ -1,9 +1,19 @@
 <Window x:Class="RevitUI.UI.Slope.SlopeAnalysisDashboard"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="B-Lab Slope Analysis" Height="400" Width="350"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        Title="B-Lab Slope Analysis" Height="500" Width="350"
         WindowStartupLocation="CenterScreen" Topmost="True"
         Background="#1A1A1A" AllowsTransparency="True" WindowStyle="None">
+
+    <Window.Resources>
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="#222"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+    </Window.Resources>
     
     <Border CornerRadius="15" BorderBrush="#333" BorderThickness="1">
         <Grid Margin="25">
@@ -33,8 +43,53 @@
                 <Separator Background="#333" Margin="0,0,0,20"/>
 
                 <TextBlock Text="Color Visualization" Foreground="Gray" FontSize="11" Margin="0,0,0,10"/>
-                <RadioButton x:Name="RbNone" Content="No Coloring (Data Only)" Foreground="White" IsChecked="True" Margin="0,0,0,8"/>
-                <RadioButton x:Name="RbHeatMap" Content="Apply Heat-Map (Red = Steep)" Foreground="White" Margin="0,0,0,8"/>
+                <RadioButton x:Name="RbNone" Content="No Coloring (Data Only)" Foreground="White" Margin="0,0,0,8"/>
+                <RadioButton x:Name="RbHeatMap" Content="Apply Custom Coloring" Foreground="White" IsChecked="True" Margin="0,0,0,15"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBlock Text="Unit: " Foreground="Gray" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="ComboUnit" Width="120" Background="#222" Foreground="White" BorderBrush="#444">
+                        <ComboBoxItem Content="Degrees" IsSelected="True"/>
+                        <ComboBoxItem Content="Percentage (%)"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Color Ranges -->
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="80"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Threshold" Foreground="Gray" FontSize="10" Grid.Column="0"/>
+                    <TextBlock Text="Color Picker" Foreground="Gray" FontSize="10" Grid.Column="1" HorizontalAlignment="Center"/>
+                </Grid>
+
+                <StackPanel x:Name="RangePanel">
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="80"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtT1" Text="0" Background="#222" Foreground="White" BorderBrush="#444" VerticalContentAlignment="Center" Padding="5,0"/>
+                        <xctk:ColorPicker x:Name="PickC1" SelectedColor="#90EE90" Background="#222" Foreground="White" BorderBrush="#444" Grid.Column="1" ShowAvailableColors="True" ShowRecentColors="True"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="80"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtT2" Text="5" Background="#222" Foreground="White" BorderBrush="#444" VerticalContentAlignment="Center" Padding="5,0"/>
+                        <xctk:ColorPicker x:Name="PickC2" SelectedColor="#FFA500" Background="#222" Foreground="White" BorderBrush="#444" Grid.Column="1" ShowAvailableColors="True" ShowRecentColors="True"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="80"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtT3" Text="15" Background="#222" Foreground="White" BorderBrush="#444" VerticalContentAlignment="Center" Padding="5,0"/>
+                        <xctk:ColorPicker x:Name="PickC3" SelectedColor="#FF0000" Background="#222" Foreground="White" BorderBrush="#444" Grid.Column="1" ShowAvailableColors="True" ShowRecentColors="True"/>
+                    </Grid>
+                </StackPanel>
             </StackPanel>
 
             <!-- Action -->

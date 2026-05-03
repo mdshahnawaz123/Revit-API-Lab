@@ -103,13 +103,13 @@ namespace RevitUI.UI.AutoCadExport
             var selected = Views.Where(v => v.IsChecked).Select(v => v.Id).ToList();
             if (selected.Count == 0)
             {
-                MessageBox.Show("Please select at least one sheet.", "Export", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(this, "Please select at least one sheet.", "Export", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrEmpty(PathTxt.Text))
             {
-                MessageBox.Show("Please select an export path.", "Export", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(this, "Please select an export path.", "Export", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

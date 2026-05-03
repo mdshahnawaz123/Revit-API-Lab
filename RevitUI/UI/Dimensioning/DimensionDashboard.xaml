@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="BIM Digital Design - Dimension Automation" Height="380" Width="320"
+        Title="BIM Digital Design - Dimension Automation" Height="450" Width="320"
         WindowStartupLocation="CenterScreen" Topmost="True"
         Background="#1A1A1A" AllowsTransparency="True" WindowStyle="None">
     
@@ -58,10 +58,23 @@
                     </StackPanel>
                 </RadioButton>
 
+                <RadioButton x:Name="RbColumns" GroupName="DimMode" Margin="0,0,0,12">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Grid to Column" Foreground="White" FontSize="13"/>
+                        <TextBlock Text=" (Structural Only)" Foreground="#555" FontSize="11" Margin="5,0,0,0"/>
+                    </StackPanel>
+                </RadioButton>
+
                 <Separator Background="#333" Margin="0,10,0,15"/>
 
-                <TextBlock Text="Offset Distance" Foreground="Gray" FontSize="11" Margin="0,0,0,5"/>
+                <TextBlock Text="Offset Distance (mm)" Foreground="Gray" FontSize="11" Margin="0,0,0,5"/>
                 <TextBox x:Name="TxtOffset" Text="1000" Background="#222" Foreground="White" BorderBrush="#444" Padding="5"/>
+
+                <TextBlock Text="Room Source" Foreground="Gray" FontSize="11" Margin="0,15,0,5"/>
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox x:Name="CbIncludeHost" Content="Host Model" Foreground="White" IsChecked="True" Margin="0,0,15,0"/>
+                    <CheckBox x:Name="CbIncludeLinked" Content="Linked Models" Foreground="White"/>
+                </StackPanel>
             </StackPanel>
 
             <!-- Action Button -->

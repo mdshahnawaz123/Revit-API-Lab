@@ -13,19 +13,23 @@ namespace RevitUI.UI.Interoperability
         {
             Document doc = app.ActiveUIDocument.Document;
             
-            // Collect all physical elements
-            var collector = new FilteredElementCollector(doc)
+            // Collect elements and filter for Model categories only
+            var elements = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
-                .WhereElementIsViewIndependent();
+                .WhereElementIsViewIndependent()
+                .Where(e => e.Category != null && 
+                            e.Category.CategoryType == CategoryType.Model && 
+                            !e.Category.Name.Contains("<") && // Exclude <Sketch>, <Internal>, etc.
+                            !e.Category.Name.Contains("Automatic")) // Exclude Automatic Sketch Dimensions
+                .ToList();
 
-            var stats = collector
-                .GroupBy(e => e.Category?.Name ?? "Uncategorized")
-                .Where(g => g.Key != "Uncategorized")
+            var stats = elements
+                .GroupBy(e => e.Category.Name)
                 .Select(g => new CategoryStat
                 {
                     CategoryName = g.Key,
                     ElementCount = g.Count(),
-                    // Logic: Count elements that have an IFC GUID or a Mark
+                    // Logic: Count elements that have interop data
                     CoveragePercent = CalculateCoverage(g.ToList())
                 })
                 .OrderByDescending(s => s.ElementCount)
@@ -43,10 +47,14 @@ namespace RevitUI.UI.Interoperability
         {
             if (elements.Count == 0) return 0;
             
+            // Define interop-critical parameters
+            string[] interopParams = { "IfcGuid", "Mark", "Comments", "Identity Data", "BIM_ID" };
+
             int valid = elements.Count(e => 
-                e.LookupParameter("IfcGuid")?.HasValue == true || 
-                e.LookupParameter("Mark")?.HasValue == true ||
-                e.LookupParameter("Comments")?.HasValue == true);
+                interopParams.Any(p => e.LookupParameter(p)?.HasValue == true) ||
+                !string.IsNullOrEmpty(e.get_Parameter(BuiltInParameter.ALL_MODEL_MARK)?.AsString()) ||
+                !string.IsNullOrEmpty(e.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString())
+            );
 
             return Math.Round((double)valid / elements.Count * 100, 1);
         }

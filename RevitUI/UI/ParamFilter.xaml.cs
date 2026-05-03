@@ -200,10 +200,10 @@ namespace RevitUI.UI
             rule = (RuleCombo.SelectedItem as ComboBoxItem)?.Content?.ToString();
             value = ValueBox.Text?.Trim();
 
-            if (cat == null) { MessageBox.Show("Select a Category."); return false; }
-            if (param == null) { MessageBox.Show("Select a Parameter."); return false; }
-            if (string.IsNullOrEmpty(rule)) { MessageBox.Show("Select an Operator."); return false; }
-            if (string.IsNullOrWhiteSpace(value)) { MessageBox.Show("Enter a filter value."); return false; }
+            if (cat == null) { MessageBox.Show(this, "Select a Category."); return false; }
+            if (param == null) { MessageBox.Show(this, "Select a Parameter."); return false; }
+            if (string.IsNullOrEmpty(rule)) { MessageBox.Show(this, "Select an Operator."); return false; }
+            if (string.IsNullOrWhiteSpace(value)) { MessageBox.Show(this, "Enter a filter value."); return false; }
 
             return true;
         }
@@ -247,7 +247,7 @@ namespace RevitUI.UI
 
             if (cat == null || param == null || string.IsNullOrEmpty(rule) || string.IsNullOrEmpty(value))
             {
-                MessageBox.Show("Complete all fields");
+                MessageBox.Show(this, "Complete all fields");
                 return;
             }
 
@@ -283,7 +283,7 @@ namespace RevitUI.UI
             var cat = CategoryCombo.SelectedItem as Category;
             if (cat == null)
             {
-                MessageBox.Show("Select a Category first.");
+                MessageBox.Show(this, "Select a Category first.");
                 return;
             }
 

@@ -13,6 +13,8 @@ namespace RevitUI.UI.Export
         public bool ExportPdf { get; set; }
         public bool ExportCad { get; set; }
         public bool ExportNwc { get; set; }
+        public bool CombinePdf { get; set; }
+        public string NamingFormat { get; set; } = "{ProjectNumber}_{SheetNumber}_{SheetName}";
 
         public void Execute(UIApplication app)
         {
@@ -43,16 +45,62 @@ namespace RevitUI.UI.Export
 
             PDFExportOptions options = new PDFExportOptions
             {
-                FileName = doc.Title,
-                Combine = false
+                Combine = CombinePdf
             };
 
             using (Transaction t = new Transaction(doc, "Export PDF"))
             {
                 t.Start();
-                doc.Export(pdfDir, viewIds, options);
+                if (CombinePdf)
+                {
+                    options.FileName = GetCustomName(doc, null, NamingFormat);
+                    doc.Export(pdfDir, viewIds, options);
+                }
+                else
+                {
+                    foreach (var vid in viewIds)
+                    {
+                        View v = doc.GetElement(vid) as View;
+                        options.FileName = GetCustomName(doc, v, NamingFormat);
+                        doc.Export(pdfDir, new List<ElementId> { vid }, options);
+                    }
+                }
                 t.Commit();
             }
+        }
+
+        private string GetCustomName(Document doc, View view, string format)
+        {
+            string name = format;
+            string projectNum = doc.ProjectInformation.Number ?? "000";
+            string date = DateTime.Now.ToString("yyyyMMdd");
+
+            name = name.Replace("{ProjectNumber}", projectNum);
+            name = name.Replace("{Date}", date);
+
+            if (view != null)
+            {
+                if (view is ViewSheet sheet)
+                {
+                    name = name.Replace("{SheetNumber}", sheet.SheetNumber);
+                    name = name.Replace("{SheetName}", sheet.Name);
+                }
+                else
+                {
+                    name = name.Replace("{SheetNumber}", "");
+                    name = name.Replace("{SheetName}", view.Name);
+                }
+            }
+            else
+            {
+                name = name.Replace("{SheetNumber}", "Combined");
+                name = name.Replace("{SheetName}", "Set");
+            }
+
+            // Remove invalid characters
+            foreach (char c in Path.GetInvalidFileNameChars()) name = name.Replace(c, '_');
+            
+            return name;
         }
 
         private void RunCadExport(Document doc, List<ElementId> viewIds)
@@ -68,7 +116,8 @@ namespace RevitUI.UI.Export
                 foreach (var vid in viewIds)
                 {
                     View v = doc.GetElement(vid) as View;
-                    doc.Export(cadDir, v.Name, new List<ElementId> { vid }, options);
+                    string fileName = GetCustomName(doc, v, NamingFormat);
+                    doc.Export(cadDir, fileName, new List<ElementId> { vid }, options);
                 }
                 t.Commit();
             }

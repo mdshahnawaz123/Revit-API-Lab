@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Workset Police Dept" Height="600" Width="900"
+        Title="Workset Pro" Height="600" Width="700"
         WindowStartupLocation="CenterScreen" Topmost="True"
         Background="#F5F6F7" WindowStyle="None" AllowsTransparency="True">
 
@@ -58,7 +58,7 @@
 
             <!-- Header -->
             <Grid Grid.Row="0" Margin="20,15">
-                <TextBlock Text="Workset Police Dept" HorizontalAlignment="Center" FontSize="22" FontWeight="Bold" Foreground="#222"/>
+                <TextBlock Text="Workset Pro" HorizontalAlignment="Center" FontSize="22" FontWeight="Bold" Foreground="#222"/>
                 <Button Content="✕" Click="BtnClose_Click" HorizontalAlignment="Right" VerticalAlignment="Top" 
                         Background="Transparent" BorderThickness="0" Foreground="#888" FontSize="18" Cursor="Hand"/>
             </Grid>

@@ -57,90 +57,161 @@
 
         <!-- METRICS GRID -->
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-            <UniformGrid Columns="2">
-                
-                <!-- WARNINGS -->
-                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="Warnings" Foreground="#6B7280" FontSize="11"/>
-                        <TextBlock x:Name="WarningCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
-                        <TextBlock Text="Active issues" Foreground="#9CA3AF" FontSize="10"/>
-                    </StackPanel>
-                </Border>
+            <StackPanel>
+                <UniformGrid Columns="2">
+                    <!-- WARNINGS -->
+                    <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Warnings" Foreground="#6B7280" FontSize="11"/>
+                            <TextBlock x:Name="WarningCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                            <TextBlock Text="Active issues" Foreground="#9CA3AF" FontSize="10"/>
+                        </StackPanel>
+                    </Border>
 
-                <!-- IN-PLACE -->
-                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="In-Place Families" Foreground="#6B7280" FontSize="11"/>
-                        <TextBlock x:Name="InPlaceCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0" Foreground="#EF4444"/>
-                        <TextBlock Text="Performance impact" Foreground="#9CA3AF" FontSize="10"/>
-                    </StackPanel>
-                </Border>
+                    <!-- IN-PLACE -->
+                    <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="In-Place Families" Foreground="#6B7280" FontSize="11"/>
+                            <TextBlock x:Name="InPlaceCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0" Foreground="#EF4444"/>
+                            <TextBlock Text="Performance impact" Foreground="#9CA3AF" FontSize="10"/>
+                        </StackPanel>
+                    </Border>
 
-                <!-- CAD IMPORTS -->
-                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="CAD Imports" Foreground="#6B7280" FontSize="11"/>
-                        <TextBlock x:Name="CadCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0" Foreground="#F59E0B"/>
-                        <TextBlock Text="Imported DWGs" Foreground="#9CA3AF" FontSize="10"/>
-                    </StackPanel>
-                </Border>
+                    <!-- CAD IMPORTS -->
+                    <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="CAD Imports" Foreground="#6B7280" FontSize="11"/>
+                            <TextBlock x:Name="CadCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0" Foreground="#F59E0B"/>
+                            <TextBlock Text="Imported DWGs" Foreground="#9CA3AF" FontSize="10"/>
+                        </StackPanel>
+                    </Border>
 
-                <!-- REDUNDANT ROOMS -->
-                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="Redundant Rooms" Foreground="#6B7280" FontSize="11"/>
-                        <TextBlock x:Name="RoomCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
-                        <TextBlock Text="Not placed/enclosed" Foreground="#9CA3AF" FontSize="10"/>
-                    </StackPanel>
-                </Border>
+                    <!-- REDUNDANT ROOMS -->
+                    <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Redundant Rooms" Foreground="#6B7280" FontSize="11"/>
+                            <TextBlock x:Name="RoomCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                            <TextBlock Text="Not placed/enclosed" Foreground="#9CA3AF" FontSize="10"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
 
-                <!-- ORPHANED VIEWS -->
-                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="Orphaned Views" Foreground="#6B7280" FontSize="11"/>
-                        <TextBlock x:Name="ViewCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
-                        <TextBlock Text="Not on sheets" Foreground="#9CA3AF" FontSize="10"/>
-                    </StackPanel>
-                </Border>
+                <TextBlock Text="Advanced Best Practices" FontSize="14" FontWeight="Bold" Margin="5,15,0,10" Foreground="#374151"/>
 
-                <!-- LINKS -->
-                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="Linked Models" Foreground="#6B7280" FontSize="11"/>
-                        <TextBlock x:Name="LinkCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
-                        <TextBlock Text="Revit/IFC Links" Foreground="#9CA3AF" FontSize="10"/>
-                    </StackPanel>
-                </Border>
+                <UniformGrid Columns="2">
+                    <!-- FILE SIZE -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="12" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="File Size" Foreground="#4B5563" FontSize="10"/>
+                            <TextBlock x:Name="FileSizeText" Text="--" FontSize="16" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
 
-                <!-- GROUPS -->
-                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="Groups" Foreground="#6B7280" FontSize="11"/>
-                        <TextBlock x:Name="GroupCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
-                        <TextBlock Text="Total definitions" Foreground="#9CA3AF" FontSize="10"/>
-                    </StackPanel>
-                </Border>
+                    <!-- WORKSETS -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="12" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="User Worksets" Foreground="#4B5563" FontSize="10"/>
+                            <TextBlock x:Name="WorksetText" Text="0" FontSize="16" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
 
-                <!-- UNUSED FILTERS -->
-                <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="Unused Filters" Foreground="#6B7280" FontSize="11"/>
-                        <TextBlock x:Name="FilterCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
-                        <TextBlock Text="View filter cleanup" Foreground="#9CA3AF" FontSize="10"/>
-                    </StackPanel>
-                </Border>
+                    <!-- DESIGN OPTIONS -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="12" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="Design Options" Foreground="#4B5563" FontSize="10"/>
+                            <TextBlock x:Name="DesignText" Text="0" FontSize="16" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
 
-            </UniformGrid>
+                    <!-- IMAGES -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="12" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="Raster Images" Foreground="#4B5563" FontSize="10"/>
+                            <TextBlock x:Name="ImageText" Text="0" FontSize="16" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- MATERIALS -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="12" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="Total Materials" Foreground="#4B5563" FontSize="10"/>
+                            <TextBlock x:Name="MaterialText" Text="0" FontSize="16" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- LINE STYLES -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="12" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="Line Styles" Foreground="#4B5563" FontSize="10"/>
+                            <TextBlock x:Name="StyleText" Text="0" FontSize="16" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- VIEWS WITHOUT TEMPLATES -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="12" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="Views w/o Templates" Foreground="#4B5563" FontSize="10"/>
+                            <TextBlock x:Name="ViewTemplateText" Text="0" FontSize="16" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- TOTAL ELEMENTS -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="12" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="Model Elements" Foreground="#4B5563" FontSize="10"/>
+                            <TextBlock x:Name="TotalElementsText" Text="0" FontSize="16" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- ORPHANED VIEWS -->
+                    <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Orphaned Views" Foreground="#6B7280" FontSize="11"/>
+                            <TextBlock x:Name="ViewCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- GROUPS -->
+                    <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Groups" Foreground="#6B7280" FontSize="11"/>
+                            <TextBlock x:Name="GroupCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- UNUSED FILTERS -->
+                    <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Unused Filters" Foreground="#6B7280" FontSize="11"/>
+                            <TextBlock x:Name="FilterCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- LINKS -->
+                    <Border Background="White" CornerRadius="8" Padding="12" Margin="5" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Links" Foreground="#6B7280" FontSize="11"/>
+                            <TextBlock x:Name="LinkCount" Text="0" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+            </StackPanel>
         </ScrollViewer>
 
         <!-- FOOTER / ACTION -->
-        <StackPanel Grid.Row="3" Margin="0,20,0,0">
+        <Grid Grid.Row="3" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
             <Button x:Name="RefreshBtn" 
-                    Content="Scan Model Now" 
+                    Content="Scan" 
                     Background="#2563EB" 
                     Foreground="White" 
                     Height="40" 
+                    Margin="0,0,2,0"
                     FontWeight="SemiBold"
                     Click="Refresh_Click">
                 <Button.Resources>
@@ -149,7 +220,43 @@
                     </Style>
                 </Button.Resources>
             </Button>
-        </StackPanel>
+
+            <Button x:Name="ExportBtn" 
+                    Grid.Column="1"
+                    Content="CSV (PBI)" 
+                    Background="White" 
+                    Foreground="#2563EB" 
+                    BorderBrush="#2563EB"
+                    BorderThickness="1"
+                    Height="40" 
+                    Margin="2,0,2,0"
+                    FontWeight="SemiBold"
+                    Click="Export_Click">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="8"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+
+            <Button x:Name="ExportHtmlBtn" 
+                    Grid.Column="2"
+                    Content="HTML Report" 
+                    Background="White" 
+                    Foreground="#10B981" 
+                    BorderBrush="#10B981"
+                    BorderThickness="1"
+                    Height="40" 
+                    Margin="2,0,0,0"
+                    FontWeight="SemiBold"
+                    Click="ExportHtml_Click">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="8"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+        </Grid>
 
     </Grid>
 </Window>

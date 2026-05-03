@@ -23,10 +23,14 @@ namespace RevitUI.UI.Dimensioning
             _handler.Mode = RbGrids.IsChecked == true ? DimMode.Grids :
                            RbWalls.IsChecked == true ? DimMode.Walls :
                            RbRooms.IsChecked == true ? DimMode.Rooms :
+                           RbColumns.IsChecked == true ? DimMode.Columns :
                            DimMode.MEP;
             
             if (double.TryParse(TxtOffset.Text, out double offset))
                 _handler.OffsetMm = offset;
+
+            _handler.IncludeHost = CbIncludeHost.IsChecked == true;
+            _handler.IncludeLinked = CbIncludeLinked.IsChecked == true;
 
             // Trigger the event
             _externalEvent.Raise();
@@ -51,5 +55,5 @@ namespace RevitUI.UI.Dimensioning
         }
     }
 
-    public enum DimMode { Grids, Walls, Rooms, MEP }
+    public enum DimMode { Grids, Walls, Rooms, MEP, Columns }
 }

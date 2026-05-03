@@ -23,20 +23,26 @@ namespace RevitUI.ExternalCommand.ModelHealth
                 int warningCount = warnings.Count;
 
                 // ── 2. In-Place Families ─────────────────────────────────────
-                var inPlaceFamilies = new FilteredElementCollector(doc)
+                var inPlaceFams = new FilteredElementCollector(doc)
                     .OfClass(typeof(Family))
                     .Cast<Family>()
-                    .Count(f => f.IsInPlace);
+                    .Where(f => f.IsInPlace)
+                    .ToList();
+                int inPlaceCount = inPlaceFams.Count;
+                var inPlaceNames = inPlaceFams.Select(f => f.Name).ToList();
 
                 // ── 3. Groups ────────────────────────────────────────────────
-                var groupCount = new FilteredElementCollector(doc)
-                    .OfClass(typeof(Group))
-                    .GetElementCount();
+                var groups = new FilteredElementCollector(doc).OfClass(typeof(Group)).Cast<Group>().ToList();
+                int groupCount = groups.Count;
+                var groupNames = groups.Select(g => g.Name).Distinct().ToList();
 
                 // ── 4. CAD Imports ──────────────────────────────────────────
-                var cadImports = new FilteredElementCollector(doc)
+                var cadImportList = new FilteredElementCollector(doc)
                     .OfClass(typeof(ImportInstance))
-                    .GetElementCount();
+                    .Cast<ImportInstance>()
+                    .ToList();
+                int cadImports = cadImportList.Count;
+                var cadNames = cadImportList.Select(i => i.Category?.Name ?? "Unknown CAD").Distinct().ToList();
 
                 // ── 5. Unused View Filters ──────────────────────────────────
                 var allFilters = new FilteredElementCollector(doc).OfClass(typeof(ParameterFilterElement)).Cast<ParameterFilterElement>().ToList();
@@ -53,23 +59,57 @@ namespace RevitUI.ExternalCommand.ModelHealth
                     .Where(v => !v.IsTemplate && v.CanBePrinted && v.ViewType != ViewType.Internal)
                     .ToList();
                 
-                // Get all views that are currently placed on sheets
                 var viewports = new FilteredElementCollector(doc).OfClass(typeof(Viewport)).Cast<Viewport>();
                 var viewsOnSheets = new HashSet<ElementId>(viewports.Select(vp => vp.ViewId));
                 
-                int orphanedViews = allViews.Count(v => !viewsOnSheets.Contains(v.Id));
+                var orphanedViewsList = allViews.Where(v => !viewsOnSheets.Contains(v.Id)).ToList();
+                int orphanedViews = orphanedViewsList.Count;
+                var orphanedViewNames = orphanedViewsList.Select(v => v.Name).ToList();
 
                 // ── 7. Redundant / Not Placed Rooms ──────────────────────────
                 var rooms = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rooms).Cast<Room>();
                 int redundantRooms = rooms.Count(r => r.Area <= 0 || r.Location == null);
 
                 // ── 8. Linked Models ─────────────────────────────────────────
-                int linkCount = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).GetElementCount();
+                var linkInstances = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>().ToList();
+                int linkCount = linkInstances.Count;
+                var linkNames = linkInstances.Select(l => l.Name).ToList();
 
-                // ── 9. Purgeable Elements (Approximate) ───────────────────────
-                // Note: GetPurgeableElementIds is only available in newer Revit APIs (2024+) or via a complex workaround.
-                // We will use a placeholder or count unused types for now.
-                int unusedTypes = 0; // Placeholder
+                // ── 9. NEW ADVANCED METRICS ─────────────────────────────────
+                
+                // File Size
+                string fileSize = "N/A";
+                try {
+                    if (!string.IsNullOrEmpty(doc.PathName) && System.IO.File.Exists(doc.PathName)) {
+                        long bytes = new System.IO.FileInfo(doc.PathName).Length;
+                        fileSize = (bytes / (1024.0 * 1024.0)).ToString("F1");
+                    }
+                } catch { }
+
+                // Worksets
+                int worksets = 0;
+                if (doc.IsWorkshared) {
+                    worksets = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).Count();
+                }
+
+                // Design Options
+                int designOptions = new FilteredElementCollector(doc).OfClass(typeof(DesignOption)).GetElementCount();
+
+                // Images
+                int images = new FilteredElementCollector(doc).OfClass(typeof(ImageType)).GetElementCount();
+
+                // View Templates
+                int viewWithoutTemplate = allViews.Count(v => v.ViewTemplateId == ElementId.InvalidElementId);
+
+                // Line Styles
+                var lineStyleCat = doc.Settings.Categories.get_Item(BuiltInCategory.OST_Lines);
+                int lineStyles = lineStyleCat?.SubCategories.Size ?? 0;
+
+                // Materials
+                int materials = new FilteredElementCollector(doc).OfClass(typeof(Material)).GetElementCount();
+
+                // Total Elements
+                int totalElements = new FilteredElementCollector(doc).WhereElementIsNotElementType().GetElementCount();
 
                 // ── Update UI ────────────────────────────────────────────────
                 Dashboard.Dispatcher.Invoke(() =>
@@ -77,13 +117,28 @@ namespace RevitUI.ExternalCommand.ModelHealth
                     Dashboard.UpdateMetrics(new ModelHealthData
                     {
                         WarningCount = warningCount,
-                        InPlaceCount = inPlaceFamilies,
+                        InPlaceCount = inPlaceCount,
                         GroupCount = groupCount,
                         CadImportCount = cadImports,
                         UnusedFilterCount = unusedFilters,
                         OrphanedViewCount = orphanedViews,
                         RedundantRoomCount = redundantRooms,
-                        LinkCount = linkCount
+                        LinkCount = linkCount,
+                        
+                        FileSizeMb = fileSize,
+                        WorksetCount = worksets,
+                        DesignOptionCount = designOptions,
+                        ViewWithoutTemplateCount = viewWithoutTemplate,
+                        ImageCount = images,
+                        MaterialCount = materials,
+                        LineStyleCount = lineStyles,
+                        TotalElementCount = totalElements,
+
+                        InPlaceNames = inPlaceNames,
+                        CadNames = cadNames,
+                        GroupNames = groupNames,
+                        LinkNames = linkNames,
+                        OrphanedViewNames = orphanedViewNames
                     });
                 });
             }
@@ -106,18 +161,38 @@ namespace RevitUI.ExternalCommand.ModelHealth
         public int OrphanedViewCount { get; set; }
         public int RedundantRoomCount { get; set; }
         public int LinkCount { get; set; }
+
+        // ── NEW ADVANCED METRICS ───────────────────────────────────────────
+        public string FileSizeMb { get; set; } = "0";
+        public int WorksetCount { get; set; }
+        public int DesignOptionCount { get; set; }
+        public int ViewWithoutTemplateCount { get; set; }
+        public int ImageCount { get; set; }
+        public int MaterialCount { get; set; }
+        public int LineStyleCount { get; set; }
+        public int TotalElementCount { get; set; }
+
+        // ── DRILL-DOWN DETAILS ──────────────────────────────────────────────
+        public List<string> InPlaceNames { get; set; } = new List<string>();
+        public List<string> CadNames { get; set; } = new List<string>();
+        public List<string> GroupNames { get; set; } = new List<string>();
+        public List<string> LinkNames { get; set; } = new List<string>();
+        public List<string> OrphanedViewNames { get; set; } = new List<string>();
         
         public double HealthScore
         {
             get
             {
                 double score = 100;
-                score -= (WarningCount * 0.5);
-                score -= (InPlaceCount * 5); // In-place are bad
-                score -= (CadImportCount * 10); // Imports are very bad
+                score -= (WarningCount * 0.2); 
+                score -= (InPlaceCount * 8);   
+                score -= (CadImportCount * 12); 
                 score -= (RedundantRoomCount * 2);
-                score -= (OrphanedViewCount * 0.2);
-                return Math.Max(0, score);
+                score -= (OrphanedViewCount * 0.1);
+                score -= (ImageCount * 1.5);    
+                score -= (DesignOptionCount * 2); 
+                
+                return Math.Max(0, Math.Min(100, score));
             }
         }
     }

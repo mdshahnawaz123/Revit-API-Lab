@@ -12,6 +12,8 @@ namespace RevitUI.UI.Slope
         public bool AnalyzeRoofs { get; set; }
         public bool AnalyzeTopo { get; set; }
         public bool ApplyColor { get; set; }
+        public SlopeUnit Unit { get; set; } = SlopeUnit.Degrees;
+        public List<SlopeRange> Ranges { get; set; } = new List<SlopeRange>();
 
         public void Execute(UIApplication app)
         {
@@ -76,8 +78,14 @@ namespace RevitUI.UI.Slope
                     {
                         XYZ normal = face.ComputeNormal(new UV(0.5, 0.5));
                         double angle = Math.Acos(Math.Abs(normal.Z)); // Angle in Radians
-                        double slopeDegrees = angle * (180 / Math.PI);
-                        if (slopeDegrees > maxSlope) maxSlope = slopeDegrees;
+                        
+                        double val;
+                        if (Unit == SlopeUnit.Percentage)
+                            val = Math.Tan(angle) * 100;
+                        else
+                            val = angle * (180 / Math.PI);
+
+                        if (val > maxSlope) maxSlope = val;
                     }
                 }
             }
@@ -86,11 +94,15 @@ namespace RevitUI.UI.Slope
 
         private void ApplySlopeColor(Document doc, Element elem, double slope)
         {
-            // Simple logic: If slope > 10 degrees, make it red/orange
-            Color color;
-            if (slope > 30) color = new Color(255, 0, 0); // Very Steep
-            else if (slope > 10) color = new Color(255, 165, 0); // Warning
-            else color = new Color(144, 238, 144); // Flat/Safe
+            if (Ranges == null || Ranges.Count == 0) return;
+
+            // Find the highest range that is less than or equal to the current slope
+            var matchedRange = Ranges.OrderByDescending(r => r.Threshold)
+                                     .FirstOrDefault(r => slope >= r.Threshold);
+
+            if (matchedRange == null) return;
+
+            Color color = matchedRange.Color;
 
             OverrideGraphicSettings ogs = new OverrideGraphicSettings();
             ogs.SetSurfaceForegroundPatternColor(color);
@@ -111,4 +123,18 @@ namespace RevitUI.UI.Slope
 
         public string GetName() => "Slope Analysis Handler";
     }
+
+    public class SlopeRange
+    {
+        public double Threshold { get; set; }
+        public Color Color { get; set; }
+
+        public SlopeRange(double threshold, byte r, byte g, byte b)
+        {
+            Threshold = threshold;
+            Color = new Color(r, g, b);
+        }
+    }
+
+    public enum SlopeUnit { Degrees, Percentage }
 }

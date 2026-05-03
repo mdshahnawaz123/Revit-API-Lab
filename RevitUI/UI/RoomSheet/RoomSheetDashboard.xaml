@@ -1,0 +1,103 @@
+<Window x:Class="RevitUI.UI.RoomSheet.RoomSheetDashboard"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Room Sheet Creator" Height="620" Width="400"
+        WindowStartupLocation="CenterScreen"
+        Background="#F9FAFB"
+        Topmost="True"
+        ResizeMode="NoResize">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 1. HEADER -->
+        <StackPanel Margin="0,0,0,15">
+            <TextBlock Text="Room Sheet Creator" FontSize="20" FontWeight="SemiBold" Foreground="#111827"/>
+            <TextBlock Text="Batch generate views and sheets" Foreground="#6B7280" FontSize="11"/>
+        </StackPanel>
+
+        <!-- 2. SCROLLABLE SETTINGS AREA -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="15" BorderBrush="#E5E7EB" BorderThickness="1">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- ROOM BROWSER (Fixed height so it doesn't push everything down) -->
+                    <TextBlock Text="Select Room from List" FontWeight="Medium" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtSearchRoom" TextChanged="SearchRoom_TextChanged" Height="25" VerticalContentAlignment="Center" Margin="0,0,0,5" Padding="5,0"/>
+                    
+                    <TreeView x:Name="TreeRooms" Height="180" BorderBrush="#F3F4F6" SelectedItemChanged="TreeRooms_SelectedItemChanged" Margin="0,0,0,15">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Rooms}">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                <HierarchicalDataTemplate.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Number}" Foreground="#2563EB" FontWeight="Bold" Margin="0,0,5,0"/>
+                                            <TextBlock Text="{Binding Name}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </HierarchicalDataTemplate.ItemTemplate>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+
+                    <Separator Margin="0,0,0,15" Background="#F3F4F6"/>
+
+                    <!-- SHEET DETAILS -->
+                    <TextBlock Text="Sheet Details" Foreground="#6B7280" FontSize="11" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,5,0">
+                            <TextBlock Text="Number" FontSize="10" Margin="0,0,0,2"/>
+                            <TextBox x:Name="TxtSheetNumber" Text="RDS-101" Height="28" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                            <TextBlock Text="Name" FontSize="10" Margin="0,0,0,2"/>
+                            <TextBox x:Name="TxtSheetName" Text="ROOM DATA SHEET" Height="28" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Titleblock" FontSize="10" Margin="0,0,0,2"/>
+                    <ComboBox x:Name="ComboTitleblock" Height="28" DisplayMemberPath="Name" Margin="0,0,0,20"/>
+
+                    <!-- VIEW OPTIONS -->
+                    <TextBlock Text="View Settings" Foreground="#6B7280" FontSize="11" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <UniformGrid Columns="2" Margin="0,0,0,12">
+                        <CheckBox x:Name="ChkAllElevations" Content="4 Elevations" IsChecked="True" VerticalAlignment="Center" FontSize="11"/>
+                        <CheckBox x:Name="Chk3DView" Content="3D View" IsChecked="True" VerticalAlignment="Center" FontSize="11"/>
+                    </UniformGrid>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Scale  " FontSize="11" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="ComboScale" SelectedIndex="3" Height="25" Width="100">
+                            <ComboBoxItem Content="1:10"/>
+                            <ComboBoxItem Content="1:20"/>
+                            <ComboBoxItem Content="1:25"/>
+                            <ComboBoxItem Content="1:50"/>
+                            <ComboBoxItem Content="1:100"/>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- 3. FOOTER (Always at bottom) -->
+        <Button Grid.Row="2" 
+                Content="Create Views &amp; Sheet" 
+                Height="45" 
+                Background="#2563EB" 
+                Foreground="White" 
+                FontWeight="Bold"
+                Margin="0,15,0,0"
+                Click="Create_Click">
+            <Button.Resources>
+                <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
+            </Button.Resources>
+        </Button>
+    </Grid>
+</Window>

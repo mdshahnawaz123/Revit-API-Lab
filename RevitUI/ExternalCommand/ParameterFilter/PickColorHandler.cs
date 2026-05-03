@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.UI;
+using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ namespace RevitUI.ExternalCommand.ParameterFilter
 {
     public class PickColorHandler : IExternalEventHandler
     {
-        private Color _selectedColor = Colors.White;
+        private System.Windows.Media.Color _selectedColor = Colors.White;
 
         public void Execute(UIApplication app)
         {
@@ -21,7 +21,7 @@ namespace RevitUI.ExternalCommand.ParameterFilter
 
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    _selectedColor = Color.FromArgb(
+                    _selectedColor = System.Windows.Media.Color.FromArgb(
                         dialog.Color.A,
                         dialog.Color.R,
                         dialog.Color.G,
