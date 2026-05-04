@@ -10,7 +10,7 @@
 		<UseWPF>true</UseWPF>
 		<Prefer32Bit>false</Prefer32Bit>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<Version>1.0.3.0</Version>
+		<Version>1.0.4.0</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />

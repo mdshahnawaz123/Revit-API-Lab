@@ -4,7 +4,7 @@
 ; ==============================================================
 
 #define AppName        "B-Lab Tools"
-#define AppVersion     "1.0.2"
+#define AppVersion     "1.0.4.0"
 #define AppPublisher   "BIM Digital Design"
 #define AppURL         "https://www.bimdigitaldesign.com"
 #define VendorId       "BIM Digital Design"

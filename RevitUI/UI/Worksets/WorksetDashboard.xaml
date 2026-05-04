@@ -6,14 +6,15 @@
         Background="Transparent" WindowStyle="None" AllowsTransparency="True">
 
     <Window.Resources>
-        <!-- Modern Colors -->
-        <SolidColorBrush x:Key="PrimaryColor" Color="#0078D4"/>
-        <SolidColorBrush x:Key="SecondaryColor" Color="#2B2B2B"/>
-        <SolidColorBrush x:Key="BackgroundColor" Color="#1E1E1E"/>
-        <SolidColorBrush x:Key="HeaderColor" Color="#252526"/>
-        <SolidColorBrush x:Key="AccentColor" Color="#3E3E42"/>
-        <SolidColorBrush x:Key="TextColor" Color="#E1E1E1"/>
-        <SolidColorBrush x:Key="MutedText" Color="#999999"/>
+        <!-- Professional Light Colors -->
+        <SolidColorBrush x:Key="PrimaryColor" Color="#2563EB"/>
+        <SolidColorBrush x:Key="BackgroundColor" Color="#F9FAFB"/>
+        <SolidColorBrush x:Key="HeaderColor" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="CardColor" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#E5E7EB"/>
+        <SolidColorBrush x:Key="TextColor" Color="#111827"/>
+        <SolidColorBrush x:Key="MutedText" Color="#6B7280"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#F3F4F6"/>
 
         <!-- Button Style -->
         <Style x:Key="ModernButton" TargetType="Button">
@@ -27,15 +28,15 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#0086EF"/>
+                                <Setter Property="Background" Value="#1D4ED8"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#005A9E"/>
+                                <Setter Property="Background" Value="#1E40AF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -44,16 +45,23 @@
         </Style>
 
         <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
-            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#374151"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#505050"/>
+                                <Setter Property="Background" Value="#F9FAFB"/>
+                                <Setter Property="BorderBrush" Value="#9CA3AF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -62,84 +70,125 @@
         </Style>
 
         <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#333"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#444"/>
-            <Setter Property="Height" Value="35"/>
-            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Padding" Value="12,0"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="0,5,0,18"/>
+            <Setter Property="Margin" Value="0,5,0,20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Name="ToggleButton" 
+                                        BorderBrush="{TemplateBinding BorderBrush}" 
+                                        Background="{TemplateBinding Background}" 
+                                        Grid.Column="2" IsChecked="{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}" 
+                                        Focusable="false" ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Name="Border" CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="30"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Path Name="Arrow" Grid.Column="1" Fill="#6B7280" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter Name="ContentSite" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}"
+                                            ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                            ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                            Margin="12,3,23,3" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                            <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                <Grid Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="0,0,8,8"/>
+                                    <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
-            <Setter Property="Margin" Value="0,0,0,20"/>
+            <Setter Property="Margin" Value="0,0,0,22"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
     </Window.Resources>
 
-    <Border Background="{StaticResource BackgroundColor}" CornerRadius="12" BorderBrush="#333" BorderThickness="1">
+    <Border Background="{StaticResource BackgroundColor}" CornerRadius="16" BorderBrush="{StaticResource BorderColor}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="60"/>
+                <RowDefinition Height="70"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Border Grid.Row="0" Background="{StaticResource HeaderColor}" CornerRadius="12,12,0,0">
-                <Grid Margin="20,0">
+            <Border Grid.Row="0" Background="{StaticResource HeaderColor}" CornerRadius="16,16,0,0" BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1">
+                <Grid Margin="25,0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="WORKSET" Foreground="{StaticResource PrimaryColor}" FontSize="20" FontWeight="Bold"/>
-                        <TextBlock Text=" POLICE" Foreground="White" FontSize="20" FontWeight="Bold"/>
+                        <TextBlock Text="WORKSET" Foreground="{StaticResource PrimaryColor}" FontSize="22" FontWeight="Bold"/>
+                        <TextBlock Text=" PRO" Foreground="{StaticResource TextColor}" FontSize="22" FontWeight="Bold"/>
                     </StackPanel>
                     
                     <Button Content="✕" Click="BtnClose_Click" HorizontalAlignment="Right" VerticalAlignment="Center" 
-                            Background="Transparent" BorderThickness="0" Foreground="#888" FontSize="18" Cursor="Hand"/>
+                            Background="Transparent" BorderThickness="0" Foreground="#9CA3AF" FontSize="20" Cursor="Hand"/>
                 </Grid>
             </Border>
 
-            <Grid Grid.Row="1" Margin="25">
+            <Grid Grid.Row="1" Margin="30">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="280"/>
+                    <ColumnDefinition Width="300"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Left Panel: Configuration -->
-                <StackPanel Grid.Column="0" Margin="0,0,25,0">
-                    <TextBlock Text="FILTER SETTINGS" Foreground="{StaticResource MutedText}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15" />
+                <StackPanel Grid.Column="0" Margin="0,0,30,0">
+                    <TextBlock Text="FILTER SETTINGS" Foreground="{StaticResource MutedText}" FontSize="11" FontWeight="Bold" Margin="2,0,0,18"/>
                     
-                    <TextBlock Text="Category" Foreground="{StaticResource TextColor}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <TextBlock Text="Category" Foreground="{StaticResource TextColor}" FontWeight="SemiBold" Margin="2,0,0,6"/>
                     <ComboBox x:Name="CbCategory" ItemsSource="{Binding Categories}" SelectionChanged="CbCategory_SelectionChanged"/>
 
-                    <TextBlock Text="Element Type" Foreground="{StaticResource TextColor}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <TextBlock Text="Element Type" Foreground="{StaticResource TextColor}" FontWeight="SemiBold" Margin="2,0,0,6"/>
                     <ComboBox x:Name="CbElementType" ItemsSource="{Binding ElementTypes}" SelectionChanged="CbElementType_SelectionChanged"/>
 
                     <CheckBox x:Name="ChkAssignAll" Content="Apply to all types in category" IsChecked="{Binding AssignToAll}"/>
 
-                    <Border Height="1" Background="#333" Margin="0,10,0,20"/>
+                    <Border Height="1" Background="{StaticResource BorderColor}" Margin="0,5,0,25"/>
 
-                    <TextBlock Text="TARGET WORKSET" Foreground="{StaticResource MutedText}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15" />
+                    <TextBlock Text="TARGET WORKSET" Foreground="{StaticResource MutedText}" FontSize="11" FontWeight="Bold" Margin="2,0,0,18"/>
                     <ComboBox x:Name="CbWorkset" ItemsSource="{Binding Worksets}" SelectedItem="{Binding SelectedWorkset}"/>
 
-                    <Button Content="Assign Selection" Style="{StaticResource ModernButton}" Height="45" Margin="0,5,0,10" Click="BtnAssign_Click"/>
-                    <Button Content="Export Report" Style="{StaticResource SecondaryButton}" Height="35" Click="BtnExport_Click"/>
+                    <Button Content="Assign Selection" Style="{StaticResource ModernButton}" Height="48" Margin="0,5,0,12" Click="BtnAssign_Click"/>
+                    <Button Content="Export Report" Style="{StaticResource SecondaryButton}" Height="40" Click="BtnExport_Click"/>
                 </StackPanel>
 
                 <!-- Right Panel: Element Inspection -->
-                <Border Grid.Column="1" Background="#252526" CornerRadius="8" Padding="2">
+                <Border Grid.Column="1" Background="{StaticResource CardColor}" CornerRadius="12" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Padding="2">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <Border Grid.Row="0" Background="#2D2D30" CornerRadius="6,6,0,0" Padding="15,10">
+                        <Border Grid.Row="0" Background="#F9FAFB" CornerRadius="11,11,0,0" Padding="18,14" BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1">
                             <TextBlock Text="AFFECTED ELEMENTS" Foreground="{StaticResource MutedText}" FontSize="10" FontWeight="Bold" />
                         </Border>
 
                         <DataGrid Grid.Row="1" x:Name="DgElements" AutoGenerateColumns="False" CanUserAddRows="False" 
-                                  Background="Transparent" BorderThickness="0" GridLinesVisibility="None" 
-                                  HeadersVisibility="Column" RowHeight="32" Foreground="White"
-                                  RowBackground="Transparent" AlternatingRowBackground="#2D2D30">
+                                  Background="Transparent" BorderThickness="0" GridLinesVisibility="Horizontal" 
+                                  HorizontalGridLinesBrush="#F3F4F6" HeadersVisibility="Column" RowHeight="40" 
+                                  Foreground="{StaticResource TextColor}" RowBackground="Transparent" 
+                                  AlternatingRowBackground="#FCFCFD">
                             
                             <DataGrid.Resources>
                                 <Style TargetType="DataGridRow">
@@ -149,19 +198,20 @@
                             
                             <DataGrid.ColumnHeaderStyle>
                                 <Style TargetType="DataGridColumnHeader">
-                                    <Setter Property="Background" Value="#2D2D30"/>
-                                    <Setter Property="Foreground" Value="#AAA"/>
+                                    <Setter Property="Background" Value="#F9FAFB"/>
+                                    <Setter Property="Foreground" Value="#6B7280"/>
                                     <Setter Property="FontSize" Value="11"/>
                                     <Setter Property="FontWeight" Value="SemiBold"/>
-                                    <Setter Property="Padding" Value="12,10"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="15,12"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
                                 </Style>
                             </DataGrid.ColumnHeaderStyle>
                             
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="ELEMENT ID" Binding="{Binding Id}" Width="120"/>
                                 <DataGridTextColumn Header="TYPE NAME" Binding="{Binding TypeName}" Width="*"/>
-                                <DataGridTextColumn Header="CURRENT WORKSET" Binding="{Binding WorksetName}" Width="160"/>
+                                <DataGridTextColumn Header="CURRENT WORKSET" Binding="{Binding WorksetName}" Width="180"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>

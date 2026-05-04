@@ -11,7 +11,7 @@
 		<RootNamespace>RevitUI</RootNamespace>
 		<AssemblyName>B_Lab_RevitUI</AssemblyName>
 		<Prefer32Bit>false</Prefer32Bit>
-		<Version>1.0.2.0</Version>
+		<Version>1.0.4.0</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Extended.Wpf.Toolkit" Version="5.0.0" />
