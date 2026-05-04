@@ -14,6 +14,7 @@ namespace DataLab.LicFolder
         private List<UserRecord> _users = new List<UserRecord>();
 
         public UserRecord CurrentUser { get; private set; }
+        public DateTime? ServerTimeUtc { get; private set; }
 
         public AuthService(string source)
         {
@@ -26,7 +27,28 @@ namespace DataLab.LicFolder
             {
                 using (var http = new HttpClient())
                 {
-                    var json = await http.GetStringAsync(_source);
+                    // Authenticate for private repos
+                    var token = SecretService.GetGithubToken();
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        http.DefaultRequestHeaders.Authorization = 
+                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
+                    http.DefaultRequestHeaders.UserAgent.Add(
+                        new System.Net.Http.Headers.ProductInfoHeaderValue("RevitAddin", "1.0"));
+
+                    // Add cache-busting query parameter so GitHub gives us the newest file immediately
+                    string urlWithCacheBuster = _source + "?t=" + DateTime.UtcNow.Ticks;
+                    var response = await http.GetAsync(urlWithCacheBuster);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    // Extract true server time to prevent clock tampering
+                    if (response.Headers.Date != null)
+                    {
+                        ServerTimeUtc = response.Headers.Date.Value.UtcDateTime;
+                    }
+
+                    var json = await response.Content.ReadAsStringAsync();
                     _users = JsonConvert.DeserializeObject<List<UserRecord>>(json);
                     return true;
                 }

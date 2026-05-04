@@ -1,7 +1,7 @@
 <Window x:Class="RevitUI.UI.About.AboutDashboard"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="About B-Lab Suite" Height="450" Width="400"
+        Title="About B-Lab Suite" Height="480" Width="450"
         WindowStartupLocation="CenterScreen"
         Background="White"
         ResizeMode="NoResize"
@@ -9,12 +9,14 @@
     <Grid Margin="30">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <!-- LICENSE STATUS -->
-            <Border Background="#DCFCE7" Padding="12,4" CornerRadius="12" HorizontalAlignment="Center" Margin="0,0,0,15">
+            <Border x:Name="LicenseBorder" Background="#DCFCE7" Padding="12,4" CornerRadius="12" HorizontalAlignment="Center" Margin="0,0,0,15">
                 <StackPanel Orientation="Horizontal">
-                    <Ellipse Width="6" Height="6" Fill="#16A34A" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="PRO ENTERPRISE LICENSE ACTIVE" Foreground="#16A34A" FontSize="9" FontWeight="Bold"/>
+                    <Ellipse x:Name="StatusDot" Width="6" Height="6" Fill="#16A34A" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtLicenseStatus" Text="PRO ENTERPRISE LICENSE ACTIVE" Foreground="#16A34A" FontSize="9" FontWeight="Bold"/>
                 </StackPanel>
             </Border>
+
+            <TextBlock x:Name="TxtDaysRemaining" Text="Trial: 30 Days Remaining" Foreground="#6B7280" FontSize="11" Margin="0,-10,0,15" HorizontalAlignment="Center" Visibility="Collapsed"/>
 
             <!-- HEADER -->
             <TextBlock Text="B-Lab Revit Suite" FontSize="22" FontWeight="Bold" Foreground="#111827" HorizontalAlignment="Center"/>
@@ -40,17 +42,22 @@
 
             <!-- ACTIONS -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-                <Button Content="Website" Width="100" Height="35" Margin="0,0,8,0" Click="Support_Click" Background="#2563EB" Foreground="White" BorderThickness="0" FontWeight="Bold">
+                <Button x:Name="BtnRequestAccess" Content="Request Access" Width="110" Height="35" Margin="0,0,8,0" Click="RequestAccess_Click" Background="#10B981" Foreground="White" BorderThickness="0" FontWeight="Bold">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
                     </Button.Resources>
                 </Button>
-                <Button Content="LinkedIn" Width="100" Height="35" Margin="0,0,8,0" Click="LinkedIn_Click" Background="#0077B5" Foreground="White" BorderThickness="0" FontWeight="Bold">
+                <Button Content="Website" Width="75" Height="35" Margin="0,0,8,0" Click="Support_Click" Background="#2563EB" Foreground="White" BorderThickness="0" FontWeight="Bold">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
                     </Button.Resources>
                 </Button>
-                <Button Content="Close" Width="80" Height="35" Click="Close_Click" Background="#F3F4F6" Foreground="#374151" BorderThickness="0" FontWeight="Bold">
+                <Button Content="LinkedIn" Width="75" Height="35" Margin="0,0,8,0" Click="LinkedIn_Click" Background="#0077B5" Foreground="White" BorderThickness="0" FontWeight="Bold">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                    </Button.Resources>
+                </Button>
+                <Button Content="Close" Width="60" Height="35" Click="Close_Click" Background="#F3F4F6" Foreground="#374151" BorderThickness="0" FontWeight="Bold">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
                     </Button.Resources>

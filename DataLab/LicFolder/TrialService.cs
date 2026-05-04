@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +34,7 @@ namespace DataLab.LicFolder
 
         /// <summary>
         /// Returns the current trial status for this user on this machine.
+        /// Also enforces the Offline Time-Travel Trap.
         /// </summary>
         public static TrialStatus GetTrialStatus(string username)
         {
@@ -43,6 +44,25 @@ namespace DataLab.LicFolder
                 {
                     if (key == null)
                         return TrialStatus.Expired("Unable to read trial data.");
+
+                    // OFFLINE TIME-TRAVEL TRAP
+                    bool isTampered = (key.GetValue("Tampered") as string) == "true";
+                    if (isTampered)
+                        return TrialStatus.Expired("System clock tampering detected. License locked.");
+
+                    string lastRunStr = key.GetValue("LastRunTime") as string;
+                    if (lastRunStr != null && DateTime.TryParse(lastRunStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out var lastRun))
+                    {
+                        // If current time is OLDER than the last run time, they moved their clock back!
+                        if (DateTime.UtcNow < lastRun.AddMinutes(-5)) // 5 minute buffer for normal drift
+                        {
+                            key.SetValue("Tampered", "true", RegistryValueKind.String);
+                            return TrialStatus.Expired("System clock tampering detected. License permanently locked.");
+                        }
+                    }
+                    
+                    // Always update LastRunTime to current time
+                    key.SetValue("LastRunTime", DateTime.UtcNow.ToString("o"), RegistryValueKind.String);
 
                     var raw = key.GetValue(RegValue) as string;
                     if (raw == null)
