@@ -90,7 +90,7 @@ namespace RevitUI.UI.About
 
         private void CopyEmail_Click(object sender, RoutedEventArgs e)
         {
-            Clipboard.SetText("bimdigitaldesign@gmail.com");
+            System.Windows.Clipboard.SetText("bimdigitaldesign@gmail.com");
             TaskDialog.Show("Info", "Email copied to clipboard.");
         }
 
