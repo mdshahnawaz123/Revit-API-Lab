@@ -82,6 +82,18 @@ namespace RevitUI.UI.About
             OpenUrl("https://www.linkedin.com/in/mohd-shahnawaz-5bb61798/");
         }
 
+        private void Email_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            OpenUrl(e.Uri.AbsoluteUri);
+            e.Handled = true;
+        }
+
+        private void CopyEmail_Click(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText("bimdigitaldesign@gmail.com");
+            TaskDialog.Show("Info", "Email copied to clipboard.");
+        }
+
         private void OpenUrl(string url)
         {
             try {

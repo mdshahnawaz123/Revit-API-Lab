@@ -31,7 +31,19 @@
                     <TextBlock Text="CONTACT SUPPORT" FontSize="10" FontWeight="Bold" Foreground="#6B7280" Margin="0,0,0,10" HorizontalAlignment="Center"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
                         <TextBlock Text="📧" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="bimdigitaldesign@gmail.com" Foreground="#2563EB" FontWeight="SemiBold" FontSize="13"/>
+                        <TextBlock FontSize="13" FontWeight="SemiBold">
+                            <Hyperlink NavigateUri="mailto:bimdigitaldesign@gmail.com" RequestNavigate="Email_RequestNavigate" Foreground="#2563EB" TextDecorations="None">
+                                bimdigitaldesign@gmail.com
+                                <Hyperlink.ToolTip>
+                                    <ToolTip Content="Click to send email / Right-click to copy"/>
+                                </Hyperlink.ToolTip>
+                                <Hyperlink.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Copy Email" Click="CopyEmail_Click"/>
+                                    </ContextMenu>
+                                </Hyperlink.ContextMenu>
+                            </Hyperlink>
+                        </TextBlock>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <TextBlock Text="📞" Margin="0,0,10,0" VerticalAlignment="Center"/>
