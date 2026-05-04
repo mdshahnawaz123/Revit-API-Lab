@@ -23,6 +23,13 @@ namespace B_Lab.RevitApp
                     using (HttpClient client = new HttpClient())
                     {
                         await Task.Delay(3000);
+                        
+                        var token = SecretService.GetGithubToken();
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                        }
+
                         client.DefaultRequestHeaders.Add("User-Agent", "BDD-Revit-Updater");
                         client.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue { NoCache = true };
                         
@@ -125,6 +132,12 @@ namespace B_Lab.RevitApp
 
                     using (HttpClient client = new HttpClient())
                     {
+                        var token = SecretService.GetGithubToken();
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                        }
+
                         client.DefaultRequestHeaders.Add("User-Agent", "BDD-Revit-Updater");
                         byte[] fileBytes = await client.GetByteArrayAsync(downloadUrl);
                         File.WriteAllBytes(exePath, fileBytes);
