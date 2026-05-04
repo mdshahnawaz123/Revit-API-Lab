@@ -101,15 +101,22 @@ namespace DataLab.LicFolder
         /// </summary>
         public static async Task<LoginResult> TryAutoLoginAsync()
         {
+            Logger.Log("LicenseManager: Starting auto-login check...");
             var token = TokenService.LoadToken();
             if (token == null)
+            {
+                Logger.Log("LicenseManager: No local token found.");
                 return LoginResult.Fail("Login required.");
+            }
 
             bool isAdmin = string.Equals(token.Plan, "admin", StringComparison.OrdinalIgnoreCase);
 
             // 1. Machine binding check (Skip for admin)
             if (!isAdmin && token.MachineId != MachineHelper.GetMachineId())
+            {
+                Logger.Log($"LicenseManager: Machine mismatch. Token: {token.MachineId}, Current: {MachineHelper.GetMachineId()}", "ERROR");
                 return LoginResult.Fail("This license is bound to a different machine.");
+            }
 
             // 2. Trial expiry check (uses both Registry + backup file) (Skip for admin)
             if (!isAdmin)
@@ -117,6 +124,7 @@ namespace DataLab.LicFolder
                 var trialError = CheckTrialValidity(token.Username);
                 if (trialError != null)
                 {
+                    Logger.Log($"LicenseManager: Trial validation failed: {trialError}", "WARNING");
                     TokenService.DeleteToken();
                     return LoginResult.Fail(trialError);
                 }
@@ -125,6 +133,7 @@ namespace DataLab.LicFolder
             // 3. Token expiry check
             if (!isAdmin && token.ExpiresUtc < DateTime.UtcNow)
             {
+                Logger.Log($"LicenseManager: Local token expired on {token.ExpiresUtc}.", "WARNING");
                 TokenService.DeleteToken();
                 return LoginResult.Fail("License expired.");
             }
@@ -139,6 +148,7 @@ namespace DataLab.LicFolder
                     var user = auth.GetUser(token.Username);
                     if (user == null || !user.Active)
                     {
+                        Logger.Log($"LicenseManager: User '{token.Username}' revoked on server.", "WARNING");
                         TokenService.DeleteToken();
                         return LoginResult.Fail("License has been revoked. Please contact support.");
                     }
@@ -150,16 +160,22 @@ namespace DataLab.LicFolder
                     DateTime trueTime = auth.ServerTimeUtc ?? DateTime.UtcNow;
                     if (!isAdmin && user.Expires.ToUniversalTime() < trueTime)
                     {
+                        Logger.Log($"LicenseManager: Server expiry reached. Exp: {user.Expires}, TrueTime: {trueTime}", "WARNING");
                         TokenService.DeleteToken();
                         return LoginResult.Fail("Server-side license expired.");
                     }
                 }
+                else
+                {
+                    Logger.Log("LicenseManager: GitHub unreachable. Allowing offline mode with cached token.");
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // Network unavailable — allow offline use with existing token
+                Logger.LogError(ex, "LicenseManager: Online validation error (falling back to offline)");
             }
 
+            Logger.Log($"LicenseManager: Auto-login successful for {token.Username} ({token.Plan})");
             return LoginResult.Ok(token.Username, token.Plan, token.ExpiresUtc);
         }
 

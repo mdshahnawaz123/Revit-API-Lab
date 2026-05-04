@@ -19,23 +19,23 @@ namespace DataLab.LicFolder
         /// </summary>
         public static void RecordTrialStartIfNew(string username)
         {
+            Logger.Log($"TrialService: Checking trial start for user '{username}'...");
             try
             {
                 using (var key = GetOrCreateKey(username))
                 {
                     if (key == null) return;
-                    // Only write if not already recorded — this is the critical guard
                     if (key.GetValue(RegValue) == null)
-                        key.SetValue(RegValue, DateTime.UtcNow.ToString("o"), RegistryValueKind.String);
+                    {
+                        var start = DateTime.UtcNow;
+                        key.SetValue(RegValue, start.ToString("o"), RegistryValueKind.String);
+                        Logger.Log($"TrialService: NEW TRIAL RECORDED for '{username}' starting {start}.");
+                    }
                 }
             }
-            catch { }
+            catch (Exception ex) { Logger.LogError(ex, "TrialService: RecordTrialStartIfNew failed"); }
         }
 
-        /// <summary>
-        /// Returns the current trial status for this user on this machine.
-        /// Also enforces the Offline Time-Travel Trap.
-        /// </summary>
         public static TrialStatus GetTrialStatus(string username)
         {
             try
@@ -43,46 +43,58 @@ namespace DataLab.LicFolder
                 using (var key = GetOrCreateKey(username))
                 {
                     if (key == null)
+                    {
+                        Logger.Log("TrialService: Registry access failed.", "ERROR");
                         return TrialStatus.Expired("Unable to read trial data.");
+                    }
 
                     // OFFLINE TIME-TRAVEL TRAP
                     bool isTampered = (key.GetValue("Tampered") as string) == "true";
                     if (isTampered)
+                    {
+                        Logger.Log($"TrialService: TAMPERING DETECTED for '{username}'. Permanent lockout.", "CRITICAL");
                         return TrialStatus.Expired("System clock tampering detected. License locked.");
+                    }
 
                     string lastRunStr = key.GetValue("LastRunTime") as string;
                     if (lastRunStr != null && DateTime.TryParse(lastRunStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out var lastRun))
                     {
-                        // If current time is OLDER than the last run time, they moved their clock back!
-                        if (DateTime.UtcNow < lastRun.AddMinutes(-5)) // 5 minute buffer for normal drift
+                        if (DateTime.UtcNow < lastRun.AddMinutes(-5))
                         {
                             key.SetValue("Tampered", "true", RegistryValueKind.String);
+                            Logger.Log($"TrialService: Clock rollback detected for '{username}'! Last: {lastRun}, Current: {DateTime.UtcNow}. LOCKING.", "CRITICAL");
                             return TrialStatus.Expired("System clock tampering detected. License permanently locked.");
                         }
                     }
                     
-                    // Always update LastRunTime to current time
                     key.SetValue("LastRunTime", DateTime.UtcNow.ToString("o"), RegistryValueKind.String);
 
                     var raw = key.GetValue(RegValue) as string;
                     if (raw == null)
+                    {
+                        Logger.Log($"TrialService: No trial found for '{username}'.");
                         return TrialStatus.NotStarted();
+                    }
 
-                    if (!DateTime.TryParse(raw, null,
-                        System.Globalization.DateTimeStyles.RoundtripKind, out var startDate))
+                    if (!DateTime.TryParse(raw, null, System.Globalization.DateTimeStyles.RoundtripKind, out var startDate))
                         return TrialStatus.Expired("Trial data corrupted.");
 
                     var expiry = startDate.AddDays(TrialDays);
                     var remaining = (int)(expiry - DateTime.UtcNow).TotalDays;
 
                     if (DateTime.UtcNow > expiry)
+                    {
+                        Logger.Log($"TrialService: Trial for '{username}' expired on {expiry}.");
                         return TrialStatus.Expired($"Trial ended on {expiry.ToLocalTime():dd MMM yyyy}.");
+                    }
 
+                    Logger.Log($"TrialService: Trial for '{username}' is active. Days left: {remaining}");
                     return TrialStatus.Active(expiry, remaining);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.LogError(ex, "TrialService: GetTrialStatus failed");
                 return TrialStatus.Expired("Trial validation error.");
             }
         }

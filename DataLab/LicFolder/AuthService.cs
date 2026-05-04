@@ -23,11 +23,11 @@ namespace DataLab.LicFolder
 
         public async Task<bool> LoadUsersAsync()
         {
+            Logger.Log($"Fetching user database from {_source}...");
             try
             {
                 using (var http = new HttpClient())
                 {
-                    // Authenticate for private repos
                     var token = SecretService.GetGithubToken();
                     if (!string.IsNullOrEmpty(token))
                     {
@@ -37,12 +37,15 @@ namespace DataLab.LicFolder
                     http.DefaultRequestHeaders.UserAgent.Add(
                         new System.Net.Http.Headers.ProductInfoHeaderValue("RevitAddin", "1.0"));
 
-                    // Add cache-busting query parameter so GitHub gives us the newest file immediately
                     string urlWithCacheBuster = _source + "?t=" + DateTime.UtcNow.Ticks;
                     var response = await http.GetAsync(urlWithCacheBuster);
-                    if (!response.IsSuccessStatusCode) return false;
+                    
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Logger.Log($"GitHub request failed: {response.StatusCode}", "ERROR");
+                        return false;
+                    }
 
-                    // Extract true server time to prevent clock tampering
                     if (response.Headers.Date != null)
                     {
                         ServerTimeUtc = response.Headers.Date.Value.UtcDateTime;
@@ -50,17 +53,20 @@ namespace DataLab.LicFolder
 
                     var json = await response.Content.ReadAsStringAsync();
                     _users = JsonConvert.DeserializeObject<List<UserRecord>>(json);
+                    Logger.Log($"Database loaded successfully. Found {_users?.Count ?? 0} users.");
                     return true;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.LogError(ex, "Failed to load users from GitHub");
                 return false;
             }
         }
 
         public async Task<bool> ValidateCredentialsAsync(string user, string pass, Action<string> err)
         {
+            Logger.Log($"Attempting login for user: {user}");
             var ok = await LoadUsersAsync();
             if (!ok)
             {
@@ -71,11 +77,54 @@ namespace DataLab.LicFolder
             var match = _users.FirstOrDefault(x =>
                 x.Username.Equals(user, StringComparison.OrdinalIgnoreCase));
 
-            if (match == null) { err?.Invoke("User not found."); return false; }
-            if (match.Password != pass) { err?.Invoke("Wrong password."); return false; }
-            if (!match.Active) { err?.Invoke("License inactive."); return false; }
-            if (match.Expires < DateTime.UtcNow) { err?.Invoke("License expired."); return false; }
+            if (match == null) 
+            { 
+                Logger.Log($"Login failed: User '{user}' not found.", "WARNING");
+                err?.Invoke("User not found."); 
+                return false; 
+            }
 
+            // Secure Hashing Logic with migration fallback
+            string inputHash = HashUtils.ComputeHash(pass);
+            bool isCorrect = false;
+
+            if (HashUtils.IsHash(match.Password))
+            {
+                // DB has a hash, compare hashes
+                isCorrect = match.Password.Equals(inputHash, StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                // DB has plain text (old user), compare plain text
+                isCorrect = match.Password == pass;
+                
+                if (isCorrect)
+                    Logger.Log($"MIGRATION: User '{user}' logged in with plain text password. Please update their record on GitHub to use hash: {inputHash}");
+            }
+
+            if (!isCorrect) 
+            { 
+                Logger.Log($"Login failed: Wrong password for user '{user}'.", "WARNING");
+                err?.Invoke("Wrong password."); 
+                return false; 
+            }
+
+            if (!match.Active) 
+            { 
+                Logger.Log($"Login failed: Account '{user}' is inactive.", "WARNING");
+                err?.Invoke("License inactive."); 
+                return false; 
+            }
+
+            DateTime trueTime = ServerTimeUtc ?? DateTime.UtcNow;
+            if (match.Expires.ToUniversalTime() < trueTime) 
+            { 
+                Logger.Log($"Login failed: Account '{user}' has expired on {match.Expires}.", "WARNING");
+                err?.Invoke("License expired."); 
+                return false; 
+            }
+
+            Logger.Log($"Login successful for user: {user}");
             CurrentUser = match;
             return true;
         }
