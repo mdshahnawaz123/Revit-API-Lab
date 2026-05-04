@@ -13,8 +13,8 @@ namespace DataLab.LicFolder
     public static class GithubService
     {
         private static string GithubToken => SecretService.GetGithubToken();
-        private const string RepoOwner = "mdshahnawaz123";
-        private const string RepoName = "BDD-Releases";
+        private static readonly string RepoOwner = SecretService.GetRepoOwner();
+        private static readonly string RepoName = SecretService.GetRepoName();
         private const string FilePath = "LoginDetails";
 
         public static async Task<(bool Success, string ErrorMessage)> AddUserToGithubAsync(UserRecord newUser)

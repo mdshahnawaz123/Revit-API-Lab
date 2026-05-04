@@ -11,8 +11,8 @@ namespace B_Lab.RevitApp
 {
     public static class BDDUpdater
     {
-        private const string GITHUB_API_URL = "https://api.github.com/repos/mdshahnawaz123/BDD-Releases/releases/latest";
-        private const string GITHUB_RELEASES_PAGE = "https://github.com/mdshahnawaz123/BDD-Releases/releases/latest";
+        private static readonly string GITHUB_API_URL = SecretService.GetUpdaterApiUrl();
+        private static readonly string GITHUB_RELEASES_PAGE = SecretService.GetUpdaterPageUrl();
 
         public static void CheckForUpdates(UIControlledApplication app)
         {

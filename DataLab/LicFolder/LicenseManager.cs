@@ -9,8 +9,7 @@ namespace DataLab.LicFolder
 {
     public static class LicenseManager
     {
-        private static readonly string URL =
-            "https://raw.githubusercontent.com/mdshahnawaz123/BDD-Releases/main/LoginDetails";
+        private static readonly string URL = SecretService.GetLicenseUrl();
 
         // Hidden backup file anchor (secondary trial record)
         private static string GetBackupTrialPath(string username)
