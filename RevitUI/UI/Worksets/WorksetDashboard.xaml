@@ -105,7 +105,7 @@
 
                 <!-- Left Panel: Configuration -->
                 <StackPanel Grid.Column="0" Margin="0,0,25,0">
-                    <TextBlock Text="FILTER SETTINGS" Foreground="{StaticResource MutedText}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15" LetterSpacing="1"/>
+                    <TextBlock Text="FILTER SETTINGS" Foreground="{StaticResource MutedText}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15" CharacterSpacing="50"/>
                     
                     <TextBlock Text="Category" Foreground="{StaticResource TextColor}" FontWeight="SemiBold" Margin="0,0,0,5"/>
                     <ComboBox x:Name="CbCategory" ItemsSource="{Binding Categories}" SelectionChanged="CbCategory_SelectionChanged"/>
@@ -117,7 +117,7 @@
 
                     <Border Height="1" Background="#333" Margin="0,10,0,20"/>
 
-                    <TextBlock Text="TARGET WORKSET" Foreground="{StaticResource MutedText}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15" LetterSpacing="1"/>
+                    <TextBlock Text="TARGET WORKSET" Foreground="{StaticResource MutedText}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15" CharacterSpacing="50"/>
                     <ComboBox x:Name="CbWorkset" ItemsSource="{Binding Worksets}" SelectedItem="{Binding SelectedWorkset}"/>
 
                     <Button Content="Assign Selection" Style="{StaticResource ModernButton}" Height="45" Margin="0,5,0,10" Click="BtnAssign_Click"/>
@@ -133,7 +133,7 @@
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0" Background="#2D2D30" CornerRadius="6,6,0,0" Padding="15,10">
-                            <TextBlock Text="AFFECTED ELEMENTS" Foreground="{StaticResource MutedText}" FontSize="10" FontWeight="Bold" LetterSpacing="1"/>
+                            <TextBlock Text="AFFECTED ELEMENTS" Foreground="{StaticResource MutedText}" FontSize="10" FontWeight="Bold" CharacterSpacing="50"/>
                         </Border>
 
                         <DataGrid Grid.Row="1" x:Name="DgElements" AutoGenerateColumns="False" CanUserAddRows="False" 

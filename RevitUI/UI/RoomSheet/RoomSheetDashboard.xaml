@@ -91,7 +91,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <!-- Scope Selection -->
-                        <TextBlock Text="SEARCH SCOPE" Foreground="{StaticResource MutedText}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5" LetterSpacing="1"/>
+                        <TextBlock Text="SEARCH SCOPE" Foreground="{StaticResource MutedText}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5" CharacterSpacing="50"/>
                         <ComboBox x:Name="ComboScope" SelectionChanged="ComboScope_SelectionChanged">
                             <ComboBoxItem Content="Active View" IsSelected="True"/>
                             <ComboBoxItem Content="All Model"/>
@@ -99,7 +99,7 @@
                         </ComboBox>
 
                         <!-- Room List -->
-                        <TextBlock Text="SELECT ROOMS" Foreground="{StaticResource MutedText}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5" LetterSpacing="1"/>
+                        <TextBlock Text="SELECT ROOMS" Foreground="{StaticResource MutedText}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5" CharacterSpacing="50"/>
                         <TextBox x:Name="TxtSearchRoom" TextChanged="SearchRoom_TextChanged" ToolTip="Search by Name or Number..."/>
                         
                         <Grid Margin="0,0,0,5">
@@ -127,7 +127,7 @@
                         <Separator Background="#333" Margin="0,20"/>
 
                         <!-- Batch Settings -->
-                        <TextBlock Text="SHEET SETTINGS" Foreground="{StaticResource MutedText}" FontSize="10" FontWeight="Bold" Margin="0,0,0,15" LetterSpacing="1"/>
+                        <TextBlock Text="SHEET SETTINGS" Foreground="{StaticResource MutedText}" FontSize="10" FontWeight="Bold" Margin="0,0,0,15" CharacterSpacing="50"/>
                         
                         <TextBlock Text="Titleblock" Foreground="{StaticResource TextColor}" FontSize="11" Margin="0,0,0,5"/>
                         <ComboBox x:Name="ComboTitleblock" DisplayMemberPath="Name"/>
