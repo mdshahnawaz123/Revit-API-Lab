@@ -10,9 +10,7 @@ namespace RevitUI.UI.RoomSheet
 {
     public class RoomSheetHandler : IExternalEventHandler
     {
-        public ElementId SelectedRoomId { get; set; }
-        public string SheetNumber { get; set; }
-        public string SheetName { get; set; }
+        public List<RoomSheetDashboard.RoomItem> SelectedRooms { get; set; } = new List<RoomSheetDashboard.RoomItem>();
         public int ScaleValue { get; set; } = 50;
         public Action<string> OnSuccess { get; set; }
 
@@ -22,107 +20,105 @@ namespace RevitUI.UI.RoomSheet
 
         public void Execute(UIApplication app)
         {
-            Document doc = app.ActiveUIDocument.Document;
-            if (SelectedRoomId == null) return;
+            Document hostDoc = app.ActiveUIDocument.Document;
+            if (SelectedRooms == null || !SelectedRooms.Any()) return;
 
-            Room room = doc.GetElement(SelectedRoomId) as Room;
-            if (room == null) return;
-
-            using (Transaction trans = new Transaction(doc, "Create Room Data Sheet"))
+            foreach (var item in SelectedRooms)
             {
-                trans.Start();
-                try
+                Document sourceDoc = item.SourceDoc;
+                Room room = sourceDoc.GetElement(item.Id) as Room;
+                if (room == null) continue;
+
+                using (Transaction trans = new Transaction(hostDoc, "Create Room Data Sheet - " + room.Number))
                 {
-                    // 1. Plan View
-                    ViewFamilyType planType = new FilteredElementCollector(doc).OfClass(typeof(ViewFamilyType)).Cast<ViewFamilyType>().FirstOrDefault(x => x.ViewFamily == ViewFamily.FloorPlan);
-                    ViewPlan roomPlan = ViewPlan.Create(doc, planType.Id, room.Level.Id);
-                    roomPlan.Name = GetUniqueViewName(doc, "RDS_Plan_" + room.Number);
-                    roomPlan.Scale = ScaleValue;
-
-                    // Crop Plan
-                    BoundingBoxXYZ bbox = room.get_BoundingBox(null);
-                    double offset = 1.0;
-                    roomPlan.get_Parameter(BuiltInParameter.VIEWER_CROP_REGION).Set(1);
-                    
-                    // 2. Sheet
-                    if (TitleBlockId == null) TitleBlockId = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_TitleBlocks).WhereElementIsElementType().FirstElementId();
-                    ViewSheet sheet = ViewSheet.Create(doc, TitleBlockId);
-                    sheet.SheetNumber = GetUniqueSheetNumber(doc, SheetNumber);
-                    sheet.Name = SheetName;
-
-                    // 3. Elevations
-                    List<ViewSection> elevations = new List<ViewSection>();
-                    if (CreateAllElevations)
+                    trans.Start();
+                    try
                     {
-                        // Find an Interior Elevation type if possible, otherwise use any elevation type
-                        ViewFamilyType elevType = new FilteredElementCollector(doc)
-                            .OfClass(typeof(ViewFamilyType))
-                            .Cast<ViewFamilyType>()
-                            .FirstOrDefault(x => x.ViewFamily == ViewFamily.Elevation && x.Name.Contains("Interior"))
-                            ?? new FilteredElementCollector(doc)
+                        // 1. Find Level in Host (Matching Name)
+                        Level hostLevel = new FilteredElementCollector(hostDoc)
+                            .OfClass(typeof(Level))
+                            .Cast<Level>()
+                            .FirstOrDefault(l => l.Name.Equals(room.Level.Name, StringComparison.InvariantCultureIgnoreCase));
+
+                        if (hostLevel == null) hostLevel = new FilteredElementCollector(hostDoc).OfClass(typeof(Level)).FirstElement() as Level;
+
+                        // 2. Plan View (Created in Host)
+                        ViewFamilyType planType = new FilteredElementCollector(hostDoc).OfClass(typeof(ViewFamilyType)).Cast<ViewFamilyType>().FirstOrDefault(x => x.ViewFamily == ViewFamily.FloorPlan);
+                        ViewPlan roomPlan = ViewPlan.Create(hostDoc, planType.Id, hostLevel.Id);
+                        roomPlan.Name = GetUniqueViewName(hostDoc, "RDS_Plan_" + room.Number);
+                        roomPlan.Scale = ScaleValue;
+
+                        // Crop Plan (Match room bounds)
+                        BoundingBoxXYZ bbox = room.get_BoundingBox(null);
+                        roomPlan.get_Parameter(BuiltInParameter.VIEWER_CROP_REGION).Set(1);
+                        
+                        // 3. Sheet
+                        if (TitleBlockId == null) TitleBlockId = new FilteredElementCollector(hostDoc).OfCategory(BuiltInCategory.OST_TitleBlocks).WhereElementIsElementType().FirstElementId();
+                        ViewSheet sheet = ViewSheet.Create(hostDoc, TitleBlockId);
+                        sheet.SheetNumber = GetUniqueSheetNumber(hostDoc, "RDS-" + room.Number);
+                        sheet.Name = "RDS - " + room.Name.ToUpper();
+
+                        // 4. Elevations
+                        List<ViewSection> elevations = new List<ViewSection>();
+                        if (CreateAllElevations)
+                        {
+                            ViewFamilyType elevType = new FilteredElementCollector(hostDoc)
                                 .OfClass(typeof(ViewFamilyType))
                                 .Cast<ViewFamilyType>()
-                                .FirstOrDefault(x => x.ViewFamily == ViewFamily.Elevation);
+                                .FirstOrDefault(x => x.ViewFamily == ViewFamily.Elevation && x.Name.Contains("Interior"))
+                                ?? new FilteredElementCollector(hostDoc)
+                                    .OfClass(typeof(ViewFamilyType))
+                                    .Cast<ViewFamilyType>()
+                                    .FirstOrDefault(x => x.ViewFamily == ViewFamily.Elevation);
 
-                        XYZ roomCenter = (bbox.Max + bbox.Min) / 2;
-                        ElevationMarker marker = ElevationMarker.CreateElevationMarker(doc, elevType.Id, roomCenter, ScaleValue);
-                        
-                        for (int i = 0; i < 4; i++)
-                        {
-                            try 
+                            XYZ roomCenter = (bbox.Max + bbox.Min) / 2;
+                            ElevationMarker marker = ElevationMarker.CreateElevationMarker(hostDoc, elevType.Id, roomCenter, ScaleValue);
+                            
+                            for (int i = 0; i < 4; i++)
                             {
-                                if (marker.IsAvailableIndex(i))
-                                {
-                                    var v = marker.CreateElevation(doc, roomPlan.Id, i);
-                                    v.Name = GetUniqueViewName(doc, $"RDS_Elev_{room.Number}_{i}");
-                                    elevations.Add(v);
-                                }
+                                try {
+                                    if (marker.IsAvailableIndex(i))
+                                    {
+                                        var v = marker.CreateElevation(hostDoc, roomPlan.Id, i);
+                                        v.Name = GetUniqueViewName(hostDoc, $"RDS_Elev_{room.Number}_{i}");
+                                        elevations.Add(v);
+                                    }
+                                } catch { }
                             }
-                            catch { /* Skip occupied or invalid indices */ }
                         }
-                    }
 
-                    // 4. 3D View
-                    View3D view3d = null;
-                    if (Create3DView)
+                        // 5. 3D View
+                        View3D view3d = null;
+                        if (Create3DView)
+                        {
+                            ViewFamilyType v3dType = new FilteredElementCollector(hostDoc).OfClass(typeof(ViewFamilyType)).Cast<ViewFamilyType>().FirstOrDefault(x => x.ViewFamily == ViewFamily.ThreeDimensional);
+                            view3d = View3D.CreateIsometric(hostDoc, v3dType.Id);
+                            view3d.Name = GetUniqueViewName(hostDoc, "RDS_3D_" + room.Number);
+                            
+                            BoundingBoxXYZ sectionBox = new BoundingBoxXYZ { Min = bbox.Min, Max = bbox.Max };
+                            view3d.SetSectionBox(sectionBox);
+                            view3d.IsSectionBoxActive = true;
+                        }
+
+                        // 6. Placement
+                        Viewport.Create(hostDoc, sheet.Id, roomPlan.Id, new XYZ(0.8, 1.2, 0));
+                        double yStep = 0.5;
+                        for (int i = 0; i < elevations.Count; i++)
+                        {
+                            Viewport.Create(hostDoc, sheet.Id, elevations[i].Id, new XYZ(2.0, 0.4 + (i * yStep), 0));
+                        }
+                        if (view3d != null) Viewport.Create(hostDoc, sheet.Id, view3d.Id, new XYZ(2.0, 2.5, 0));
+
+                        trans.Commit();
+                        OnSuccess?.Invoke(sheet.SheetNumber);
+                    }
+                    catch (Exception ex)
                     {
-                        ViewFamilyType v3dType = new FilteredElementCollector(doc).OfClass(typeof(ViewFamilyType)).Cast<ViewFamilyType>().FirstOrDefault(x => x.ViewFamily == ViewFamily.ThreeDimensional);
-                        view3d = View3D.CreateIsometric(doc, v3dType.Id);
-                        view3d.Name = GetUniqueViewName(doc, "RDS_3D_" + room.Number);
-                        
-                        BoundingBoxXYZ sectionBox = new BoundingBoxXYZ();
-                        sectionBox.Min = bbox.Min;
-                        sectionBox.Max = bbox.Max;
-                        view3d.SetSectionBox(sectionBox);
-                        view3d.IsSectionBoxActive = true;
+                        trans.RollBack();
                     }
-
-                    // 5. Placement (Grid Layout)
-                    // Plan at center-left
-                    Viewport.Create(doc, sheet.Id, roomPlan.Id, new XYZ(0.8, 1.2, 0));
-
-                    // Elevations in a row or column
-                    double yStep = 0.5;
-                    for (int i = 0; i < elevations.Count; i++)
-                    {
-                        Viewport.Create(doc, sheet.Id, elevations[i].Id, new XYZ(2.0, 0.4 + (i * yStep), 0));
-                    }
-
-                    // 3D View at top-right
-                    if (view3d != null)
-                    {
-                        Viewport.Create(doc, sheet.Id, view3d.Id, new XYZ(2.0, 2.5, 0));
-                    }
-
-                    trans.Commit();
-                    OnSuccess?.Invoke(sheet.SheetNumber);
-                }
-                catch (Exception ex)
-                {
-                    trans.RollBack();
-                    TaskDialog.Show("Error", ex.Message);
                 }
             }
+            TaskDialog.Show("B-Lab", "Batch creation complete!");
         }
 
         private string GetUniqueViewName(Document doc, string baseName)

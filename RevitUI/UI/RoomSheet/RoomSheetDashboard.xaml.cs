@@ -13,7 +13,7 @@ namespace RevitUI.UI.RoomSheet
         private readonly ExternalEvent _externalEvent;
         private readonly RoomSheetHandler _handler;
         private readonly UIApplication _uiApp;
-        private List<LevelGroup> _allLevels;
+        private List<RoomItem> _allRooms = new List<RoomItem>();
 
         public RoomSheetDashboard(ExternalEvent externalEvent, RoomSheetHandler handler, UIApplication uiApp)
         {
@@ -27,32 +27,67 @@ namespace RevitUI.UI.RoomSheet
             LoadTitleblocks();
 
             _handler.OnSuccess = (sheetNum) => {
-                TaskDialog.Show("B-Lab", "Sheet " + sheetNum + " created successfully!");
+                // TaskDialog.Show("B-Lab", "Sheet " + sheetNum + " created successfully!");
             };
         }
 
         private void LoadRooms()
         {
             Document doc = _uiApp.ActiveUIDocument.Document;
-            var rooms = new FilteredElementCollector(doc)
-                .OfCategory(BuiltInCategory.OST_Rooms)
+            _allRooms.Clear();
+
+            int scope = ComboScope.SelectedIndex; // 0: Active View, 1: All Model, 2: Links
+
+            // 1. Current Document Rooms
+            var collector = (scope == 0) 
+                ? new FilteredElementCollector(doc, doc.ActiveView.Id) 
+                : new FilteredElementCollector(doc);
+
+            var rooms = collector.OfCategory(BuiltInCategory.OST_Rooms)
                 .Cast<Room>()
                 .Where(r => r.Area > 0 && r.Level != null)
-                .ToList();
+                .Select(r => new RoomItem { 
+                    Id = r.Id, 
+                    Name = r.Name, 
+                    Number = r.Number, 
+                    LevelName = r.Level?.Name ?? "N/A",
+                    IsFromLink = false,
+                    SourceDoc = doc
+                });
 
-            _allLevels = rooms.GroupBy(r => r.Level.Name)
-                .Select(g => new LevelGroup { 
-                    Name = g.Key, 
-                    Rooms = g.Select(r => new RoomItem { 
-                        Id = r.Id, 
-                        Name = r.Name, 
-                        Number = r.Number 
-                    }).OrderBy(r => r.Number).ToList() 
-                })
-                .OrderBy(l => l.Name)
-                .ToList();
+            _allRooms.AddRange(rooms);
 
-            TreeRooms.ItemsSource = _allLevels;
+            // 2. Linked Document Rooms
+            if (scope == 2)
+            {
+                var links = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>();
+                foreach (var link in links)
+                {
+                    Document linkDoc = link.GetLinkDocument();
+                    if (linkDoc == null) continue;
+
+                    var linkRooms = new FilteredElementCollector(linkDoc)
+                        .OfCategory(BuiltInCategory.OST_Rooms)
+                        .Cast<Room>()
+                        .Where(r => r.Area > 0 && r.Level != null)
+                        .Select(r => new RoomItem { 
+                            Id = r.Id, 
+                            Name = r.Name, 
+                            Number = r.Number, 
+                            LevelName = r.Level?.Name ?? "N/A",
+                            IsFromLink = true,
+                            SourceDoc = linkDoc
+                        });
+                    _allRooms.AddRange(linkRooms);
+                }
+            }
+
+            ListRooms.ItemsSource = _allRooms.OrderBy(r => r.Number).ToList();
+        }
+
+        private void ComboScope_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (IsLoaded) LoadRooms();
         }
 
         private void SearchRoom_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -60,26 +95,27 @@ namespace RevitUI.UI.RoomSheet
             string filter = TxtSearchRoom.Text.ToLower();
             if (string.IsNullOrWhiteSpace(filter))
             {
-                TreeRooms.ItemsSource = _allLevels;
+                ListRooms.ItemsSource = _allRooms.OrderBy(r => r.Number).ToList();
                 return;
             }
 
-            var filtered = _allLevels.Select(l => new LevelGroup {
-                Name = l.Name,
-                Rooms = l.Rooms.Where(r => r.Name.ToLower().Contains(filter) || r.Number.ToLower().Contains(filter)).ToList()
-            }).Where(l => l.Rooms.Any()).ToList();
+            var filtered = _allRooms.Where(r => 
+                r.Name.ToLower().Contains(filter) || 
+                r.Number.ToLower().Contains(filter) || 
+                r.LevelName.ToLower().Contains(filter))
+                .OrderBy(r => r.Number).ToList();
 
-            TreeRooms.ItemsSource = filtered;
+            ListRooms.ItemsSource = filtered;
         }
 
-        private void TreeRooms_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private void ChkSelectAll_Checked(object sender, RoutedEventArgs e)
         {
-            if (e.NewValue is RoomItem room)
+            bool isChecked = ChkSelectAll.IsChecked == true;
+            foreach (var item in ListRooms.ItemsSource as List<RoomItem>)
             {
-                _handler.SelectedRoomId = room.Id;
-                TxtSheetNumber.Text = "RDS-" + room.Number;
-                TxtSheetName.Text = "RDS - " + room.Name.ToUpper();
+                item.IsSelected = isChecked;
             }
+            ListRooms.Items.Refresh();
         }
 
         private void LoadTitleblocks()
@@ -96,15 +132,14 @@ namespace RevitUI.UI.RoomSheet
 
         private void Create_Click(object sender, RoutedEventArgs e)
         {
-            if (_handler.SelectedRoomId == null)
+            var selected = (ListRooms.ItemsSource as List<RoomItem>).Where(r => r.IsSelected).ToList();
+            if (!selected.Any())
             {
-                TaskDialog.Show("B-Lab", "Please select a room from the list first.");
+                TaskDialog.Show("B-Lab", "Please select at least one room from the list.");
                 return;
             }
 
-            _handler.SheetNumber = TxtSheetNumber.Text;
-            _handler.SheetName = TxtSheetName.Text;
-            
+            _handler.SelectedRooms = selected;
             _handler.CreateAllElevations = ChkAllElevations.IsChecked == true;
             _handler.Create3DView = Chk3DView.IsChecked == true;
 
@@ -122,13 +157,43 @@ namespace RevitUI.UI.RoomSheet
             _externalEvent.Raise();
         }
 
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed)
+                this.DragMove();
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
             RevitUI.Command.RoomSheetCommand.Instance = null;
         }
 
-        public class LevelGroup { public string Name { get; set; } public List<RoomItem> Rooms { get; set; } }
-        public class RoomItem { public ElementId Id { get; set; } public string Name { get; set; } public string Number { get; set; } }
+        public class RoomItem : System.ComponentModel.INotifyPropertyChanged
+        {
+            private bool _isSelected;
+            public bool IsSelected 
+            { 
+                get => _isSelected; 
+                set { _isSelected = value; OnPropertyChanged(nameof(IsSelected)); } 
+            }
+
+            public ElementId Id { get; set; }
+            public string Name { get; set; }
+            public string Number { get; set; }
+            public string LevelName { get; set; }
+            public bool IsFromLink { get; set; }
+            public Document SourceDoc { get; set; }
+
+            public Visibility LinkedIndicatorVisibility => IsFromLink ? Visibility.Visible : Visibility.Collapsed;
+
+            public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+            protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+        }
     }
 }
