@@ -10,7 +10,7 @@
 #define VendorId       "BIM Digital Design"
 #define VendorDesc     "BIM Digital Design"
 #define AppGuid        "{A1B2C3D4-1234-5678-ABCD-123456789000}"
-#define AppIconFile    "BDD.ico"
+#define AppIconFile    "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\BDD.ico"
 
 ; ================= BUILD PATHS =================
 #define API_ROOT_24  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\Release\net48"
@@ -127,15 +127,21 @@ begin
 end;
 
 function GetAddinDir(Year: string): string;
+var
+  YearInt: Integer;
 begin
+  YearInt := StrToIntDef(Year, 0);
   if InstallForAllUsers then
   begin
-    if Year = '2027' then
-      Result := ExpandConstant('{pf}\Autodesk\Revit\Addins\' + Year)
+    // Autodesk New Guideline (Revit 2024+): Use Common Files (Program Files) for better security
+    if YearInt >= 2024 then
+      Result := ExpandConstant('{commoncf}\Autodesk\Revit\Addins\' + Year)
     else
+      // Legacy versions (2021-2023) still use ProgramData
       Result := ExpandConstant('{commonappdata}\Autodesk\Revit\Addins\' + Year);
   end
   else
+    // Per-user installations still use AppData
     Result := ExpandConstant('{userappdata}\Autodesk\Revit\Addins\' + Year);
 end;
 
