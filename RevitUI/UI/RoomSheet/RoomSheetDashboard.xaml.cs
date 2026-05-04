@@ -190,7 +190,7 @@ namespace RevitUI.UI.RoomSheet
             public bool IsFromLink { get; set; }
             public Document SourceDoc { get; set; }
 
-            public Visibility LinkedIndicatorVisibility => IsFromLink ? Visibility.Visible : Visibility.Collapsed;
+            public System.Windows.Visibility LinkedIndicatorVisibility => IsFromLink ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
             public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
             protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
