@@ -132,16 +132,18 @@ namespace RevitUI.UI.Worksets
 
             var collector = new FilteredElementCollector(doc).WhereElementIsNotElementType();
             
+            IEnumerable<Element> filteredElements = collector;
+            
             if (AssignToAll)
             {
-                collector.Where(e => e.Category?.Name == SelectedCategory);
+                filteredElements = filteredElements.Where(e => e.Category?.Name == SelectedCategory);
             }
             else
             {
-                collector.Where(e => e.Category?.Name == SelectedCategory && doc.GetElement(e.GetTypeId())?.Name == SelectedType);
+                filteredElements = filteredElements.Where(e => e.Category?.Name == SelectedCategory && doc.GetElement(e.GetTypeId())?.Name == SelectedType);
             }
 
-            var elements = collector.ToList();
+            var elements = filteredElements.ToList();
 
             using (Transaction t = new Transaction(doc, "Assign Workset"))
             {
