@@ -10,24 +10,29 @@ namespace RevitUI.Command
     [Transaction(TransactionMode.Manual)]
     public class ModelHealthCommand : IExternalCommand
     {
-        public static ModelHealthDashboard? Instance;
         private static ExternalEvent? _externalEvent;
         private static ModelHealthHandler? _handler;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            if (Instance == null)
+            // LOGIN CHECK
+            if (!RevitUI.UI.LoginGuard.IsAuthorized()) return Result.Cancelled;
+
+            try
             {
-                _handler = new ModelHealthHandler();
-                _externalEvent = ExternalEvent.Create(_handler);
-                
-                Instance = new ModelHealthDashboard(_externalEvent, _handler);
-                _handler.Dashboard = Instance;
-                Instance.Show();
+                RevitUI.UI.WindowExtensions.ShowSingleton(() =>
+                {
+                    _handler = new ModelHealthHandler();
+                    _externalEvent = ExternalEvent.Create(_handler);
+                    var dashboard = new ModelHealthDashboard(_externalEvent, _handler);
+                    _handler.Dashboard = dashboard;
+                    return dashboard;
+                }, hideIcon: true);
             }
-            else
+            catch (Exception ex)
             {
-                Instance.Activate();
+                message = ex.Message;
+                return Result.Failed;
             }
 
             return Result.Succeeded;
