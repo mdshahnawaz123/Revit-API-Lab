@@ -11,26 +11,38 @@ namespace RevitUI.Command
     public class ModelHealthCommand : IExternalCommand
     {
         public static ModelHealthDashboard? Instance;
-        private static ExternalEvent? _externalEvent;
-        private static ModelHealthHandler? _handler;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            if (Instance == null)
+            try
             {
-                _handler = new ModelHealthHandler();
-                _externalEvent = ExternalEvent.Create(_handler);
-                
-                Instance = new ModelHealthDashboard(_externalEvent, _handler);
-                _handler.Dashboard = Instance;
-                Instance.Show();
-            }
-            else
-            {
-                Instance.Activate();
-            }
+                if (Instance != null)
+                {
+                    Instance.Activate();
+                    if (Instance.WindowState == System.Windows.WindowState.Minimized)
+                        Instance.WindowState = System.Windows.WindowState.Normal;
+                    return Result.Succeeded;
+                }
 
-            return Result.Succeeded;
+                var handler = new ModelHealthHandler();
+                var externalEvent = ExternalEvent.Create(handler);
+                
+                Instance = new ModelHealthDashboard(externalEvent, handler);
+                handler.Dashboard = Instance;
+                
+                // Safety: Reset instance on close
+                Instance.Closed += (s, e) => { Instance = null; };
+                
+                Instance.Show();
+
+                return Result.Succeeded;
+            }
+            catch (Exception ex)
+            {
+                TaskDialog.Show("Model Health Error", "Failed to open dashboard: " + ex.Message);
+                Instance = null;
+                return Result.Failed;
+            }
         }
     }
 }

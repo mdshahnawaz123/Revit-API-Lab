@@ -13,9 +13,9 @@
 #define AppIconFile    "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\BDD.ico"
 
 ; ================= BUILD PATHS =================
-#define API_ROOT_24  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\Release\net48"
-#define API_ROOT_25  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\Release\net8.0-windows"
-#define API_ROOT_27  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\Release\net10.0-windows"
+#define API_ROOT_24  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\x64\Release\net48"
+#define API_ROOT_25  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\x64\Release\net8.0-windows"
+#define API_ROOT_27  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\x64\Release\net10.0-windows"
 
 #define TOP_ROOT_24  "C:\Users\Mohd Shahnawaz\source\repos\RevitTopSurfacePoint\bin\Release\net48"
 #define TOP_ROOT_25  "C:\Users\Mohd Shahnawaz\source\repos\RevitTopSurfacePoint\bin\Release\net8.0-windows"
