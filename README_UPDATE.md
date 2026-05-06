@@ -17,6 +17,7 @@ This update introduces significant enhancements to the **Dimension Automation**,
 - **Link-Based NWC Slicing**: Option to export linked models as individual NWC files.
 - **Level-Based Export**: Automatic vertical slicing of models into floor-by-floor coordination NWCs using dynamic section boxes.
 - **Searchable Sheet Selection**: Integrated filtering system for large-scale sheet sets.
+- **Enhanced Debugging**: Integrated real-time error reporting and file-count verification for Navisworks exports to diagnose path or permission issues.
 
 ### 3. RoomSheet Generation
 - **Automated 500mm Offset Cropping**: 

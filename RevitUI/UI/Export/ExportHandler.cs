@@ -143,9 +143,12 @@ namespace RevitUI.UI.Export
             NavisworksExportOptions options = new NavisworksExportOptions();
             options.ExportScope = NavisworksExportScope.View;
             
+            int exportCount = 0;
+            List<string> errors = new List<string>();
+
             if (ExportNwcByLevel)
             {
-                ExportNwcSlices(doc, nwcDir, options);
+                exportCount = ExportNwcSlicesWithDebug(doc, nwcDir, options, out errors);
             }
             else
             {
@@ -160,76 +163,105 @@ namespace RevitUI.UI.Export
                             Document linkDoc = link.GetLinkDocument();
                             if (linkDoc != null)
                             {
-                                try { linkDoc.Export(nwcDir, link.Name.Replace(".rvt", "") + ".nwc", options); } catch { }
+                                try 
+                                { 
+                                    // Note: Exporting a link directly with 'View' scope requires a view in that link.
+                                    // If we don't have one, we might need to change scope or skip.
+                                    options.ExportScope = NavisworksExportScope.Model; 
+                                    linkDoc.Export(nwcDir, link.Name.Replace(".rvt", "") + ".nwc", options); 
+                                    exportCount++;
+                                } 
+                                catch (Exception ex) { errors.Add($"Link {link.Name}: {ex.Message}"); }
                             }
                         }
                     }
                     else
                     {
-                        doc.Export(nwcDir, doc.Title + ".nwc", options);
+                        try 
+                        { 
+                            options.ViewId = doc.ActiveView.Id;
+                            options.ExportScope = NavisworksExportScope.View;
+                            doc.Export(nwcDir, doc.Title + ".nwc", options); 
+                            exportCount++;
+                        } 
+                        catch (Exception ex) { errors.Add($"Host Model: {ex.Message}"); }
                     }
                     t.Commit();
                 }
             }
+
+            string msg = $"NWC Export Complete.\nFiles Exported: {exportCount}";
+            if (errors.Any()) msg += "\n\nErrors:\n" + string.Join("\n", errors.Take(5));
+            TaskDialog.Show("B-Lab Debug", msg);
         }
 
-        private void ExportNwcSlices(Document doc, string dir, NavisworksExportOptions options)
+        private int ExportNwcSlicesWithDebug(Document doc, string dir, NavisworksExportOptions options, out List<string> errors)
         {
+            errors = new List<string>();
+            int count = 0;
             var levels = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).ToList();
-            if (levels.Count == 0) return;
+            if (levels.Count == 0) { errors.Add("No levels found in project."); return 0; }
 
-            // Get total bounding box (generous default if empty)
-            BoundingBoxXYZ modelBox = new BoundingBoxXYZ { Min = new XYZ(-500, -500, -500), Max = new XYZ(500, 500, 500) };
-            
             ViewFamilyType vft = new FilteredElementCollector(doc).OfClass(typeof(ViewFamilyType))
                 .Cast<ViewFamilyType>().FirstOrDefault(x => x.ViewFamily == ViewFamily.ThreeDimensional);
 
-            if (vft == null) return;
+            if (vft == null) { errors.Add("No 3D View Type found."); return 0; }
 
-            // Export logic
-            var targets = new List<(Document doc, string prefix)>();
+            var targets = new List<(Document doc, string prefix, bool isLink)>();
             if (ExportLinksIndividually)
             {
                 var links = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>();
                 foreach (var l in links)
                 {
                     var ld = l.GetLinkDocument();
-                    if (ld != null) targets.Add((ld, l.Name.Replace(".rvt", "")));
+                    if (ld != null) targets.Add((ld, l.Name.Replace(".rvt", ""), true));
                 }
             }
             else
             {
-                targets.Add((doc, doc.Title));
+                targets.Add((doc, doc.Title, false));
             }
 
             foreach (var target in targets)
             {
+                if (target.isLink)
+                {
+                    errors.Add($"Skipping Link {target.prefix}: Cannot create temporary 3D views in read-only linked documents. Please export from the linked file itself or export host with links visible.");
+                    continue;
+                }
+
                 using (Transaction t = new Transaction(target.doc, "NWC Slice Export"))
                 {
                     t.Start();
-                    View3D view = View3D.CreateIsometric(target.doc, vft.Id);
-                    view.IsSectionBoxActive = true;
-
-                    for (int i = 0; i < levels.Count; i++)
+                    try 
                     {
-                        Level lvl = levels[i];
-                        double minZ = lvl.Elevation;
-                        double maxZ = (i < levels.Count - 1) ? levels[i + 1].Elevation : (minZ + 15.0); // 15ft for top level
+                        View3D view = View3D.CreateIsometric(target.doc, vft.Id);
+                        view.IsSectionBoxActive = true;
 
-                        BoundingBoxXYZ sbox = new BoundingBoxXYZ();
-                        sbox.Min = new XYZ(modelBox.Min.X, modelBox.Min.Y, minZ);
-                        sbox.Max = new XYZ(modelBox.Max.X, modelBox.Max.Y, maxZ);
-                        view.SetSectionBox(sbox);
+                        for (int i = 0; i < levels.Count; i++)
+                        {
+                            Level lvl = levels[i];
+                            double minZ = lvl.Elevation;
+                            double maxZ = (i < levels.Count - 1) ? levels[i + 1].Elevation : (minZ + 15.0);
 
-                        options.ViewId = view.Id;
-                        string fileName = $"{target.prefix}_{lvl.Name}.nwc";
-                        try { target.doc.Export(dir, fileName, options); } catch { }
+                            BoundingBoxXYZ sbox = new BoundingBoxXYZ();
+                            sbox.Min = new XYZ(-1000, -1000, minZ); // Using large model extents
+                            sbox.Max = new XYZ(1000, 1000, maxZ);
+                            view.SetSectionBox(sbox);
+
+                            options.ViewId = view.Id;
+                            options.ExportScope = NavisworksExportScope.View;
+                            string fileName = $"{target.prefix}_{lvl.Name}.nwc";
+                            target.doc.Export(dir, fileName, options);
+                            count++;
+                        }
+                        target.doc.Delete(view.Id);
                     }
-                    
-                    target.doc.Delete(view.Id);
+                    catch (Exception ex) { errors.Add($"{target.prefix} Error: {ex.Message}"); }
                     t.Commit();
                 }
             }
+            return count;
         }
 
         public string GetName() => "Master Export Handler";
