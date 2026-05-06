@@ -13,9 +13,17 @@ namespace RevitUI.UI.Dimensioning
         public double OffsetMm { get; set; } = 1000;
         public bool IncludeHost { get; set; } = true;
         public bool IncludeLinked { get; set; } = false;
+        public bool SameGroup { get; set; } = false;
+        public bool MultiTierGrids { get; set; } = true;
+        public bool WallCoreOnly { get; set; } = false;
+        public string OpeningDimMode { get; set; } = "Faces"; // "Faces" or "Centers"
+        public ElementId DimensionStyleId { get; set; } = ElementId.InvalidElementId;
+        public bool UseSelection { get; set; } = false;
+        private UIApplication _app;
 
         public void Execute(UIApplication app)
         {
+            _app = app;
             Document doc = app.ActiveUIDocument.Document;
 
             using (Transaction trans = new Transaction(doc, "Dimension Automation"))
@@ -23,6 +31,11 @@ namespace RevitUI.UI.Dimensioning
                 trans.Start();
                 try
                 {
+                    if (UseSelection)
+                    {
+                        // Logic to filter selection by mode...
+                    }
+
                     switch (Mode)
                     {
                         case DimMode.Grids:
@@ -40,6 +53,9 @@ namespace RevitUI.UI.Dimensioning
                         case DimMode.Columns:
                             DimensionColumns(doc);
                             break;
+                        case DimMode.CurtainWalls:
+                            DimensionCurtainWalls(doc);
+                            break;
                     }
                     trans.Commit();
                 }
@@ -53,112 +69,142 @@ namespace RevitUI.UI.Dimensioning
 
         private void DimensionWalls(Document doc)
         {
-            var walls = new FilteredElementCollector(doc, doc.ActiveView.Id)
-                .OfClass(typeof(Wall))
-                .Cast<Wall>()
-                .ToList();
+            var wallData = GetElements<Wall>(doc, BuiltInCategory.OST_Walls);
 
-            foreach (var wall in walls)
+            // Implement "Same Group" logic
+            IEnumerable<IEnumerable<(Wall Element, RevitLinkInstance Link)>> wallGroups;
+            if (SameGroup)
             {
-                LocationCurve locCurve = wall.Location as LocationCurve;
-                if (locCurve == null) continue;
-                Curve curve = locCurve.Curve;
+                wallGroups = wallData.GroupBy(x => x.Element.GroupId).Select(g => g.AsEnumerable());
+            }
+            else
+            {
+                wallGroups = new[] { wallData };
+            }
 
-                ReferenceArray refs = new ReferenceArray();
-                Options opt = new Options { ComputeReferences = true, DetailLevel = ViewDetailLevel.Fine };
-                GeometryElement geo = wall.get_Geometry(opt);
-                
-                foreach (var obj in geo)
+            foreach (var group in wallGroups)
+            {
+                foreach (var item in group)
                 {
-                    if (obj is Solid solid && solid.Faces.Size > 0)
+                    Wall wall = item.Element;
+                    RevitLinkInstance link = item.Link;
+
+                    LocationCurve locCurve = wall.Location as LocationCurve;
+                    if (locCurve == null) continue;
+                    Curve curve = locCurve.Curve;
+                    if (link != null) curve = curve.CreateTransformed(link.GetTotalTransform());
+
+                    ReferenceArray refs = new ReferenceArray();
+                    
+                    if (WallCoreOnly)
                     {
-                        AddWallFaces(solid, curve, refs);
+                        // Dimension to Centerline
+                        try {
+                            // Trying to get the centerline reference. 
+                            // Note: For some elements, the direct reference works as centerline.
+                            refs.Append(new Reference(wall)); 
+                        } catch { }
                     }
-                    else if (obj is GeometryInstance inst)
+                    else
                     {
-                        GeometryElement instGeo = inst.GetInstanceGeometry();
-                        foreach (var instObj in instGeo)
+                        Options opt = new Options { ComputeReferences = true, DetailLevel = ViewDetailLevel.Fine };
+                        GeometryElement geo = wall.get_Geometry(opt);
+                        ProcessGeometry(geo, curve, refs, link);
+                    }
+
+                    // Add Openings if requested
+                    if (OpeningDimMode == "Centers")
+                    {
+                        AddOpeningCenters(wall, refs, link);
+                    }
+
+                    if (refs.Size >= 2)
+                    {
+                        if (curve is Line line)
                         {
-                            if (instObj is Solid instSolid && instSolid.Faces.Size > 0)
+                            XYZ dir = line.Direction.Normalize();
+                            XYZ normal = new XYZ(-dir.Y, dir.X, 0);
+                            
+                            double offsetFeet = OffsetMm / 304.8;
+                            Line dimLine = Line.CreateBound(line.GetEndPoint(0) + normal * offsetFeet, line.GetEndPoint(1) + normal * offsetFeet);
+                            try { doc.Create.NewDimension(doc.ActiveView, dimLine, refs); } catch { }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ProcessGeometry(GeometryElement geo, Curve transformedCurve, ReferenceArray refs, RevitLinkInstance link)
+        {
+            foreach (var obj in geo)
+            {
+                if (obj is Solid solid && solid.Faces.Size > 0)
+                {
+                    AddWallFaces(solid, transformedCurve, refs, link);
+                }
+                else if (obj is GeometryInstance inst)
+                {
+                    GeometryElement instGeo = inst.GetInstanceGeometry();
+                    ProcessGeometry(instGeo, transformedCurve, refs, link);
+                }
+            }
+        }
+            
+        private void AddOpeningCenters(Wall wall, ReferenceArray refs, RevitLinkInstance link)
+        {
+            var doc = wall.Document;
+            var inserts = wall.FindInserts(true, true, true, true);
+            foreach (var id in inserts)
+            {
+                var e = doc.GetElement(id);
+                if (e is FamilyInstance fi)
+                {
+                    // For wall-hosted items, we want the center reference parallel to the wall
+                    var centerRefs = fi.GetReferences(FamilyInstanceReferenceType.CenterLeftRight);
+                    if (centerRefs.Count == 0) centerRefs = fi.GetReferences(FamilyInstanceReferenceType.CenterFrontBack);
+                    
+                    if (centerRefs.Count > 0)
+                    {
+                        Reference r = centerRefs.First();
+                        if (link != null) r = r.CreateLinkReference(link);
+                        try { refs.Append(r); } catch { }
+                    }
+                }
+            }
+        }
+
+        private void AddWallFaces(Solid solid, Curve transformedCurve, ReferenceArray refs, RevitLinkInstance link)
+        {
+            Transform t = link?.GetTotalTransform() ?? Transform.Identity;
+            foreach (Face face in solid.Faces)
+            {
+                if (face is PlanarFace planar)
+                {
+                    XYZ normal = t.OfVector(planar.FaceNormal);
+                    if (transformedCurve is Line line)
+                    {
+                        XYZ dir = line.Direction.Normalize();
+                        if (Math.Abs(normal.DotProduct(dir)) < 0.01)
+                        {
+                            if (planar.Reference != null)
                             {
-                                AddWallFaces(instSolid, curve, refs);
+                                Reference r = planar.Reference;
+                                if (link != null) r = r.CreateLinkReference(link);
+                                try { refs.Append(r); } catch { }
                             }
                         }
                     }
                 }
-
-                if (refs.Size >= 2)
-                {
-                    if (curve is Line line)
-                    {
-                        XYZ dir = line.Direction.Normalize();
-                        XYZ normal = new XYZ(-dir.Y, dir.X, 0);
-                        Line dimLine = Line.CreateBound(line.GetEndPoint(0) + normal * 2, line.GetEndPoint(1) + normal * 2);
-                        try { doc.Create.NewDimension(doc.ActiveView, dimLine, refs); } catch { }
-                    }
-                }
             }
         }
 
-        private void AddWallFaces(Solid solid, Curve curve, ReferenceArray refs)
-        {
-            foreach (Face face in solid.Faces)
-            {
-                if (face is PlanarFace planar && IsFaceParallelToCurve(planar, curve))
-                {
-                    if (planar.Reference != null)
-                    {
-                        try { refs.Append(planar.Reference); } catch { }
-                    }
-                }
-            }
-        }
 
-        private bool IsFaceParallelToCurve(PlanarFace face, Curve curve)
-        {
-            if (curve is Line line)
-            {
-                XYZ dir = line.Direction.Normalize();
-                return Math.Abs(face.FaceNormal.DotProduct(dir)) < 0.01;
-            }
-            return false;
-        }
 
         private void DimensionRooms(Document doc)
         {
-            List<SpatialElement> rooms = new List<SpatialElement>();
+            var roomData = GetElements<SpatialElement>(doc, BuiltInCategory.OST_Rooms);
 
-            // 1. Host Rooms
-            if (IncludeHost)
-            {
-                rooms.AddRange(new FilteredElementCollector(doc, doc.ActiveView.Id)
-                    .OfCategory(BuiltInCategory.OST_Rooms)
-                    .Cast<SpatialElement>()
-                    .Where(r => r.Location != null));
-            }
-
-            // 2. Linked Rooms
-            if (IncludeLinked)
-            {
-                var links = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>();
-                foreach (var link in links)
-                {
-                    Document linkDoc = link.GetLinkDocument();
-                    if (linkDoc == null) continue;
-
-                    var linkedRooms = new FilteredElementCollector(linkDoc)
-                        .OfCategory(BuiltInCategory.OST_Rooms)
-                        .Cast<SpatialElement>()
-                        .Where(r => r.Location != null);
-                    
-                    foreach(var lr in linkedRooms)
-                    {
-                        rooms.Add(lr);
-                    }
-                }
-            }
-
-            if (rooms.Count == 0)
+            if (roomData.Count == 0)
             {
                 TaskDialog.Show("B-Lab", "No rooms found in the active view.");
                 return;
@@ -171,35 +217,30 @@ namespace RevitUI.UI.Dimensioning
                 return;
             }
 
-            foreach (var room in rooms)
+            foreach (var item in roomData)
             {
+                SpatialElement room = item.Element;
+                RevitLinkInstance link = item.Link;
                 XYZ center = GetElementCenter(room);
                 
                 // If the room is from a link, transform its center to host
-                if (room.Document.IsLinked)
-                {
-                    var link = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance))
-                        .Cast<RevitLinkInstance>()
-                        .FirstOrDefault(l => l.GetLinkDocument()?.PathName == room.Document.PathName);
-                    
-                    if (link != null) center = link.GetTotalTransform().OfPoint(center);
-                }
+                if (link != null) center = link.GetTotalTransform().OfPoint(center);
                 
                 // Dimension to nearest vertical grids
-                var vGrids = grids.Where(IsVertical).OrderBy(g => Math.Abs(GetX(g) - center.X)).ToList();
+                var vGrids = grids.Where(g => IsVertical(g, null)).OrderBy(g => Math.Abs(GetX(g, null) - center.X)).ToList();
                 if (vGrids.Count >= 2)
                 {
-                    var gLeft = vGrids.Where(g => GetX(g) < center.X).OrderByDescending(GetX).FirstOrDefault();
-                    var gRight = vGrids.Where(g => GetX(g) >= center.X).OrderBy(GetX).FirstOrDefault();
+                    var gLeft = vGrids.Where(g => GetX(g, null) < center.X).OrderByDescending(g => GetX(g, null)).FirstOrDefault();
+                    var gRight = vGrids.Where(g => GetX(g, null) >= center.X).OrderBy(g => GetX(g, null)).FirstOrDefault();
                     if (gLeft != null && gRight != null) CreateRoomDimBetweenGrids(doc, center, gLeft, gRight, true);
                 }
 
                 // Dimension to nearest horizontal grids
-                var hGrids = grids.Where(g => !IsVertical(g)).OrderBy(g => Math.Abs(GetY(g) - center.Y)).ToList();
+                var hGrids = grids.Where(g => !IsVertical(g, null)).OrderBy(g => Math.Abs(GetY(g, null) - center.Y)).ToList();
                 if (hGrids.Count >= 2)
                 {
-                    var gBot = hGrids.Where(g => GetY(g) < center.Y).OrderByDescending(GetY).FirstOrDefault();
-                    var gTop = hGrids.Where(g => GetY(g) >= center.Y).OrderBy(GetY).FirstOrDefault();
+                    var gBot = hGrids.Where(g => GetY(g, null) < center.Y).OrderByDescending(g => GetY(g, null)).FirstOrDefault();
+                    var gTop = hGrids.Where(g => GetY(g, null) >= center.Y).OrderBy(g => GetY(g, null)).FirstOrDefault();
                     if (gBot != null && gTop != null) CreateRoomDimBetweenGrids(doc, center, gBot, gTop, false);
                 }
             }
@@ -213,9 +254,9 @@ namespace RevitUI.UI.Dimensioning
 
             Line line;
             if (vertical)
-                line = Line.CreateBound(new XYZ(GetX(g1), roomCenter.Y, 0), new XYZ(GetX(g2), roomCenter.Y, 0));
+                line = Line.CreateBound(new XYZ(GetX(g1, null), roomCenter.Y, 0), new XYZ(GetX(g2, null), roomCenter.Y, 0));
             else
-                line = Line.CreateBound(new XYZ(roomCenter.X, GetY(g1), 0), new XYZ(roomCenter.X, GetY(g2), 0));
+                line = Line.CreateBound(new XYZ(roomCenter.X, GetY(g1, null), 0), new XYZ(roomCenter.X, GetY(g2, null), 0));
 
             try { doc.Create.NewDimension(doc.ActiveView, line, roomRefs); } catch { }
         }
@@ -228,115 +269,267 @@ namespace RevitUI.UI.Dimensioning
 
         private void DimensionGrids(Document doc)
         {
-            var grids = new FilteredElementCollector(doc, doc.ActiveView.Id)
-                .OfClass(typeof(Grid))
-                .Cast<Grid>()
+            var gridData = GetGrids(doc);
+
+            if (gridData.Count < 2) return;
+
+            // Group grids by direction (to handle angled grids)
+            var directionGroups = gridData.GroupBy(x => GetDirectionKey(x.Element, x.Link)).ToList();
+
+            foreach (var group in directionGroups)
+            {
+                var sortedGrids = group.OrderBy(x => GetPositionAlongNormal(x.Element, x.Link)).ToList();
+                if (sortedGrids.Count > 1)
+                {
+                    CreateGridDimension(doc, sortedGrids);
+                }
+            }
+        }
+
+        private string GetDirectionKey(Grid g, RevitLinkInstance link)
+        {
+            if (g.Curve is Line l)
+            {
+                XYZ dir = l.Direction.Normalize();
+                if (link != null) dir = link.GetTotalTransform().OfVector(dir);
+                // Standardize direction (e.g., always pointing positive X or positive Y)
+                if (dir.X < 0 || (Math.Abs(dir.X) < 0.001 && dir.Y < 0)) dir = -dir;
+                return $"{Math.Round(dir.X, 3)}_{Math.Round(dir.Y, 3)}_{Math.Round(dir.Z, 3)}";
+            }
+            return "unknown";
+        }
+
+        private double GetPositionAlongNormal(Grid g, RevitLinkInstance link)
+        {
+            if (g.Curve is Line l)
+            {
+                XYZ p = l.GetEndPoint(0);
+                if (link != null) p = link.GetTotalTransform().OfPoint(p);
+                XYZ dir = l.Direction.Normalize();
+                if (link != null) dir = link.GetTotalTransform().OfVector(dir);
+                XYZ normal = new XYZ(-dir.Y, dir.X, 0).Normalize();
+                return p.DotProduct(normal);
+            }
+            return 0;
+        }
+
+        private void DimensionCurtainWalls(Document doc)
+        {
+            var walls = new FilteredElementCollector(doc, doc.ActiveView.Id)
+                .OfClass(typeof(Wall))
+                .Cast<Wall>()
+                .Where(w => w.WallType.Kind == WallKind.Curtain)
                 .ToList();
 
-            if (grids.Count < 2) return;
+            foreach (var wall in walls)
+            {
+                var grid = wall.CurtainGrid;
+                if (grid == null) continue;
 
-            var verticalGrids = grids.Where(IsVertical).OrderBy(GetX).ToList();
-            var horizontalGrids = grids.Where(g => !IsVertical(g)).OrderBy(GetY).ToList();
+                // Dimension U-Grids
+                var uGridIds = grid.GetUGridLineIds();
+                if (uGridIds.Count > 1) CreateCurtainGridDim(doc, wall, uGridIds);
 
-            if (verticalGrids.Count > 1) CreateGridDimension(doc, verticalGrids, true);
-            if (horizontalGrids.Count > 1) CreateGridDimension(doc, horizontalGrids, false);
+                // Dimension V-Grids
+                var vGridIds = grid.GetVGridLineIds();
+                if (vGridIds.Count > 1) CreateCurtainGridDim(doc, wall, vGridIds);
+            }
+        }
+
+        private void CreateCurtainGridDim(Document doc, Wall wall, ICollection<ElementId> gridIds)
+        {
+            ReferenceArray refs = new ReferenceArray();
+            foreach (var id in gridIds)
+            {
+                var gridLine = doc.GetElement(id) as CurtainGridLine;
+                if (gridLine != null)
+                {
+                    var r = gridLine.get_Geometry(new Options { ComputeReferences = true }).Cast<GeometryObject>()
+                        .Select(x => (x as Curve)?.Reference).FirstOrDefault(x => x != null);
+                    if (r != null) refs.Append(r);
+                }
+            }
+
+            if (refs.Size < 2) return;
+
+            LocationCurve lc = wall.Location as LocationCurve;
+            if (lc == null) return;
+            Curve curve = lc.Curve;
+            XYZ dir = (curve.GetEndPoint(1) - curve.GetEndPoint(0)).Normalize();
+            XYZ normal = new XYZ(-dir.Y, dir.X, 0);
+            Line dimLine = Line.CreateBound(curve.GetEndPoint(0) + normal * 2, curve.GetEndPoint(1) + normal * 2);
+
+            try { doc.Create.NewDimension(doc.ActiveView, dimLine, refs); } catch { }
+        }
+
+        private bool IsVertical(Grid g, RevitLinkInstance link)
+        {
+            if (g.Curve is Line l)
+            {
+                XYZ dir = l.Direction;
+                if (link != null) dir = link.GetTotalTransform().OfVector(dir);
+                return Math.Abs(dir.X) < 0.01;
+            }
+            return false;
+        }
+
+        private double GetX(Grid g, RevitLinkInstance link)
+        {
+            if (g.Curve is Line l)
+            {
+                XYZ p = l.GetEndPoint(0);
+                if (link != null) p = link.GetTotalTransform().OfPoint(p);
+                return p.X;
+            }
+            return 0;
+        }
+
+        private double GetY(Grid g, RevitLinkInstance link)
+        {
+            if (g.Curve is Line l)
+            {
+                XYZ p = l.GetEndPoint(0);
+                if (link != null) p = link.GetTotalTransform().OfPoint(p);
+                return p.Y;
+            }
+            return 0;
+        }
+
+        private void CreateGridDimension(Document doc, List<(Grid Element, RevitLinkInstance Link)> sortedGrids)
+        {
+            ReferenceArray refs = new ReferenceArray();
+            foreach (var item in sortedGrids)
+            {
+                Reference r = new Reference(item.Element);
+                if (item.Link != null) r = r.CreateLinkReference(item.Link);
+                refs.Append(r);
+            }
+
+            if (refs.Size < 2) return;
+
+            // Calculate dimension line direction and position
+            Line firstLine = sortedGrids.First().Element.Curve as Line;
+            XYZ dir = firstLine.Direction.Normalize();
+            if (sortedGrids.First().Link != null) dir = sortedGrids.First().Link.GetTotalTransform().OfVector(dir);
+            XYZ normal = new XYZ(-dir.Y, dir.X, 0).Normalize();
+
+            double offsetFeet = OffsetMm / 304.8;
+            
+            // Find extreme points to place dimension line
+            var points = sortedGrids.Select(x => {
+                Line l = x.Element.Curve as Line;
+                XYZ p1 = l.GetEndPoint(0);
+                if (x.Link != null) p1 = x.Link.GetTotalTransform().OfPoint(p1);
+                return p1;
+            }).ToList();
+
+            XYZ start = points.First();
+            XYZ end = points.Last();
+            
+            // Adjust points based on normal and offset
+            XYZ dimStart = start + normal * offsetFeet;
+            XYZ dimEnd = end + normal * offsetFeet;
+            Line line = Line.CreateBound(dimStart, dimEnd);
+
+            Dimension dim;
+            if (DimensionStyleId != ElementId.InvalidElementId)
+                dim = doc.Create.NewDimension(doc.ActiveView, line, refs, doc.GetElement(DimensionStyleId) as DimensionType);
+            else
+                dim = doc.Create.NewDimension(doc.ActiveView, line, refs);
+
+            // Create Overall Dimension if Multi-Tier is enabled
+            if (MultiTierGrids && sortedGrids.Count > 2)
+            {
+                ReferenceArray overallRefs = new ReferenceArray();
+                var rStart = new Reference(sortedGrids.First().Element);
+                var rEnd = new Reference(sortedGrids.Last().Element);
+                if (sortedGrids.First().Link != null) rStart = rStart.CreateLinkReference(sortedGrids.First().Link);
+                if (sortedGrids.Last().Link != null) rEnd = rEnd.CreateLinkReference(sortedGrids.Last().Link);
+                overallRefs.Append(rStart);
+                overallRefs.Append(rEnd);
+
+                double extraOffset = 500 / 304.8;
+                Line overallLine = Line.CreateBound(dimStart + normal * extraOffset, dimEnd + normal * extraOffset);
+
+                if (DimensionStyleId != ElementId.InvalidElementId)
+                    doc.Create.NewDimension(doc.ActiveView, overallLine, overallRefs, doc.GetElement(DimensionStyleId) as DimensionType);
+                else
+                    doc.Create.NewDimension(doc.ActiveView, overallLine, overallRefs);
+            }
         }
 
         private void DimensionColumns(Document doc)
         {
-            var columns = new FilteredElementCollector(doc, doc.ActiveView.Id)
-                .OfCategory(BuiltInCategory.OST_StructuralColumns)
-                .OfClass(typeof(FamilyInstance))
-                .Cast<FamilyInstance>()
-                .ToList();
+            var columnData = GetElements<FamilyInstance>(doc, BuiltInCategory.OST_StructuralColumns);
 
-            if (columns.Count == 0) return;
+            if (columnData.Count == 0) return;
 
             var grids = new FilteredElementCollector(doc, doc.ActiveView.Id).OfClass(typeof(Grid)).Cast<Grid>().ToList();
             if (grids.Count == 0) return;
 
-            foreach (var col in columns)
+            foreach (var item in columnData)
             {
-                XYZ center = GetElementCenter(col);
+                XYZ center = GetElementCenter(item.Element);
+                if (item.Link != null) center = item.Link.GetTotalTransform().OfPoint(center);
                 
-                var nearestV = grids.Where(IsVertical).OrderBy(g => Math.Abs(GetX(g) - center.X)).FirstOrDefault();
-                var nearestH = grids.Where(g => !IsVertical(g)).OrderBy(g => Math.Abs(GetY(g) - center.Y)).FirstOrDefault();
+                var nearestV = grids.Where(g => IsVertical(g, null)).OrderBy(g => Math.Abs(GetX(g, null) - center.X)).FirstOrDefault();
+                var nearestH = grids.Where(g => !IsVertical(g, null)).OrderBy(g => Math.Abs(GetY(g, null) - center.Y)).FirstOrDefault();
 
-                if (nearestV != null) CreateSingleDim(doc, col, nearestV, true);
-                if (nearestH != null) CreateSingleDim(doc, col, nearestH, false);
+                if (nearestV != null) CreateSingleDim(doc, item.Element, item.Link, nearestV, null, true);
+                if (nearestH != null) CreateSingleDim(doc, item.Element, item.Link, nearestH, null, false);
             }
         }
 
         private void DimensionMEP(Document doc)
         {
-            var openings = new FilteredElementCollector(doc, doc.ActiveView.Id)
-                .OfClass(typeof(FamilyInstance))
-                .OfCategory(BuiltInCategory.OST_GenericModel)
-                .Cast<FamilyInstance>()
-                .Where(fi => fi.Symbol.FamilyName.Contains("Opening") || fi.Symbol.FamilyName.Contains("Sleeve"))
+            var openingData = GetElements<FamilyInstance>(doc, BuiltInCategory.OST_GenericModel)
+                .Where(x => x.Element.Symbol.FamilyName.Contains("Opening") || x.Element.Symbol.FamilyName.Contains("Sleeve"))
                 .ToList();
 
-            if (openings.Count == 0) return;
+            if (openingData.Count == 0) return;
 
             var grids = new FilteredElementCollector(doc, doc.ActiveView.Id).OfClass(typeof(Grid)).Cast<Grid>().ToList();
             var columns = new FilteredElementCollector(doc, doc.ActiveView.Id).OfClass(typeof(FamilyInstance))
                 .OfCategory(BuiltInCategory.OST_StructuralColumns).Cast<FamilyInstance>().ToList();
 
-            foreach (var opening in openings)
+            foreach (var item in openingData)
             {
-                XYZ center = GetElementCenter(opening);
+                XYZ center = GetElementCenter(item.Element);
+                if (item.Link != null) center = item.Link.GetTotalTransform().OfPoint(center);
                 
-                var nearestV = grids.Where(IsVertical).OrderBy(g => Math.Abs(GetX(g) - center.X)).FirstOrDefault();
-                var nearestH = grids.Where(g => !IsVertical(g)).OrderBy(g => Math.Abs(GetY(g) - center.Y)).FirstOrDefault();
+                var nearestV = grids.Where(g => IsVertical(g, null)).OrderBy(g => Math.Abs(GetX(g, null) - center.X)).FirstOrDefault();
+                var nearestH = grids.Where(g => !IsVertical(g, null)).OrderBy(g => Math.Abs(GetY(g, null) - center.Y)).FirstOrDefault();
 
-                if (nearestV != null) CreateSingleDim(doc, opening, nearestV, true);
-                if (nearestH != null) CreateSingleDim(doc, opening, nearestH, false);
+                if (nearestV != null) CreateSingleDim(doc, item.Element, item.Link, nearestV, null, true);
+                if (nearestH != null) CreateSingleDim(doc, item.Element, item.Link, nearestH, null, false);
 
                 var nearestCol = columns.OrderBy(c => GetElementCenter(c).DistanceTo(center)).FirstOrDefault();
                 if (nearestCol != null && GetElementCenter(nearestCol).DistanceTo(center) < 5.0)
                 {
-                    CreateSingleDim(doc, opening, nearestCol, true);
+                    CreateSingleDim(doc, item.Element, item.Link, nearestCol, null, true);
                 }
             }
         }
 
-        private void CreateGridDimension(Document doc, List<Grid> sortedGrids, bool isVerticalGroup)
-        {
-            ReferenceArray refs = new ReferenceArray();
-            foreach (var grid in sortedGrids) refs.Append(new Reference(grid));
-
-            Line line;
-            double offsetFeet = OffsetMm / 304.8;
-
-            if (isVerticalGroup)
-            {
-                double minY = sortedGrids.Min(GetMinY) - offsetFeet;
-                line = Line.CreateBound(new XYZ(GetX(sortedGrids.First()), minY, 0), new XYZ(GetX(sortedGrids.Last()), minY, 0));
-            }
-            else
-            {
-                double minX = sortedGrids.Min(GetMinX) - offsetFeet;
-                line = Line.CreateBound(new XYZ(minX, GetY(sortedGrids.First()), 0), new XYZ(minX, GetY(sortedGrids.Last()), 0));
-            }
-
-            doc.Create.NewDimension(doc.ActiveView, line, refs);
-        }
-
-        private void CreateSingleDim(Document doc, Element e1, Element e2, bool horizontal)
+        private void CreateSingleDim(Document doc, Element e1, RevitLinkInstance l1, Element e2, RevitLinkInstance l2, bool horizontal)
         {
             ReferenceArray refs = new ReferenceArray();
             
-            // For columns/families, we must pick the reference plane parallel to the grid
             Reference r1 = GetBestReference(e1, horizontal);
             Reference r2 = GetBestReference(e2, horizontal);
 
             if (r1 == null || r2 == null) return;
 
+            if (l1 != null) r1 = r1.CreateLinkReference(l1);
+            if (l2 != null) r2 = r2.CreateLinkReference(l2);
+
             refs.Append(r1);
             refs.Append(r2);
 
             XYZ p1 = GetElementCenter(e1);
+            if (l1 != null) p1 = l1.GetTotalTransform().OfPoint(p1);
             XYZ p2 = GetElementCenter(e2);
+            if (l2 != null) p2 = l2.GetTotalTransform().OfPoint(p2);
             
             Line line;
             if (horizontal)
@@ -353,8 +546,6 @@ namespace RevitUI.UI.Dimensioning
             
             if (e is FamilyInstance fi)
             {
-                // For Horizontal Dimension (X-distance), we need the Vertical reference (Left/Right)
-                // For Vertical Dimension (Y-distance), we need the Horizontal reference (Front/Back)
                 if (horizontal)
                 {
                     var refs = fi.GetReferences(FamilyInstanceReferenceType.CenterLeftRight);
@@ -366,7 +557,6 @@ namespace RevitUI.UI.Dimensioning
                     if (refs.Count > 0) return refs.First();
                 }
 
-                // Fallback to any center reference
                 var anyRefs = fi.GetReferences(FamilyInstanceReferenceType.CenterLeftRight);
                 if (anyRefs.Count > 0) return anyRefs.First();
                 anyRefs = fi.GetReferences(FamilyInstanceReferenceType.CenterFrontBack);
@@ -386,14 +576,84 @@ namespace RevitUI.UI.Dimensioning
             return (bbox.Min + bbox.Max) * 0.5;
         }
 
-        private bool IsVertical(Grid g) {
-            if (g.Curve is Line l) return Math.Abs(l.Direction.X) < 0.01;
-            return false;
+        private List<(T Element, RevitLinkInstance Link)> GetElements<T>(Document doc, BuiltInCategory category) where T : Element
+        {
+            var results = new List<(T Element, RevitLinkInstance Link)>();
+            
+            if (UseSelection)
+            {
+                var selIds = _app.ActiveUIDocument.Selection.GetElementIds();
+                if (selIds.Count > 0)
+                {
+                    var elements = new FilteredElementCollector(doc, selIds)
+                        .OfCategory(category)
+                        .WhereElementIsNotElementType()
+                        .Cast<T>();
+                    foreach (var e in elements) results.Add((e, null));
+                    return results;
+                }
+            }
+
+            if (IncludeHost)
+            {
+                var elements = new FilteredElementCollector(doc, doc.ActiveView.Id)
+                    .OfCategory(category)
+                    .WhereElementIsNotElementType()
+                    .Cast<T>();
+                foreach (var e in elements) results.Add((e, null));
+            }
+
+            if (IncludeLinked)
+            {
+                var links = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>();
+                foreach (var link in links)
+                {
+                    Document linkDoc = link.GetLinkDocument();
+                    if (linkDoc == null) continue;
+                    var elements = new FilteredElementCollector(linkDoc)
+                        .OfCategory(category)
+                        .WhereElementIsNotElementType()
+                        .Cast<T>();
+                    foreach (var e in elements) results.Add((e, link));
+                }
+            }
+
+            return results;
         }
-        private double GetX(Grid g) => g.Curve is Line l ? l.GetEndPoint(0).X : 0;
-        private double GetY(Grid g) => g.Curve is Line l ? l.GetEndPoint(0).Y : 0;
-        private double GetMinY(Grid g) => g.Curve is Line l ? Math.Min(l.GetEndPoint(0).Y, l.GetEndPoint(1).Y) : 0;
-        private double GetMinX(Grid g) => g.Curve is Line l ? Math.Min(l.GetEndPoint(0).X, l.GetEndPoint(1).X) : 0;
+
+        private List<(Grid Element, RevitLinkInstance Link)> GetGrids(Document doc)
+        {
+            var results = new List<(Grid Element, RevitLinkInstance Link)>();
+            if (UseSelection)
+            {
+                var selIds = _app.ActiveUIDocument.Selection.GetElementIds();
+                if (selIds.Count > 0)
+                {
+                    var grids = new FilteredElementCollector(doc, selIds).OfClass(typeof(Grid)).Cast<Grid>();
+                    foreach (var g in grids) results.Add((g, null));
+                    return results;
+                }
+            }
+
+            if (IncludeHost)
+            {
+                var grids = new FilteredElementCollector(doc, doc.ActiveView.Id).OfClass(typeof(Grid)).Cast<Grid>();
+                foreach (var g in grids) results.Add((g, null));
+            }
+
+            if (IncludeLinked)
+            {
+                var links = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>();
+                foreach (var link in links)
+                {
+                    Document linkDoc = link.GetLinkDocument();
+                    if (linkDoc == null) continue;
+                    var grids = new FilteredElementCollector(linkDoc).OfClass(typeof(Grid)).Cast<Grid>();
+                    foreach (var g in grids) results.Add((g, link));
+                }
+            }
+            return results;
+        }
 
         public string GetName() => "Dimension Automation Handler";
     }

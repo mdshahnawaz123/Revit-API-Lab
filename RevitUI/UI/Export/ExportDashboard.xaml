@@ -1,12 +1,12 @@
 <Window x:Class="RevitUI.UI.Export.ExportDashboard"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="B-Lab Master Export" Height="650" Width="400"
+        Title="Master Export Dashboard" Height="580" Width="850"
         WindowStartupLocation="CenterScreen" Topmost="True"
-        Background="#1A1A1A" AllowsTransparency="True" WindowStyle="None">
+        Background="White" AllowsTransparency="True" WindowStyle="None">
     
-    <Border CornerRadius="15" BorderBrush="#333" BorderThickness="1">
-        <Grid Margin="25">
+    <Border CornerRadius="15" BorderBrush="#E0E0E0" BorderThickness="1">
+        <Grid Margin="30">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -14,51 +14,98 @@
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,25">
-                <Grid>
-                    <TextBlock Text="MASTER EXPORT" Foreground="White" FontSize="20" FontWeight="Bold"/>
-                    <Button Content="✕" Click="BtnClose_Click" HorizontalAlignment="Right" Background="Transparent" Foreground="Gray" BorderThickness="0" Cursor="Hand"/>
-                </Grid>
-                <TextBlock Text="Multi-format bulk export engine" Foreground="#007ACC" FontSize="11"/>
-            </StackPanel>
+            <Grid Grid.Row="0" Margin="0,0,0,30">
+                <StackPanel>
+                    <TextBlock Text="MASTER EXPORT" Foreground="#222" FontSize="22" FontWeight="Bold"/>
+                    <TextBlock Text="Enterprise-grade multi-format export engine" Foreground="#888" FontSize="11" Margin="0,5,0,0" FontStyle="Italic"/>
+                </StackPanel>
+                <Button Content="✕" Click="BtnClose_Click" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" Foreground="#AAA" BorderThickness="0" Cursor="Hand" FontSize="20"/>
+            </Grid>
 
-            <!-- Options -->
-            <StackPanel Grid.Row="1">
-                <TextBlock Text="Export Formats" Foreground="Gray" FontSize="11" Margin="0,0,0,10"/>
-                <CheckBox x:Name="ChkPdf" Content="PDF Documents (.pdf)" Foreground="White" IsChecked="True" Margin="0,0,0,5"/>
-                <CheckBox x:Name="ChkCombinePdf" Content="Combine into Single PDF" Foreground="Gray" Margin="25,0,0,12" FontSize="11" IsChecked="False"/>
-                <CheckBox x:Name="ChkCad" Content="AutoCAD DWG (.dwg)" Foreground="White" IsChecked="True" Margin="0,0,0,12"/>
-                <CheckBox x:Name="ChkNwc" Content="Navisworks NWC (.nwc)" Foreground="White" IsChecked="True" Margin="0,0,0,12"/>
-                <CheckBox x:Name="ChkIfc" Content="IFC 4 (.ifc)" Foreground="Gray" IsEnabled="False" Margin="0,0,0,12"/>
-                
-                <Separator Background="#333" Margin="0,15,0,15"/>
-                
-                <TextBlock Text="Export Range" Foreground="Gray" FontSize="11" Margin="0,0,0,10"/>
-                <RadioButton Content="Current View Only" Foreground="White" IsChecked="True" Margin="0,0,0,8"/>
-                <RadioButton Content="All Sheets in Project" Foreground="White" Margin="0,0,0,8"/>
-                <RadioButton Content="Selected Sheet Set" Foreground="White" Margin="0,0,0,8"/>
+            <!-- Main Content: 3 Columns -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.2*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
 
-                <Separator Background="#333" Margin="0,15,0,15"/>
-                
-                <TextBlock Text="Output Folder" Foreground="Gray" FontSize="11" Margin="0,0,0,5"/>
-                <Grid Margin="0,0,0,15">
-                    <TextBox x:Name="TxtPath" Height="30" Background="#222" Foreground="White" VerticalContentAlignment="Center" Padding="5,0" BorderThickness="1" BorderBrush="#444"/>
-                    <Button Content="..." Width="30" Height="30" HorizontalAlignment="Right" Background="#333" Foreground="White" Click="BtnBrowse_Click"/>
-                </Grid>
+                <!-- COLUMN 1: FORMATS -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="1. EXPORT FORMATS" Foreground="#007ACC" FontSize="11" FontWeight="Bold" Margin="0,0,0,20"/>
+                    
+                    <Border Background="#FAFAFA" CornerRadius="10" Padding="15" BorderBrush="#F0F0F0" BorderThickness="1">
+                        <StackPanel>
+                            <CheckBox x:Name="ChkPdf" Content="PDF Documents" Foreground="#333" FontSize="14" IsChecked="True" Margin="0,0,0,8"/>
+                            <CheckBox x:Name="ChkCombinePdf" Content="Combine into Single PDF" Foreground="#777" Margin="26,0,0,15" FontSize="11" IsChecked="False"/>
+                            
+                            <CheckBox x:Name="ChkCad" Content="AutoCAD DWG" Foreground="#333" FontSize="14" IsChecked="True" Margin="0,0,0,15"/>
+                            
+                            <CheckBox x:Name="ChkNwc" Content="Navisworks NWC" Foreground="#333" FontSize="14" IsChecked="True" Margin="0,0,0,8"/>
+                            <CheckBox x:Name="ChkLinksIndividually" Content="Separate Links" Foreground="#777" Margin="26,0,0,8" FontSize="11" IsChecked="False"/>
+                            <CheckBox x:Name="ChkNwcByLevel" Content="By Level Slicing" Foreground="#777" Margin="26,0,0,0" FontSize="11" IsChecked="False"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
 
-                <TextBlock Text="Naming System (PDF/DWG)" Foreground="Gray" FontSize="11" Margin="0,0,0,5"/>
-                <TextBox x:Name="TxtNamingFormat" Text="{}{ProjectNumber}_{SheetNumber}_{SheetName}" Height="30" Background="#222" Foreground="White" VerticalContentAlignment="Center" Padding="5,0" BorderThickness="1" BorderBrush="#444"/>
-                <TextBlock Text="Tags: {ProjectNumber}, {SheetNumber}, {SheetName}, {Date}" Foreground="#555" FontSize="9" Margin="0,2,0,0"/>
-            </StackPanel>
+                <!-- Vertical Divider -->
+                <Rectangle Grid.Column="1" Width="1" Fill="#EEE" Margin="20,0"/>
 
-            <!-- Action Button -->
-            <Button Grid.Row="2" Content="GENERATE MASTER EXPORT" Height="50" Background="#007ACC" Foreground="White" FontWeight="Bold" Margin="0,20,0,0" Click="BtnExport_Click">
-                <Button.Resources>
-                    <Style TargetType="Border">
-                        <Setter Property="CornerRadius" Value="10"/>
-                    </Style>
-                </Button.Resources>
-            </Button>
+                <!-- COLUMN 2: RANGE -->
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="2. EXPORT RANGE" Foreground="#007ACC" FontSize="11" FontWeight="Bold" Margin="0,0,0,20"/>
+                    
+                    <RadioButton x:Name="RadioCurrent" Content="Active View Only" Foreground="#333" FontSize="13" IsChecked="True" Margin="0,0,0,12" Checked="Radio_Changed"/>
+                    <RadioButton x:Name="RadioAll" Content="All Project Sheets" Foreground="#333" FontSize="13" Margin="0,0,0,12" Checked="Radio_Changed"/>
+                    <RadioButton x:Name="RadioSelected" Content="Custom Sheet Selection" Foreground="#333" FontSize="13" Margin="0,0,0,15" Checked="Radio_Changed"/>
+
+                    <Grid x:Name="SelectionGrid" Visibility="Collapsed" Height="220">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBox x:Name="SearchBox" Grid.Row="0" Margin="0,0,0,10" Height="32" Background="#FAFAFA" BorderBrush="#DDD" Padding="10,5" VerticalContentAlignment="Center" TextChanged="SearchBox_TextChanged" Tag="Search..."/>
+                        <ListBox x:Name="SheetListBox" Grid.Row="1" Background="White" BorderBrush="#EEE" BorderThickness="1">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" Foreground="#444" Margin="5,3"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Vertical Divider -->
+                <Rectangle Grid.Column="3" Width="1" Fill="#EEE" Margin="20,0"/>
+
+                <!-- COLUMN 3: CONFIG -->
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="3. CONFIGURATION" Foreground="#007ACC" FontSize="11" FontWeight="Bold" Margin="0,0,0,20"/>
+                    
+                    <TextBlock Text="Output Path" Foreground="#999" FontSize="10" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <Grid Margin="0,0,0,25">
+                        <TextBox x:Name="TxtPath" Height="32" Background="#FAFAFA" BorderBrush="#DDD" Padding="10,5" VerticalContentAlignment="Center" FontSize="11"/>
+                        <Button Content="..." Width="32" Height="32" HorizontalAlignment="Right" Background="#F5F5F5" BorderBrush="#DDD" Click="BtnBrowse_Click"/>
+                    </Grid>
+
+                    <TextBlock Text="Naming Template" Foreground="#999" FontSize="10" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <TextBox x:Name="TxtNamingFormat" Text="{}{ProjectNumber}_{SheetNumber}_{SheetName}" Height="32" Background="#FAFAFA" BorderBrush="#DDD" Padding="10,5" VerticalContentAlignment="Center" FontSize="11"/>
+                    <TextBlock Text="Variables: {ProjectNumber}, {SheetNumber}, {SheetName}, {Date}" Foreground="#BBB" FontSize="9" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Footer Action -->
+            <Grid Grid.Row="2" Margin="0,30,0,0">
+                <Button Content="GENERATE MASTER EXPORT" Height="60" Background="#007ACC" Foreground="White" FontSize="16" FontWeight="Bold" Click="BtnExport_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="10"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
         </Grid>
     </Border>
 </Window>

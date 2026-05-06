@@ -116,14 +116,11 @@ procedure InitializeWizard();
 begin
   InstallForAllUsers := (MsgBox('Install for ALL users on this machine? (requires Admin rights)', mbConfirmation, MB_YESNO) = IDYES);
   
-  SetArrayLength(Years, 7);
-  Years[0] := '2021';
-  Years[1] := '2022';
-  Years[2] := '2023';
-  Years[3] := '2024';
-  Years[4] := '2025';
-  Years[5] := '2026';
-  Years[6] := '2027';
+  SetArrayLength(Years, 4);
+  Years[0] := '2024';
+  Years[1] := '2025';
+  Years[2] := '2026';
+  Years[3] := '2027';
 end;
 
 function GetAddinDir(Year: string): string;
@@ -133,12 +130,9 @@ begin
   YearInt := StrToIntDef(Year, 0);
   if InstallForAllUsers then
   begin
-    // Autodesk New Guideline (Revit 2024+): Use Common Files (Program Files) for better security
-    if YearInt >= 2024 then
-      Result := ExpandConstant('{commoncf}\Autodesk\Revit\Addins\' + Year)
-    else
-      // Legacy versions (2021-2023) still use ProgramData
-      Result := ExpandConstant('{commonappdata}\Autodesk\Revit\Addins\' + Year);
+    // User Specified Path: Program Files\Autodesk\Revit\Addins\<Year>
+    // This ensures add-ins are created in C:\Program Files\Autodesk\Revit\Addins\<Year>
+    Result := ExpandConstant('{commonpf}\Autodesk\Revit\Addins\' + Year);
   end
   else
     // Per-user installations still use AppData
@@ -223,15 +217,19 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var
   i: Integer;
   Dir: string;
+  Year: string;
 begin
   if CurStep = ssPostInstall then
   begin
+    // Create add-in manifests for each targeted Revit version
     for i := 0 to GetArrayLength(Years) - 1 do
     begin
-      Dir := GetAddinDir(Years[i]);
+      Year := Years[i];
+      Dir := GetAddinDir(Year);
+      
       if ForceDirectories(Dir) then
       begin
-        SaveStringToFile(Dir + '\BDD-Tool.addin', GenerateAddinManifest(Years[i]), False);
+        SaveStringToFile(Dir + '\BDD-Tool.addin', GenerateAddinManifest(Year), False);
       end;
     end;
   end;
