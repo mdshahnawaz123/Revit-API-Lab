@@ -53,6 +53,7 @@ namespace B_Lab.RevitApp
                 var interopBtn = new PushButtonData("BDD_Interop_BTN", "Interop\nDashboard", dll, "RevitUI.Command.InteropCommand");
                 var exportBtn = new PushButtonData("BDD_AutoCadExport_BTN", "Master\nExport", dll, "RevitUI.Command.AutoCadExportCommand");
                 var sharedBtn = new PushButtonData("BDD_SharedParam_BTN", "Shared\nParam", dll, "RevitUI.Command.SharedParamCommand");
+                var batchUpgradeBtn = new PushButtonData("BDD_BatchUpgrade_BTN", "Batch\nUpgrade", dll, "RevitUI.Command.BatchFamilyUpgraderCommand");
                 var roomSheetBtn = new PushButtonData("BDD_RoomSheet_BTN", "Room\nSheet", dll, "RevitUI.Command.RoomSheetCommand");
                 var aboutBtn = new PushButtonData("BDD_AboutMe_BTN", "About\nDeveloper", dll, "RevitUI.Command.AboutMeCommand");
 
@@ -67,6 +68,7 @@ namespace B_Lab.RevitApp
                 var worksetButton = GetOrAddButton(panel1, worksetBtn);
                 var purgeButton = GetOrAddButton(panel1, purgeBtn);
                 var sharedButton = GetOrAddButton(panel1, sharedBtn);
+                var batchUpgradeButton = GetOrAddButton(panel1, batchUpgradeBtn);
                 
                 var roomButton = GetOrAddButton(panel2, roomBtn);
                 var loadingButton = GetOrAddButton(panel2, loadingBtn);
@@ -99,6 +101,7 @@ namespace B_Lab.RevitApp
                     roomSheetButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Export.png", uiAssembly); // Reusing export icon for now
                     aboutButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.BDD_Main.png", uiAssembly);
                     sharedButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.SharedParam.png", uiAssembly);
+                    batchUpgradeButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Purge.png", uiAssembly); // Reusing purge icon for now
                 } catch { }
 
                 // ── Help ──────────────────────────────────────────────────────

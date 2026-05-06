@@ -1,0 +1,581 @@
+<Window x:Class="RevitUI.UI.BatchFamilyUpgrader.BatchFamilyUpgraderWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Batch Family Upgrader" Height="820" Width="880"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        Background="#1A1A2E" Foreground="#E0E0E0"
+        FontFamily="Segoe UI"
+        MinWidth="750" MinHeight="680">
+
+    <Window.Resources>
+        <!-- Accent Colors -->
+        <SolidColorBrush x:Key="AccentBrush"       Color="#0078D4"/>
+        <SolidColorBrush x:Key="AccentHoverBrush"   Color="#1A8FE8"/>
+        <SolidColorBrush x:Key="AccentPressedBrush"  Color="#005A9E"/>
+        <SolidColorBrush x:Key="CardBrush"          Color="#16213E"/>
+        <SolidColorBrush x:Key="CardLightBrush"     Color="#1C2A4A"/>
+        <SolidColorBrush x:Key="SurfaceBrush"       Color="#0F3460"/>
+        <SolidColorBrush x:Key="DangerBrush"        Color="#E94560"/>
+        <SolidColorBrush x:Key="SuccessBrush"       Color="#27AE60"/>
+        <SolidColorBrush x:Key="WarningBrush"       Color="#F39C12"/>
+        <SolidColorBrush x:Key="OrangeBrush"        Color="#E67E22"/>
+        <SolidColorBrush x:Key="PurpleBrush"        Color="#9B59B6"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush"   Color="#ECEFF4"/>
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#8892A0"/>
+        <SolidColorBrush x:Key="BorderBrush"        Color="#2A3A5C"/>
+
+        <!-- Premium Button Style -->
+        <Style x:Key="PremiumButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentPressedBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Danger Button Style -->
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource PremiumButton}">
+            <Setter Property="Background" Value="{StaticResource DangerBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FF5C75"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#C9374D"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Ghost Button Style -->
+        <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource PremiumButton}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource CardLightBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Orange Accent Button for Family Reload -->
+        <Style x:Key="OrangeButton" TargetType="Button" BasedOn="{StaticResource PremiumButton}">
+            <Setter Property="Background" Value="{StaticResource OrangeBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#F39C12"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#D35400"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Toggle Button Style for Source Type Switcher -->
+        <Style x:Key="SourceToggle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="Transparent" 
+                                CornerRadius="6" Padding="18,10"
+                                BorderThickness="1" BorderBrush="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentBrush}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- CheckBox Dark Style -->
+        <Style x:Key="DarkCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <!-- Main Container with ScrollViewer for tall content -->
+        <Border Background="#1A1A2E" CornerRadius="0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <Grid Margin="24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>   <!-- Header -->
+                        <RowDefinition Height="Auto"/>   <!-- Source Type Toggle -->
+                        <RowDefinition Height="Auto"/>   <!-- Add Model Section -->
+                        <RowDefinition Height="Auto"/>   <!-- Family Reload Section -->
+                        <RowDefinition Height="Auto"/>   <!-- Models List -->
+                        <RowDefinition Height="Auto"/>   <!-- Family Files List -->
+                        <RowDefinition Height="Auto"/>   <!-- Log -->
+                        <RowDefinition Height="Auto"/>   <!-- Progress -->
+                        <RowDefinition Height="Auto"/>   <!-- Actions -->
+                    </Grid.RowDefinitions>
+
+                    <!-- ═══════════ HEADER ═══════════ -->
+                    <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                        <TextBlock Text="⚡ Batch Family Upgrader" FontSize="22" FontWeight="Bold" 
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Upgrade families from local/cloud sources, or reload updated families into target models"
+                                   FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- ═══════════ SOURCE TYPE TOGGLE ═══════════ -->
+                    <Border Grid.Row="1" Background="{StaticResource CardBrush}" CornerRadius="10" 
+                            Padding="6" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Source Type:" VerticalAlignment="Center" 
+                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="10,0,16,0"/>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <RadioButton x:Name="rbLocal" Content="📁  Local Folder" 
+                                             GroupName="SourceType" IsChecked="True"
+                                             Style="{StaticResource SourceToggle}"
+                                             Checked="SourceType_Changed"/>
+                                <RadioButton x:Name="rbCloud" Content="☁  Cloud Model" 
+                                             GroupName="SourceType" Margin="8,0,0,0"
+                                             Style="{StaticResource SourceToggle}"
+                                             Checked="SourceType_Changed"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- ═══════════ ADD MODEL SECTION ═══════════ -->
+                    <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="10" 
+                            Padding="16" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Local Folder Input -->
+                            <Grid x:Name="panelLocal" Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Border Background="{StaticResource CardLightBrush}" CornerRadius="6" Padding="2">
+                                    <TextBox x:Name="txtFolderPath" Height="36" 
+                                             VerticalContentAlignment="Center" Padding="10,0" 
+                                             IsReadOnly="True" Background="Transparent" 
+                                             Foreground="{StaticResource TextPrimaryBrush}" 
+                                             BorderThickness="0" FontSize="13"
+                                             Text="Select a folder containing .rfa files..."/>
+                                </Border>
+                                <Button x:Name="btnBrowse" Grid.Column="1" Content="Browse" 
+                                        Width="90" Height="36" Margin="10,0,0,0" 
+                                        Style="{StaticResource PremiumButton}" Click="BtnBrowse_Click"/>
+                                <Button x:Name="btnAddLocal" Grid.Column="2" Content="＋ Add" 
+                                        Width="80" Height="36" Margin="8,0,0,0" 
+                                        Style="{StaticResource PremiumButton}" Click="BtnAddSource_Click"/>
+                            </Grid>
+
+                            <!-- Cloud Model Browser -->
+                            <Grid x:Name="panelCloud" Grid.Row="1" Visibility="Collapsed">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Login Status + Fetch Button -->
+                                <Grid Grid.Row="0" Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock x:Name="txtLoginStatus" Text="☁ Click 'Fetch Models' to scan your Revit session" 
+                                                   FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" 
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <Button x:Name="btnFetchCloud" Grid.Column="1" Content="🔄 Fetch Models" 
+                                            Height="34" Style="{StaticResource PremiumButton}" 
+                                            Padding="16,6" Click="BtnFetchCloudModels_Click"/>
+                                </Grid>
+
+                                <!-- Cloud Models ListView -->
+                                <Border Grid.Row="1" Background="{StaticResource CardLightBrush}" CornerRadius="8" 
+                                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                        MaxHeight="160" Margin="0,0,0,10">
+                                    <ListView x:Name="lvCloudModels" Background="Transparent" 
+                                              Foreground="{StaticResource TextPrimaryBrush}" 
+                                              BorderThickness="0" FontSize="12"
+                                              SelectionMode="Extended">
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridViewColumn Header="Model Name" Width="250" 
+                                                                DisplayMemberBinding="{Binding DisplayName}"/>
+                                                <GridViewColumn Header="Project GUID" Width="220" 
+                                                                DisplayMemberBinding="{Binding ProjectGuid}"/>
+                                                <GridViewColumn Header="Status" Width="100" 
+                                                                DisplayMemberBinding="{Binding OpenStatus}"/>
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                </Border>
+
+                                <!-- Select All / Add Selected -->
+                                <Grid Grid.Row="2" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="btnSelectAll" Content="Select All" 
+                                            Style="{StaticResource GhostButton}" Padding="10,5" FontSize="11"
+                                            Click="BtnSelectAll_Click"/>
+                                    <Button x:Name="btnDeselectAll" Grid.Column="1" Content="Deselect All" 
+                                            Style="{StaticResource GhostButton}" Padding="10,5" FontSize="11" Margin="6,0,0,0"
+                                            Click="BtnDeselectAll_Click"/>
+                                    <Button x:Name="btnAddCloudSelected" Grid.Column="3" Content="＋ Add Selected" 
+                                            Height="32" Style="{StaticResource PremiumButton}" Padding="16,6"
+                                            Click="BtnAddCloudSelected_Click"/>
+                                </Grid>
+
+                                <!-- Manual GUID Fallback (Expander) -->
+                                <Expander Grid.Row="3" Header="  Manual GUID Entry" Foreground="{StaticResource TextSecondaryBrush}" 
+                                          FontSize="11" IsExpanded="False" Margin="0,4,0,0">
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Row="0" Background="{StaticResource CardLightBrush}" CornerRadius="6" Padding="2" Margin="0,0,0,6">
+                                            <TextBox x:Name="txtCloudProjectGuid" Height="32" 
+                                                     VerticalContentAlignment="Center" Padding="10,0"
+                                                     Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" 
+                                                     BorderThickness="0" FontSize="12"
+                                                     Tag="Project GUID" GotFocus="PlaceholderText_GotFocus" LostFocus="PlaceholderText_LostFocus"/>
+                                        </Border>
+                                        <Border Grid.Row="1" Background="{StaticResource CardLightBrush}" CornerRadius="6" Padding="2">
+                                            <TextBox x:Name="txtCloudModelGuid" Height="32" 
+                                                     VerticalContentAlignment="Center" Padding="10,0"
+                                                     Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" 
+                                                     BorderThickness="0" FontSize="12"
+                                                     Tag="Model GUID" GotFocus="PlaceholderText_GotFocus" LostFocus="PlaceholderText_LostFocus"/>
+                                        </Border>
+                                        <Button x:Name="btnAddCloud" Grid.Column="1" Grid.RowSpan="2" 
+                                                Content="＋ Add" Width="80" Height="32" Margin="10,0,0,0" 
+                                                VerticalAlignment="Center"
+                                                Style="{StaticResource PremiumButton}" Click="BtnAddSource_Click"/>
+                                    </Grid>
+                                </Expander>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- ═══════════ FAMILY RELOAD SECTION ═══════════ -->
+                    <Border Grid.Row="3" Background="{StaticResource CardBrush}" CornerRadius="10" 
+                            Padding="16" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Section Header -->
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Text="🔄 Family Reload" FontSize="14" FontWeight="SemiBold" 
+                                           Foreground="{StaticResource OrangeBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="  —  Add .rfa files to reload into target models (match by family name)"
+                                           FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" 
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Add Family Files -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Border Background="{StaticResource CardLightBrush}" CornerRadius="6" Padding="2">
+                                    <TextBox x:Name="txtFamilyFiles" Height="36" 
+                                             VerticalContentAlignment="Center" Padding="10,0" 
+                                             IsReadOnly="True" Background="Transparent" 
+                                             Foreground="{StaticResource TextSecondaryBrush}" 
+                                             BorderThickness="0" FontSize="13"
+                                             Text="Select .rfa family files to reload..."/>
+                                </Border>
+                                <Button x:Name="btnBrowseFamilies" Grid.Column="1" Content="Browse .rfa" 
+                                        Width="100" Height="36" Margin="10,0,0,0" 
+                                        Style="{StaticResource OrangeButton}" Click="BtnBrowseFamilies_Click"/>
+                                <Button x:Name="btnAddFamilies" Grid.Column="2" Content="＋ Add" 
+                                        Width="80" Height="36" Margin="8,0,0,0" 
+                                        Style="{StaticResource OrangeButton}" Click="BtnAddFamilies_Click"/>
+                            </Grid>
+
+                            <!-- Overwrite Checkbox + Info -->
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                                <CheckBox x:Name="chkOverwriteParams" Content="Overwrite existing parameter values" 
+                                          Style="{StaticResource DarkCheckBox}" IsChecked="True"/>
+                                <TextBlock Text="  ℹ Families are matched by name (without .rfa extension)"
+                                           FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" 
+                                           VerticalAlignment="Center" Margin="16,0,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- ═══════════ MODELS LIST ═══════════ -->
+                    <Grid Grid.Row="4" Margin="0,0,0,8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Models List Header -->
+                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📋 Model Sources" FontSize="13" FontWeight="SemiBold" 
+                                           Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="txtModelCount" Text="  (0 sources)" FontSize="11" 
+                                           Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button x:Name="btnRemoveSelected" Grid.Column="1" Content="✕ Remove Selected" 
+                                    Style="{StaticResource DangerButton}" Padding="12,6" FontSize="11"
+                                    Click="BtnRemoveSelected_Click"/>
+                        </Grid>
+
+                        <!-- Models DataGrid -->
+                        <Border Grid.Row="1" Background="{StaticResource CardBrush}" CornerRadius="8" 
+                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                MaxHeight="160">
+                            <ListView x:Name="lvModels" Background="Transparent" 
+                                      Foreground="{StaticResource TextPrimaryBrush}" 
+                                      BorderThickness="0" FontSize="12"
+                                      SelectionMode="Extended"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Type" Width="90" 
+                                                        DisplayMemberBinding="{Binding SourceType}"/>
+                                        <GridViewColumn Header="Path / GUID" Width="360" 
+                                                        DisplayMemberBinding="{Binding DisplayPath}"/>
+                                        <GridViewColumn Header="Families" Width="70" 
+                                                        DisplayMemberBinding="{Binding FamilyCount}"/>
+                                        <GridViewColumn Header="Status" Width="110" 
+                                                        DisplayMemberBinding="{Binding Status}"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                        </Border>
+                    </Grid>
+
+                    <!-- ═══════════ FAMILY FILES LIST ═══════════ -->
+                    <Grid Grid.Row="5" Margin="0,0,0,8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Family Files Header -->
+                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔄 Families to Reload" FontSize="13" FontWeight="SemiBold" 
+                                           Foreground="{StaticResource OrangeBrush}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="txtFamilyFileCount" Text="  (0 files)" FontSize="11" 
+                                           Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button x:Name="btnRemoveFamilyFiles" Grid.Column="1" Content="✕ Remove Selected" 
+                                    Style="{StaticResource DangerButton}" Padding="12,6" FontSize="11"
+                                    Click="BtnRemoveFamilyFiles_Click"/>
+                        </Grid>
+
+                        <!-- Family Files ListView -->
+                        <Border Grid.Row="1" Background="{StaticResource CardBrush}" CornerRadius="8" 
+                                BorderBrush="#3D2A1A" BorderThickness="1"
+                                MaxHeight="140">
+                            <ListView x:Name="lvFamilyFiles" Background="Transparent" 
+                                      Foreground="{StaticResource TextPrimaryBrush}" 
+                                      BorderThickness="0" FontSize="12"
+                                      SelectionMode="Extended"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Family Name" Width="280" 
+                                                        DisplayMemberBinding="{Binding FamilyName}"/>
+                                        <GridViewColumn Header="File Path" Width="360" 
+                                                        DisplayMemberBinding="{Binding FilePath}"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                        </Border>
+                    </Grid>
+
+                    <!-- ═══════════ LOG ═══════════ -->
+                    <Grid Grid.Row="6" Margin="0,0,0,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="📝 Activity Log" FontSize="13" FontWeight="SemiBold" 
+                                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+
+                        <Border Grid.Row="1" Background="{StaticResource CardBrush}" CornerRadius="8" 
+                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                MaxHeight="180">
+                            <ListBox x:Name="lstLogs" Background="Transparent" 
+                                     Foreground="{StaticResource TextSecondaryBrush}" 
+                                     BorderThickness="0" FontSize="11" FontFamily="Cascadia Code, Consolas, monospace"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- ═══════════ PROGRESS BAR ═══════════ -->
+                    <Border Grid.Row="7" Background="{StaticResource CardBrush}" CornerRadius="8" 
+                            Padding="16,12" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="txtProgress" Text="Ready" 
+                                       VerticalAlignment="Center" FontSize="12"
+                                       Foreground="{StaticResource TextSecondaryBrush}" 
+                                       Width="160"/>
+                            <Border Grid.Column="1" CornerRadius="4" Background="#0D1B2A" Margin="12,0" Height="8"
+                                    VerticalAlignment="Center">
+                                <ProgressBar x:Name="pbProgress" Height="8" Minimum="0" Maximum="100" Value="0" 
+                                             Background="Transparent" Foreground="{StaticResource AccentBrush}" 
+                                             BorderThickness="0"/>
+                            </Border>
+                            <TextBlock x:Name="txtPercentage" Text="0%" Grid.Column="2"
+                                       VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentBrush}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- ═══════════ ACTION BUTTONS ═══════════ -->
+                    <Grid Grid.Row="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="btnClearAll" Content="Clear All" 
+                                Style="{StaticResource GhostButton}" Padding="14,10"
+                                Click="BtnClearAll_Click"/>
+
+                        <Button x:Name="btnStart" Grid.Column="2" Content="▶  Start Upgrade" 
+                                Width="160" Height="40" Margin="0,0,10,0"
+                                Style="{StaticResource PremiumButton}" FontSize="14"
+                                Click="BtnStart_Click"/>
+                        <Button x:Name="btnClose" Grid.Column="3" Content="Close" 
+                                Width="90" Height="40"
+                                Style="{StaticResource GhostButton}"
+                                Click="BtnClose_Click"/>
+                    </Grid>
+                </Grid>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Window>
