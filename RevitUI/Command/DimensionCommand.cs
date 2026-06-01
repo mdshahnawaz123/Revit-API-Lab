@@ -25,7 +25,7 @@ namespace RevitUI.Command
                 var handler = new DimensionHandler();
                 var externalEvent = ExternalEvent.Create(handler);
                 
-                Instance = new DimensionDashboard(externalEvent, handler);
+                Instance = new DimensionDashboard(externalEvent, handler, commandData.Application.ActiveUIDocument.Document);
                 Instance.Show();
 
                 return Result.Succeeded;

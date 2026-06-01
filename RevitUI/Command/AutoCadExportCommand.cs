@@ -24,7 +24,8 @@ namespace RevitUI.Command
                 var handler = new ExportHandler();
                 var externalEvent = ExternalEvent.Create(handler);
                 
-                Instance = new ExportDashboard(externalEvent, handler);
+                Document doc = commandData.Application.ActiveUIDocument.Document;
+                Instance = new ExportDashboard(doc, externalEvent, handler);
                 Instance.Show();
 
                 return Result.Succeeded;

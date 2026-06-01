@@ -48,16 +48,44 @@ namespace RevitUI.UI.RoomSheet
                         roomPlan.Name = GetUniqueViewName(hostDoc, "RDS_Plan_" + room.Number);
                         roomPlan.Scale = ScaleValue;
 
-                        // Crop Plan (Match room bounds)
+                        // --- 500mm OFFSET CROP LOGIC ---
+                        double offsetFt = 500.0 / 304.8;
                         BoundingBoxXYZ bbox = room.get_BoundingBox(null);
-                        roomPlan.get_Parameter(BuiltInParameter.VIEWER_CROP_REGION).Set(1);
+                        Transform roomTransform = Transform.Identity;
+                        if (sourceDoc.Title != hostDoc.Title)
+                        {
+                            var link = new FilteredElementCollector(hostDoc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>().FirstOrDefault(x => x.GetLinkDocument()?.Title == sourceDoc.Title);
+                            if (link != null) roomTransform = link.GetTotalTransform();
+                        }
+
+                        // Plan View Crop Shape
+                        var boundaryOptions = new SpatialElementBoundaryOptions();
+                        var boundarySegments = room.GetBoundarySegments(boundaryOptions);
+                        if (boundarySegments.Any())
+                        {
+                            CurveLoop loop = new CurveLoop();
+                            foreach (var seg in boundarySegments[0])
+                            {
+                                Curve c = seg.GetCurve().CreateTransformed(roomTransform);
+                                loop.Append(c);
+                            }
+                            
+                            try {
+                                CurveLoop offsetLoop = CurveLoop.CreateViaOffset(loop, offsetFt, XYZ.BasisZ);
+                                roomPlan.CropBoxActive = true;
+                                roomPlan.CropBoxVisible = false;
+                                roomPlan.GetCropRegionShapeManager().SetCropShape(offsetLoop);
+                            } catch {
+                                roomPlan.CropBoxActive = true;
+                            }
+                        }
                         
                         // 3. Sheet
                         if (TitleBlockId == null) TitleBlockId = new FilteredElementCollector(hostDoc).OfCategory(BuiltInCategory.OST_TitleBlocks).WhereElementIsElementType().FirstElementId();
                         ViewSheet sheet = ViewSheet.Create(hostDoc, TitleBlockId);
                         sheet.SheetNumber = GetUniqueSheetNumber(hostDoc, "RDS-" + room.Number);
                         sheet.Name = "RDS - " + room.Name.ToUpper();
-
+ 
                         // 4. Elevations
                         List<ViewSection> elevations = new List<ViewSection>();
                         if (CreateAllElevations)
@@ -71,7 +99,7 @@ namespace RevitUI.UI.RoomSheet
                                     .Cast<ViewFamilyType>()
                                     .FirstOrDefault(x => x.ViewFamily == ViewFamily.Elevation);
 
-                            XYZ roomCenter = (bbox.Max + bbox.Min) / 2;
+                            XYZ roomCenter = roomTransform.OfPoint((bbox.Max + bbox.Min) / 2);
                             ElevationMarker marker = ElevationMarker.CreateElevationMarker(hostDoc, elevType.Id, roomCenter, ScaleValue);
                             
                             for (int i = 0; i < 4; i++)
@@ -81,12 +109,14 @@ namespace RevitUI.UI.RoomSheet
                                     {
                                         var v = marker.CreateElevation(hostDoc, roomPlan.Id, i);
                                         v.Name = GetUniqueViewName(hostDoc, $"RDS_Elev_{room.Number}_{i}");
+                                        v.CropBoxActive = true;
+                                        v.CropBoxVisible = false;
                                         elevations.Add(v);
                                     }
                                 } catch { }
                             }
                         }
-
+ 
                         // 5. 3D View
                         View3D view3d = null;
                         if (Create3DView)
@@ -95,11 +125,14 @@ namespace RevitUI.UI.RoomSheet
                             view3d = View3D.CreateIsometric(hostDoc, v3dType.Id);
                             view3d.Name = GetUniqueViewName(hostDoc, "RDS_3D_" + room.Number);
                             
-                            BoundingBoxXYZ sectionBox = new BoundingBoxXYZ { Min = bbox.Min, Max = bbox.Max };
+                            BoundingBoxXYZ sectionBox = new BoundingBoxXYZ { 
+                                Min = roomTransform.OfPoint(bbox.Min) - new XYZ(offsetFt, offsetFt, offsetFt), 
+                                Max = roomTransform.OfPoint(bbox.Max) + new XYZ(offsetFt, offsetFt, offsetFt) 
+                            };
                             view3d.SetSectionBox(sectionBox);
                             view3d.IsSectionBoxActive = true;
                         }
-
+ 
                         // 6. Placement
                         Viewport.Create(hostDoc, sheet.Id, roomPlan.Id, new XYZ(0.8, 1.2, 0));
                         double yStep = 0.5;

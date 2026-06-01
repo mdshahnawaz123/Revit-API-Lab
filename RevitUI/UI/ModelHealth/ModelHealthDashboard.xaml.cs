@@ -290,6 +290,11 @@ namespace RevitUI.UI.ModelHealth
             _externalEvent.Raise();
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+        }
+
         private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
