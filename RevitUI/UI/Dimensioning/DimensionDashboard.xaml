@@ -31,43 +31,50 @@
                     
                     <RadioButton x:Name="RbGrids" IsChecked="True" GroupName="DimMode" Margin="0,0,0,14">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Grid to Grid" Foreground="#333" FontSize="14" FontWeight="Medium"/>
-                            <TextBlock Text=" (Parallel)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0"/>
+                            <TextBlock Text="Grid to Grid" Foreground="#333" FontSize="14" FontWeight="Medium" IsHitTestVisible="False"/>
+                            <TextBlock Text=" (Parallel)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0" IsHitTestVisible="False"/>
                         </StackPanel>
                     </RadioButton>
 
-                    <RadioButton x:Name="RbWalls" GroupName="DimMode" Margin="0,0,0,14">
+                    <RadioButton x:Name="RbWalls" GroupName="DimMode" Margin="0,0,0,14" Checked="RbWalls_Checked">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Wall Openings" Foreground="#333" FontSize="14" FontWeight="Medium"/>
-                            <TextBlock Text=" (Openings)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0"/>
+                            <TextBlock Text="Wall Openings" Foreground="#333" FontSize="14" FontWeight="Medium" IsHitTestVisible="False"/>
+                            <TextBlock Text=" (Openings)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0" IsHitTestVisible="False"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton x:Name="RbWallsFull" GroupName="DimMode" Margin="0,0,0,14">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Wall Full" Foreground="#333" FontSize="14" FontWeight="Medium" IsHitTestVisible="False"/>
+                            <TextBlock Text=" (Openings, Grids, Walls)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0" IsHitTestVisible="False"/>
                         </StackPanel>
                     </RadioButton>
 
                     <RadioButton x:Name="RbRooms" GroupName="DimMode" Margin="0,0,0,14">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Room Boundary" Foreground="#333" FontSize="14" FontWeight="Medium"/>
-                            <TextBlock Text=" (Area)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0"/>
+                            <TextBlock Text="Room Boundary" Foreground="#333" FontSize="14" FontWeight="Medium" IsHitTestVisible="False"/>
+                            <TextBlock Text=" (Area)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0" IsHitTestVisible="False"/>
                         </StackPanel>
                     </RadioButton>
 
                     <RadioButton x:Name="RbMEP" GroupName="DimMode" Margin="0,0,0,14">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="MEP Sleeves" Foreground="#333" FontSize="14" FontWeight="Medium"/>
-                            <TextBlock Text=" (Coordination)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0"/>
+                            <TextBlock Text="MEP Sleeves" Foreground="#333" FontSize="14" FontWeight="Medium" IsHitTestVisible="False"/>
+                            <TextBlock Text=" (Coordination)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0" IsHitTestVisible="False"/>
                         </StackPanel>
                     </RadioButton>
 
                     <RadioButton x:Name="RbColumns" GroupName="DimMode" Margin="0,0,0,14">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Grid to Column" Foreground="#333" FontSize="14" FontWeight="Medium"/>
-                            <TextBlock Text=" (Structural)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0"/>
+                            <TextBlock Text="Grid to Column" Foreground="#333" FontSize="14" FontWeight="Medium" IsHitTestVisible="False"/>
+                            <TextBlock Text=" (Structural)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0" IsHitTestVisible="False"/>
                         </StackPanel>
                     </RadioButton>
 
                     <RadioButton x:Name="RbCurtainWalls" GroupName="DimMode" Margin="0,0,0,14">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Curtain Walls" Foreground="#333" FontSize="14" FontWeight="Medium"/>
-                            <TextBlock Text=" (Mullions)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0"/>
+                            <TextBlock Text="Curtain Walls" Foreground="#333" FontSize="14" FontWeight="Medium" IsHitTestVisible="False"/>
+                            <TextBlock Text=" (Mullions)" Foreground="#AAA" FontSize="10" Margin="6,3,0,0" IsHitTestVisible="False"/>
                         </StackPanel>
                     </RadioButton>
 
@@ -79,7 +86,7 @@
                     <ComboBox x:Name="ComboDimStyle" Height="32" Background="White" BorderBrush="#DDD" Margin="0,0,0,18" FontSize="11"/>
 
                     <TextBlock Text="Offset Distance (mm)" Foreground="#999" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
-                    <TextBox x:Name="TxtOffset" Text="1000" Height="32" Background="#FAFAFA" BorderBrush="#DDD" Padding="10,5" VerticalContentAlignment="Center" FontSize="11"/>
+                    <TextBox x:Name="TxtOffset" Text="300" Height="32" Background="#FAFAFA" BorderBrush="#DDD" Padding="10,5" VerticalContentAlignment="Center" FontSize="11"/>
 
                     <Separator Background="#F0F0F0" Margin="0,20,0,20"/>
                     

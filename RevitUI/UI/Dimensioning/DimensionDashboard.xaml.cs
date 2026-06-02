@@ -33,13 +33,7 @@ namespace RevitUI.UI.Dimensioning
 
         private void BtnRun_Click(object sender, RoutedEventArgs e)
         {
-            // Set parameters in the handler
-            _handler.Mode = RbGrids.IsChecked == true ? DimMode.Grids :
-                           RbWalls.IsChecked == true ? DimMode.Walls :
-                           RbRooms.IsChecked == true ? DimMode.Rooms :
-                           RbColumns.IsChecked == true ? DimMode.Columns :
-                           RbCurtainWalls.IsChecked == true ? DimMode.CurtainWalls :
-                           DimMode.MEP;
+            _handler.Mode = ReadSelectedMode();
             
             if (double.TryParse(TxtOffset.Text, out double offset))
                 _handler.OffsetMm = offset;
@@ -50,8 +44,10 @@ namespace RevitUI.UI.Dimensioning
             _handler.UseSelection = RbSelectionOnly.IsChecked == true;
             _handler.MultiTierGrids = CbMultiTier.IsChecked == true;
             string dimRef = (ComboDimRef.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "Faces";
-            _handler.WallCoreOnly = dimRef == "Centerline";
-            _handler.OpeningDimMode = dimRef == "Centerline" ? "Centers" : "Faces";
+            bool useCenterline = dimRef == "Centerline";
+            _handler.WallCoreOnly = useCenterline;
+            _handler.RoomUseCenterBoundary = useCenterline;
+            _handler.OpeningDimMode = useCenterline ? "Centers" : "Faces";
 
             if (ComboDimStyle.SelectedItem != null)
             {
@@ -84,7 +80,25 @@ namespace RevitUI.UI.Dimensioning
             // Cleanup: ensure the command knows we're closed
             RevitUI.Command.DimensionCommand.Instance = null;
         }
+
+        /// <summary>Read the checked mode radio (specific modes before default Grids).</summary>
+        private DimMode ReadSelectedMode()
+        {
+            if (RbCurtainWalls.IsChecked == true) return DimMode.CurtainWalls;
+            if (RbColumns.IsChecked == true) return DimMode.Columns;
+            if (RbMEP.IsChecked == true) return DimMode.MEP;
+            if (RbRooms.IsChecked == true) return DimMode.Rooms;
+            if (RbWallsFull.IsChecked == true) return DimMode.WallsFull;
+            if (RbWalls.IsChecked == true) return DimMode.Walls;
+            if (RbGrids.IsChecked == true) return DimMode.Grids;
+            return DimMode.Grids;
+        }
+
+        private void RbWalls_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
-    public enum DimMode { Grids, Walls, Rooms, MEP, Columns, CurtainWalls }
+    public enum DimMode { Grids, Walls, WallsFull, Rooms, MEP, Columns, CurtainWalls }
 }

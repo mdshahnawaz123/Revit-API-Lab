@@ -1,6 +1,7 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using RevitUI.UI;
 using RevitUI.UI.Purge;
 using System;
 
@@ -13,6 +14,9 @@ namespace RevitUI.Command
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            if (!LoginGuard.IsAuthorized())
+                return Result.Cancelled;
+
             try
             {
                 if (Instance != null)

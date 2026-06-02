@@ -11,6 +11,9 @@ namespace RevitUI.Command
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            if (!LoginGuard.IsAuthorized())
+                return Result.Cancelled;
+
             try
             {
                 // Use the singleton helper to show the window
