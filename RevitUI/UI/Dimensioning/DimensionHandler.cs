@@ -23,8 +23,7 @@ namespace RevitUI.UI.Dimensioning
         public ElementId DimensionStyleId { get; set; } = ElementId.InvalidElementId;
         public bool UseSelection { get; set; } = false;
         private UIApplication _app;
-        private System.Text.StringBuilder _diag;
-        private void Log(string msg) => _diag?.AppendLine(msg);
+        private void Log(string msg) { }
 
         public void Execute(UIApplication app)
         {
@@ -32,7 +31,6 @@ namespace RevitUI.UI.Dimensioning
             Document doc = app.ActiveUIDocument.Document;
             View view = doc.ActiveView;
             int createdCount = 0;
-            _diag = new System.Text.StringBuilder();
             Log($"═══ Dimension Diagnostic Log ═══");
             Log($"Time: {DateTime.Now:HH:mm:ss}");
             Log($"Mode: {Mode} → {GetModeDisplayName(Mode)}");
@@ -55,8 +53,7 @@ namespace RevitUI.UI.Dimensioning
                         Log($"  Supported: FloorPlan, CeilingPlan, EngineeringPlan, AreaPlan, Section, Elevation, Detail");
                         TaskDialog.Show("B-Lab",
                             "Dimension Automation works in floor plans, sections, and elevations.\n" +
-                            "Open a 2D view (not a 3D view) and try again.\n\n" +
-                            "─── Diagnostic ───\n" + _diag.ToString());
+                            "Open a 2D view (not a 3D view) and try again.");
                         trans.RollBack();
                         return;
                     }
@@ -65,8 +62,7 @@ namespace RevitUI.UI.Dimensioning
                     if (view.ViewType == ViewType.ThreeD)
                     {
                         Log($"✗ BLOCKED: 3D view detected.");
-                        TaskDialog.Show("B-Lab", "Switch to a plan, section, or elevation view before creating dimensions.\n\n" +
-                            "─── Diagnostic ───\n" + _diag.ToString());
+                        TaskDialog.Show("B-Lab", "Switch to a plan, section, or elevation view before creating dimensions.");
                         trans.RollBack();
                         return;
                     }
@@ -78,8 +74,7 @@ namespace RevitUI.UI.Dimensioning
                         if (selIds.Count == 0)
                         {
                             Log($"✗ BLOCKED: No elements selected.");
-                            TaskDialog.Show("B-Lab", "Please select elements before running the tool.\n\n" +
-                                "─── Diagnostic ───\n" + _diag.ToString());
+                            TaskDialog.Show("B-Lab", "Please select elements before running the tool.");
                             trans.RollBack();
                             return;
                         }
@@ -124,17 +119,13 @@ namespace RevitUI.UI.Dimensioning
                     {
                         trans.Commit();
                         Log($"\n✓ SUCCESS: {createdCount} dimension(s) created and committed.");
-                        TaskDialog.Show("B-Lab",
-                            $"Successfully created {createdCount} dimension(s).\n\n" +
-                            "─── Diagnostic Log ───\n" + _diag.ToString());
+                        TaskDialog.Show("B-Lab", $"Successfully created {createdCount} dimension(s).");
                     }
                     else
                     {
                         trans.RollBack();
                         Log($"\n✗ FAILED: No dimensions created for mode '{GetModeDisplayName(Mode)}'.");
-                        TaskDialog.Show("B-Lab",
-                            $"No dimensions were created for mode: {GetModeDisplayName(Mode)}.\n\n" +
-                            "─── Diagnostic Log ───\n" + _diag.ToString());
+                        TaskDialog.Show("B-Lab", $"No dimensions were created for mode: {GetModeDisplayName(Mode)}.");
                     }
                 }
                 catch (Exception ex)
@@ -142,9 +133,7 @@ namespace RevitUI.UI.Dimensioning
                     trans.RollBack();
                     Log($"\n✗ EXCEPTION: {ex.Message}");
                     Log($"StackTrace: {ex.StackTrace}");
-                    TaskDialog.Show("Dimension Error",
-                        "Process failed: " + ex.Message + "\n\n" +
-                        "─── Diagnostic Log ───\n" + _diag.ToString());
+                    TaskDialog.Show("Dimension Error", "Process failed: " + ex.Message);
                 }
             }
         }
