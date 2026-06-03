@@ -16,10 +16,12 @@ namespace RevitUI.UI.Dimensioning
             _externalEvent = externalEvent;
             _handler = handler;
 
-            // Populate Dimension Styles
+            // Populate Dimension Styles (filter for Linear and LinearFixed only)
             var dimStyles = new Autodesk.Revit.DB.FilteredElementCollector(doc)
                 .OfClass(typeof(Autodesk.Revit.DB.DimensionType))
                 .Cast<Autodesk.Revit.DB.DimensionType>()
+                .Where(x => x.StyleType == Autodesk.Revit.DB.DimensionStyleType.Linear ||
+                            x.StyleType == Autodesk.Revit.DB.DimensionStyleType.LinearFixed)
                 .OrderBy(x => x.Name)
                 .ToList();
 

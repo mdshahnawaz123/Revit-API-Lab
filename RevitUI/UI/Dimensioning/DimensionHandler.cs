@@ -272,36 +272,51 @@ namespace RevitUI.UI.Dimensioning
             return TryCreateDimension(doc, view, dimLine, refs) ? 1 : 0;
         }
 
-        private void AddIntersectingGridReferences(Document doc, View view, Wall targetWall, RevitLinkInstance? targetLink, ReferenceArray refs, Line wallLine, XYZ dir, XYZ perp)
+        private void AddIntersectingGridReferences(Document doc,View view,Wall targetWall,RevitLinkInstance? targetLink,ReferenceArray refs,Line wallLine,XYZ dir,XYZ perp)
         {
             var grids = GetGrids(doc, view);
-            Curve transformedWallLine = targetLink != null ? wallLine.CreateTransformed(targetLink.GetTotalTransform()) : wallLine;
+            Curve transformedWallLine = targetLink != null
+                ? wallLine.CreateTransformed(targetLink.GetTotalTransform())
+                : wallLine;
 
             foreach (var gItem in grids)
             {
                 Curve? gridCurve = gItem.Element.Curve;
                 if (gridCurve == null) continue;
-                if (gItem.Link != null) gridCurve = gridCurve.CreateTransformed(gItem.Link.GetTotalTransform());
 
+                if (gItem.Link != null)
+                    gridCurve = gridCurve.CreateTransformed(gItem.Link.GetTotalTransform());
+
+                // Skip parallel grids
                 if (gridCurve is Line gl)
                 {
                     XYZ gDir = gl.Direction.Normalize();
-                    if (gItem.Link != null) gDir = gItem.Link.GetTotalTransform().OfVector(gDir).Normalize();
+                    if (gItem.Link != null)
+                        gDir = gItem.Link.GetTotalTransform().OfVector(gDir).Normalize();
+
                     gDir = ProjectVectorToView(view, gDir).Normalize();
-                    
-                    if (Math.Abs(gDir.DotProduct(dir)) > 0.9) continue;
+
+                    if (Math.Abs(gDir.DotProduct(dir)) > 0.9)
+                        continue;
                 }
 
 #if NET48
                 SetComparisonResult result = transformedWallLine.Intersect(gridCurve, out IntersectionResultArray _);
-                if (result == SetComparisonResult.Overlap || result == SetComparisonResult.Subset)
+
+                if (result == SetComparisonResult.Overlap ||
+                    result == SetComparisonResult.Subset)
 #else
-                CurveIntersectResult result = transformedWallLine.Intersect(gridCurve, CurveIntersectResultOption.Simple);
-                if (result.SetComparisonResult == SetComparisonResult.Overlap || result.SetComparisonResult == SetComparisonResult.Subset)
+                CurveIntersectResult result = transformedWallLine.Intersect(
+                    gridCurve,
+                    CurveIntersectResultOption.Simple);
+
+                if (result.Result == SetComparisonResult.Overlap ||
+                    result.Result == SetComparisonResult.Subset)
 #endif
                 {
                     Reference? gridRef = GetGridReference(gItem.Element, gItem.Link);
-                    if (gridRef != null) refs.Append(gridRef);
+                    if (gridRef != null)
+                        refs.Append(gridRef);
                 }
             }
         }
@@ -325,7 +340,7 @@ namespace RevitUI.UI.Dimensioning
                 if (result == SetComparisonResult.Overlap || result == SetComparisonResult.Subset)
 #else
                 CurveIntersectResult result = transformedWallLine.Intersect(otherCurve, CurveIntersectResultOption.Simple);
-                if (result.SetComparisonResult == SetComparisonResult.Overlap || result.SetComparisonResult == SetComparisonResult.Subset)
+                if (result.Result == SetComparisonResult.Overlap || result.Result == SetComparisonResult.Subset)
 #endif
                 {
                     if (otherCurve is Line ol)
@@ -1930,9 +1945,84 @@ namespace RevitUI.UI.Dimensioning
             return perp;
         }
 
+        private static double? GetCoordinateOfReference(Document doc, Reference r, View view, XYZ axis)
+        {
+            try
+            {
+                XYZ pt = r.GlobalPoint;
+                if (pt != null)
+                {
+                    return FlattenToView(view, pt).DotProduct(axis);
+                }
+            }
+            catch { }
+
+            try
+            {
+                Element el = doc.GetElement(r.ElementId);
+                if (el != null)
+                {
+                    RevitLinkInstance? linkInst = el as RevitLinkInstance;
+                    Element? targetEl = el;
+                    Transform t = Transform.Identity;
+
+                    if (linkInst != null)
+                    {
+                        t = linkInst.GetTotalTransform();
+                        Document linkDoc = linkInst.GetLinkDocument();
+                        if (linkDoc != null && r.LinkedElementId != ElementId.InvalidElementId)
+                        {
+                            targetEl = linkDoc.GetElement(r.LinkedElementId);
+                        }
+                    }
+
+                    if (targetEl != null)
+                    {
+                        if (targetEl is FamilyInstance fi)
+                        {
+                            t = t.Multiply(fi.GetTransform());
+                        }
+
+                        if (targetEl is Grid grid)
+                        {
+                            Curve curve = grid.Curve;
+                            Curve transformed = t.IsIdentity ? curve : curve.CreateTransformed(t);
+                            XYZ pt = transformed.Evaluate(0.5, true);
+                            return FlattenToView(view, pt).DotProduct(axis);
+                        }
+
+                        GeometryObject geo = targetEl.GetGeometryObjectFromReference(r);
+                        if (geo != null)
+                        {
+                            if (geo is PlanarFace pf)
+                            {
+                                XYZ pt = t.IsIdentity ? pf.Origin : t.OfPoint(pf.Origin);
+                                return FlattenToView(view, pt).DotProduct(axis);
+                            }
+                            else if (geo is Edge edge)
+                            {
+                                XYZ pt = edge.Evaluate(0.5);
+                                XYZ transformedPt = t.IsIdentity ? pt : t.OfPoint(pt);
+                                return FlattenToView(view, transformedPt).DotProduct(axis);
+                            }
+                            else if (geo is Autodesk.Revit.DB.Point point)
+                            {
+                                XYZ pt = point.Coord;
+                                XYZ transformedPt = t.IsIdentity ? pt : t.OfPoint(pt);
+                                return FlattenToView(view, transformedPt).DotProduct(axis);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
         private static ReferenceArray DeduplicateReferences(Document doc, ReferenceArray refs, View view, XYZ measureDirection)
         {
-            var unique = new List<(Reference Ref, double Position)>();
+            var unique = new List<(Reference Ref, double Position, string Stable)>();
             XYZ axis = measureDirection.Normalize();
 
             for (int i = 0; i < refs.Size; i++)
@@ -1940,27 +2030,34 @@ namespace RevitUI.UI.Dimensioning
                 Reference r = refs.get_Item(i);
                 if (r == null) continue;
 
-                double pos = i;
-                try
+                double pos;
+                double? calculatedPos = GetCoordinateOfReference(doc, r, view, axis);
+                if (calculatedPos.HasValue)
                 {
-                    XYZ globalPoint = r.GlobalPoint;
-                    pos = FlattenToView(view, globalPoint).DotProduct(axis);
+                    pos = calculatedPos.Value;
                 }
-                catch { }
+                else
+                {
+                    pos = -99999.0 + i;
+                }
 
-                string? stable = null;
-                try { stable = r.ConvertToStableRepresentation(doc); } catch { }
+                string stable = "";
+                try { stable = r.ConvertToStableRepresentation(doc) ?? ""; } catch { }
 
                 bool exists = unique.Any(u =>
                 {
-                    if (stable != null)
+                    if (stable != "" && u.Stable == stable)
+                        return true;
+
+                    if (pos > -90000.0 && u.Position > -90000.0)
                     {
-                        try { return u.Ref.ConvertToStableRepresentation(doc) == stable; }
-                        catch { }
+                        return Math.Abs(u.Position - pos) < 0.05; // ~15mm tolerance
                     }
-                    return Math.Abs(u.Position - pos) < 0.05;
+                    return false;
                 });
-                if (!exists) unique.Add((r, pos));
+
+                if (!exists)
+                    unique.Add((r, pos, stable));
             }
 
             unique.Sort((a, b) => a.Position.CompareTo(b.Position));
