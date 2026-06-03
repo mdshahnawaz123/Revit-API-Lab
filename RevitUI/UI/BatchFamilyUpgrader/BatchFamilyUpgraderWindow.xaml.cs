@@ -24,6 +24,7 @@ namespace RevitUI.UI.BatchFamilyUpgrader
         public string Path { get; set; } = "";
         public string ProjectGuid { get; set; } = "";
         public string ModelGuid { get; set; } = "";
+        public string Region { get; set; } = "US";
 
         public string DisplayPath => SourceType.Contains("Local")
             ? Path
@@ -78,6 +79,7 @@ namespace RevitUI.UI.BatchFamilyUpgrader
         public string DisplayName { get; set; } = "";
         public string ProjectGuid { get; set; } = "";
         public string ModelGuid { get; set; } = "";
+        public string Region { get; set; } = "US";
         public string OpenStatus => "Currently Open";
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -94,10 +96,10 @@ namespace RevitUI.UI.BatchFamilyUpgrader
 
         private ObservableCollection<ModelSourceItem> _modelSources;
         private ObservableCollection<FamilyFileItem> _familyFiles;
-        private ObservableCollection<CloudModelDisplayItem> _discoveredCloudModels;
 
         // Temp storage for the file browse dialog result
         private string[] _pendingFamilyFilePaths;
+        private string[] _pendingCloudDCPaths;
 
         public BatchFamilyUpgraderWindow(ExternalEvent externalEvent, BatchFamilyUpgraderHandler handler, 
                                         ExternalEvent fetchEvent, CloudModelFetchHandler fetchHandler)
@@ -117,17 +119,6 @@ namespace RevitUI.UI.BatchFamilyUpgrader
             _familyFiles = new ObservableCollection<FamilyFileItem>();
             lvFamilyFiles.ItemsSource = _familyFiles;
 
-            _discoveredCloudModels = new ObservableCollection<CloudModelDisplayItem>();
-            lvCloudModels.ItemsSource = _discoveredCloudModels;
-
-            // Set placeholder text for cloud inputs (manual fallback)
-            txtCloudProjectGuid.Text = txtCloudProjectGuid.Tag?.ToString() ?? "";
-            txtCloudProjectGuid.Foreground = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#5A6478"));
-
-            txtCloudModelGuid.Text = txtCloudModelGuid.Tag?.ToString() ?? "";
-            txtCloudModelGuid.Foreground = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#5A6478"));
 
             LogMessage("Batch Family Upgrader initialized. Add model sources to begin.");
             LogMessage("Tip: Add .rfa files in the Family Reload section to update families inside models.");
@@ -135,43 +126,8 @@ namespace RevitUI.UI.BatchFamilyUpgrader
 
         private void HandleCloudModelsFetched(string loginUser, List<CloudModelInfo> models)
         {
-            Dispatcher.Invoke(() =>
-            {
-                _discoveredCloudModels.Clear();
-                
-                if (string.IsNullOrEmpty(loginUser))
-                {
-                    txtLoginStatus.Text = "⚠ Not signed into Autodesk. Please sign in to access cloud models.";
-                    txtLoginStatus.Foreground = System.Windows.Media.Brushes.OrangeRed;
-                }
-                else
-                {
-                    txtLoginStatus.Text = $"👤 Signed in as: {loginUser}";
-                    txtLoginStatus.Foreground = new System.Windows.Media.SolidColorBrush(
-                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#27AE60"));
-                }
-
-                foreach (var model in models)
-                {
-                    _discoveredCloudModels.Add(new CloudModelDisplayItem
-                    {
-                        DisplayName = model.ModelName,
-                        ProjectGuid = model.ProjectGuid,
-                        ModelGuid = model.ModelGuid
-                    });
-                }
-
-                if (models.Count == 0)
-                {
-                    LogMessage("No open cloud models found in the current Revit session.");
-                }
-                else
-                {
-                    LogMessage($"Found {models.Count} cloud model(s) in the current session.");
-                }
-
-                btnFetchCloud.IsEnabled = true;
-            });
+            // Legacy cloud fetch logic no longer updates UI. 
+            // We now use Desktop Connector.
         }
 
         /// <summary>
@@ -230,10 +186,6 @@ namespace RevitUI.UI.BatchFamilyUpgrader
             {
                 AddLocalSource();
             }
-            else
-            {
-                AddCloudSource();
-            }
         }
 
         private void AddLocalSource()
@@ -274,112 +226,77 @@ namespace RevitUI.UI.BatchFamilyUpgrader
                 (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#5A6478"));
         }
 
-        private void AddCloudSource()
+
+
+        // ═══════════════════════════════════════════
+        //  CLOUD BROWSER ACTIONS (Desktop Connector)
+        // ═══════════════════════════════════════════
+
+        private void BtnBrowseCloud_Click(object sender, RoutedEventArgs e)
         {
-            string projectGuid = txtCloudProjectGuid.Text?.Trim();
-            string modelGuid = txtCloudModelGuid.Text?.Trim();
-
-            // Exclude placeholder text
-            if (projectGuid == txtCloudProjectGuid.Tag?.ToString()) projectGuid = "";
-            if (modelGuid == txtCloudModelGuid.Tag?.ToString()) modelGuid = "";
-
-            if (string.IsNullOrEmpty(projectGuid) || string.IsNullOrEmpty(modelGuid))
+            var dialog = new Microsoft.Win32.OpenFileDialog
             {
-                System.Windows.MessageBox.Show("Please provide both Project GUID and Model GUID.",
-                    "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            // Validate GUID format
-            if (!Guid.TryParse(projectGuid, out _) || !Guid.TryParse(modelGuid, out _))
-            {
-                System.Windows.MessageBox.Show("Please enter valid GUIDs (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx).",
-                    "Invalid GUID", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            // Check for duplicates
-            if (_modelSources.Any(m => m.SourceType.Contains("Cloud") && m.ModelGuid == modelGuid))
-            {
-                System.Windows.MessageBox.Show("This cloud model is already added.",
-                    "Duplicate", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            var item = new ModelSourceItem
-            {
-                SourceType = "☁ Cloud",
-                ProjectGuid = projectGuid,
-                ModelGuid = modelGuid,
-                FamilyCount = 0, // Will be resolved during upgrade
-                Status = "Ready"
+                Title = "Select Target Cloud Models via Desktop Connector",
+                Filter = "Revit Models (*.rvt)|*.rvt",
+                Multiselect = true
             };
-            _modelSources.Add(item);
-            UpdateModelCount();
 
-            LogMessage($"Added cloud model: Project={projectGuid}, Model={modelGuid}");
-
-            // Reset inputs with placeholders
-            txtCloudProjectGuid.Text = txtCloudProjectGuid.Tag?.ToString() ?? "";
-            txtCloudProjectGuid.Foreground = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#5A6478"));
-
-            txtCloudModelGuid.Text = txtCloudModelGuid.Tag?.ToString() ?? "";
-            txtCloudModelGuid.Foreground = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#5A6478"));
-        }
-
-        // ═══════════════════════════════════════════
-        //  CLOUD BROWSER ACTIONS
-        // ═══════════════════════════════════════════
-
-        private void BtnFetchCloudModels_Click(object sender, RoutedEventArgs e)
-        {
-            btnFetchCloud.IsEnabled = false;
-            txtLoginStatus.Text = "⌛ Scanning Revit session for cloud models...";
-            txtLoginStatus.Foreground = System.Windows.Media.Brushes.LightSkyBlue;
-            _fetchEvent.Raise();
-        }
-
-        private void BtnSelectAll_Click(object sender, RoutedEventArgs e)
-        {
-            lvCloudModels.SelectAll();
-        }
-
-        private void BtnDeselectAll_Click(object sender, RoutedEventArgs e)
-        {
-            lvCloudModels.UnselectAll();
-        }
-
-        private void BtnAddCloudSelected_Click(object sender, RoutedEventArgs e)
-        {
-            var selected = lvCloudModels.SelectedItems.Cast<CloudModelDisplayItem>().ToList();
-            if (selected.Count == 0)
+            // Attempt to default to Autodesk Docs folder if it exists
+            string dcPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "DC", "ACCDocs");
+            if (Directory.Exists(dcPath))
             {
-                System.Windows.MessageBox.Show("Please select one or more cloud models from the list.",
-                    "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                dialog.InitialDirectory = dcPath;
+            }
+
+            if (dialog.ShowDialog() == true)
+            {
+                _pendingCloudDCPaths = dialog.FileNames;
+                int count = _pendingCloudDCPaths.Length;
+                txtCloudDCPath.Text = count == 1
+                    ? System.IO.Path.GetFileName(_pendingCloudDCPaths[0])
+                    : $"{count} cloud models selected";
+                txtCloudDCPath.Foreground = new System.Windows.Media.SolidColorBrush(
+                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#ECEFF4"));
+            }
+        }
+
+        private void BtnAddCloudDC_Click(object sender, RoutedEventArgs e)
+        {
+            if (_pendingCloudDCPaths == null || _pendingCloudDCPaths.Length == 0)
+            {
+                System.Windows.MessageBox.Show("Please browse and select cloud .rvt files first.",
+                    "No Files", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             int addedCount = 0;
-            foreach (var model in selected)
+            foreach (string filePath in _pendingCloudDCPaths)
             {
-                // Check for duplicates in main list
-                if (_modelSources.Any(m => m.SourceType.Contains("Cloud") && m.ModelGuid == model.ModelGuid))
+                // Check for duplicates
+                if (_modelSources.Any(m => m.SourceType.Contains("Cloud") && m.Path.Equals(filePath, StringComparison.OrdinalIgnoreCase)))
+                {
+                    LogMessage($"  ⚠ Skipped duplicate cloud model: {Path.GetFileName(filePath)}");
                     continue;
+                }
 
                 _modelSources.Add(new ModelSourceItem
                 {
                     SourceType = "☁ Cloud",
-                    ProjectGuid = model.ProjectGuid,
-                    ModelGuid = model.ModelGuid,
+                    Path = filePath,
+                    FamilyCount = 0, // Will be resolved during upgrade
                     Status = "Ready"
                 });
                 addedCount++;
             }
 
             UpdateModelCount();
-            LogMessage($"Added {addedCount} selected cloud model(s) to the processing list.");
+            LogMessage($"Added {addedCount} cloud model(s) via Desktop Connector.");
+
+            // Reset
+            _pendingCloudDCPaths = null;
+            txtCloudDCPath.Text = "Select target .rvt files from ACC...";
+            txtCloudDCPath.Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#5A6478"));
         }
 
         // ═══════════════════════════════════════════
@@ -594,25 +511,7 @@ namespace RevitUI.UI.BatchFamilyUpgrader
         //  PLACEHOLDER TEXT HELPERS
         // ═══════════════════════════════════════════
 
-        private void PlaceholderText_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if (sender is System.Windows.Controls.TextBox tb && tb.Text == tb.Tag?.ToString())
-            {
-                tb.Text = "";
-                tb.Foreground = new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#ECEFF4"));
-            }
-        }
 
-        private void PlaceholderText_LostFocus(object sender, RoutedEventArgs e)
-        {
-            if (sender is System.Windows.Controls.TextBox tb && string.IsNullOrWhiteSpace(tb.Text))
-            {
-                tb.Text = tb.Tag?.ToString() ?? "";
-                tb.Foreground = new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#5A6478"));
-            }
-        }
 
         // ═══════════════════════════════════════════
         //  HELPERS
@@ -633,18 +532,14 @@ namespace RevitUI.UI.BatchFamilyUpgrader
             btnStart.IsEnabled = enabled;
             btnBrowse.IsEnabled = enabled;
             btnAddLocal.IsEnabled = enabled;
-            btnAddCloud.IsEnabled = enabled;
             btnRemoveSelected.IsEnabled = enabled;
             btnClearAll.IsEnabled = enabled;
             btnBrowseFamilies.IsEnabled = enabled;
             btnAddFamilies.IsEnabled = enabled;
             btnRemoveFamilyFiles.IsEnabled = enabled;
             
-            // New cloud browser controls
-            btnFetchCloud.IsEnabled = enabled;
-            btnSelectAll.IsEnabled = enabled;
-            btnDeselectAll.IsEnabled = enabled;
-            btnAddCloudSelected.IsEnabled = enabled;
+            btnBrowseCloud.IsEnabled = enabled;
+            btnAddCloudDC.IsEnabled = enabled;
         }
     }
 }

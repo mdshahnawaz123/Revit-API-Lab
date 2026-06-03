@@ -83,11 +83,15 @@ namespace RevitUI.ExternalCommand.BatchFamilyUpgrader
                     Dashboard?.Dispatcher.Invoke(() => Dashboard.UpdateProgress(i + 1, totalCount, Path.GetFileName(filePath)));
 
                     // Open in background
-                    Document familyDoc = app.Application.OpenDocumentFile(filePath);
-
-                    SaveAsOptions saveOptions = new SaveAsOptions { OverwriteExistingFile = true };
-                    familyDoc.SaveAs(filePath, saveOptions);
-                    familyDoc.Close(false);
+                    using (Document familyDoc = app.Application.OpenDocumentFile(filePath))
+                    {
+                        if (familyDoc.IsFamilyDocument)
+                        {
+                            SaveAsOptions saveOptions = new SaveAsOptions { OverwriteExistingFile = true };
+                            familyDoc.SaveAs(filePath, saveOptions);
+                        }
+                        familyDoc.Close(false);
+                    }
 
                     successCount++;
                 }
@@ -186,10 +190,15 @@ namespace RevitUI.ExternalCommand.BatchFamilyUpgrader
                     string fileName = Path.GetFileName(filePath);
                     Dashboard?.Dispatcher.Invoke(() => Dashboard.UpdateProgress(globalCurrent, totalFamilies, $"Upgrading: {fileName}"));
 
-                    Document familyDoc = app.Application.OpenDocumentFile(filePath);
-                    SaveAsOptions saveOptions = new SaveAsOptions { OverwriteExistingFile = true };
-                    familyDoc.SaveAs(filePath, saveOptions);
-                    familyDoc.Close(false);
+                    using (Document familyDoc = app.Application.OpenDocumentFile(filePath))
+                    {
+                        if (familyDoc.IsFamilyDocument)
+                        {
+                            SaveAsOptions saveOptions = new SaveAsOptions { OverwriteExistingFile = true };
+                            familyDoc.SaveAs(filePath, saveOptions);
+                        }
+                        familyDoc.Close(false);
+                    }
 
                     totalSuccess++;
                 }
@@ -221,38 +230,59 @@ namespace RevitUI.ExternalCommand.BatchFamilyUpgrader
                 globalCurrent++;
                 try
                 {
+                    bool isDesktopConnector = !string.IsNullOrEmpty(source.Path);
+                    string displayName = isDesktopConnector ? Path.GetFileName(source.Path) : source.ModelGuid;
+
                     Dashboard?.Dispatcher.Invoke(() =>
                     {
                         Dashboard.UpdateSourceStatus(sourceIndex, "Processing...");
-                        Dashboard.UpdateProgress(globalCurrent, totalFamilies, $"Cloud: {source.ModelGuid}");
-                        Dashboard.LogMessage($"── Processing cloud model: {source.ModelGuid} ──");
+                        Dashboard.UpdateProgress(globalCurrent, totalFamilies, $"Cloud: {displayName}");
+                        Dashboard.LogMessage($"── Processing cloud model: {displayName} ──");
                     });
 
-                    // Open cloud model using Revit API
-                    Guid projectGuid = Guid.Parse(source.ProjectGuid);
-                    Guid modelGuid = Guid.Parse(source.ModelGuid);
-
-                    ModelPath cloudPath = ModelPathUtils.ConvertCloudGUIDsToCloudPath(
-                        "US" /* default region */, projectGuid, modelGuid);
-
-                    OpenOptions openOpts = new OpenOptions();
-                    Document cloudDoc = app.Application.OpenDocumentFile(cloudPath, openOpts);
+                    Document cloudDoc = null;
+                    if (isDesktopConnector)
+                    {
+                        // Open via Desktop Connector local cache
+                        cloudDoc = app.Application.OpenDocumentFile(source.Path);
+                    }
+                    else
+                    {
+                        // Open cloud model using Revit API
+                        Guid projectGuid = Guid.Parse(source.ProjectGuid);
+                        Guid modelGuid = Guid.Parse(source.ModelGuid);
+                        string region = string.IsNullOrEmpty(source.Region) ? "US" : source.Region;
+                        ModelPath cloudPath = ModelPathUtils.ConvertCloudGUIDsToCloudPath(region, projectGuid, modelGuid);
+                        cloudDoc = app.Application.OpenDocumentFile(cloudPath, new OpenOptions());
+                    }
 
                     if (cloudDoc != null)
                     {
+                        bool needsSave = true;
                         // ── Reload families into this cloud model ──
                         if (hasFamilyReload)
                         {
-                            ReloadFamiliesIntoDocument(cloudDoc, source.ModelGuid);
+                            needsSave = ReloadFamiliesIntoDocument(cloudDoc, displayName);
                         }
 
-                        // Synchronize with central to save changes
-                        TransactWithCentralOptions transOpts = new TransactWithCentralOptions();
-                        SynchronizeWithCentralOptions syncOpts = new SynchronizeWithCentralOptions();
-                        syncOpts.SetRelinquishOptions(new RelinquishOptions(true));
-                        syncOpts.Comment = "Batch Family Upgrader - Version Upgrade";
-
-                        cloudDoc.SynchronizeWithCentral(transOpts, syncOpts);
+                        if (needsSave)
+                        {
+                            if (isDesktopConnector)
+                            {
+                                // Desktop Connector will automatically sync this to cloud
+                                cloudDoc.Save();
+                            }
+                            else
+                            {
+                                // Synchronize with central to save changes
+                                TransactWithCentralOptions transOpts = new TransactWithCentralOptions();
+                                SynchronizeWithCentralOptions syncOpts = new SynchronizeWithCentralOptions();
+                                syncOpts.SetRelinquishOptions(new RelinquishOptions(true));
+                                syncOpts.Comment = "Batch Family Upgrader - Version Upgrade";
+        
+                                cloudDoc.SynchronizeWithCentral(transOpts, syncOpts);
+                            }
+                        }
                         cloudDoc.Close(false);
                         totalSuccess++;
 
@@ -318,15 +348,18 @@ namespace RevitUI.ExternalCommand.BatchFamilyUpgrader
 
                             if (rvtDoc != null)
                             {
-                                ReloadFamiliesIntoDocument(rvtDoc, rvtName);
+                                bool needsSave = ReloadFamiliesIntoDocument(rvtDoc, rvtName);
 
-                                // Save the model
-                                rvtDoc.Save();
+                                if (needsSave)
+                                {
+                                    // Save the model
+                                    rvtDoc.Save();
+                                }
                                 rvtDoc.Close(false);
                                 totalSuccess++;
 
                                 Dashboard?.Dispatcher.Invoke(() =>
-                                    Dashboard.LogMessage($"  ✓ Saved and closed: {rvtName}"));
+                                    Dashboard.LogMessage($"  ✓ Closed{(needsSave ? " and saved" : "")}: {rvtName}"));
                             }
                         }
                         catch (Exception ex)
@@ -346,9 +379,9 @@ namespace RevitUI.ExternalCommand.BatchFamilyUpgrader
         /// Matches are found by comparing the family name (without .rfa extension)
         /// to the loaded families in the document.
         /// </summary>
-        private void ReloadFamiliesIntoDocument(Document doc, string modelIdentifier)
+        private bool ReloadFamiliesIntoDocument(Document doc, string modelIdentifier)
         {
-            if (FamilyFilesToReload == null || FamilyFilesToReload.Count == 0) return;
+            if (FamilyFilesToReload == null || FamilyFilesToReload.Count == 0) return false;
 
             Dashboard?.Dispatcher.Invoke(() =>
                 Dashboard.LogMessage($"    🔄 Reloading families into: {modelIdentifier}"));
@@ -373,52 +406,55 @@ namespace RevitUI.ExternalCommand.BatchFamilyUpgrader
             int reloadedCount = 0;
             int skippedCount = 0;
 
-            using (Transaction tx = new Transaction(doc, "Batch Family Reload"))
+            bool anyReloaded = false;
+            foreach (var familyFile in FamilyFilesToReload)
             {
-                tx.Start();
+                string familyName = familyFile.FamilyName;
 
-                foreach (var familyFile in FamilyFilesToReload)
+                if (familyLookup.ContainsKey(familyName))
                 {
-                    string familyName = familyFile.FamilyName;
-
-                    if (familyLookup.ContainsKey(familyName))
+                    try
                     {
-                        try
+                        bool loaded = false;
+                        using (Transaction tx = new Transaction(doc, $"Reload {familyName}"))
                         {
-                            // Found a matching family in the model — reload it
-                            bool loaded = doc.LoadFamily(familyFile.FilePath, loadOptions, out Family loadedFamily);
-
-                            if (loaded)
-                            {
-                                reloadedCount++;
-                                Dashboard?.Dispatcher.Invoke(() =>
-                                    Dashboard.LogMessage($"      ✓ Reloaded: {familyName}"));
-                            }
-                            else
-                            {
-                                Dashboard?.Dispatcher.Invoke(() =>
-                                    Dashboard.LogMessage($"      ⚠ Already up-to-date: {familyName}"));
-                            }
+                            tx.Start();
+                            loaded = doc.LoadFamily(familyFile.FilePath, loadOptions, out Family loadedFamily);
+                            if (loaded) tx.Commit();
+                            else tx.RollBack();
                         }
-                        catch (Exception ex)
+
+                        if (loaded)
+                        {
+                            anyReloaded = true;
+                            reloadedCount++;
+                            Dashboard?.Dispatcher.Invoke(() =>
+                                Dashboard.LogMessage($"      ✓ Reloaded: {familyName}"));
+                        }
+                        else
                         {
                             Dashboard?.Dispatcher.Invoke(() =>
-                                Dashboard.LogMessage($"      ✕ Failed to reload {familyName}: {ex.Message}"));
+                                Dashboard.LogMessage($"      ⚠ Already up-to-date: {familyName}"));
                         }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        skippedCount++;
                         Dashboard?.Dispatcher.Invoke(() =>
-                            Dashboard.LogMessage($"      ⊘ Not found in model: {familyName}"));
+                            Dashboard.LogMessage($"      ✕ Failed to reload {familyName}: {ex.Message}"));
                     }
                 }
-
-                tx.Commit();
+                else
+                {
+                    skippedCount++;
+                    Dashboard?.Dispatcher.Invoke(() =>
+                        Dashboard.LogMessage($"      ⊘ Not found in model: {familyName}"));
+                }
             }
 
             Dashboard?.Dispatcher.Invoke(() =>
                 Dashboard.LogMessage($"    Summary: {reloadedCount} reloaded, {skippedCount} not found in {modelIdentifier}"));
+                
+            return anyReloaded;
         }
 
         public string GetName() => "Batch Family Upgrader Handler";

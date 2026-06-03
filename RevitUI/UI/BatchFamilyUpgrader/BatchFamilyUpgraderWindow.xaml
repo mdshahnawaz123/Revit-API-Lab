@@ -245,10 +245,10 @@
                                 <Border Background="{StaticResource CardLightBrush}" CornerRadius="6" Padding="2">
                                     <TextBox x:Name="txtFolderPath" Height="36" 
                                              VerticalContentAlignment="Center" Padding="10,0" 
-                                             IsReadOnly="True" Background="Transparent" 
+                                             IsReadOnly="False" Background="Transparent" 
                                              Foreground="{StaticResource TextPrimaryBrush}" 
                                              BorderThickness="0" FontSize="13"
-                                             Text="Select a folder containing .rfa files..."/>
+                                             Text="Paste a folder path containing .rvt or .rfa files..."/>
                                 </Border>
                                 <Button x:Name="btnBrowse" Grid.Column="1" Content="Browse" 
                                         Width="90" Height="36" Margin="10,0,0,0" 
@@ -258,103 +258,31 @@
                                         Style="{StaticResource PremiumButton}" Click="BtnAddSource_Click"/>
                             </Grid>
 
-                            <!-- Cloud Model Browser -->
+                            <!-- Cloud Model Browser (Desktop Connector) -->
                             <Grid x:Name="panelCloud" Grid.Row="1" Visibility="Collapsed">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
 
-                                <!-- Login Status + Fetch Button -->
-                                <Grid Grid.Row="0" Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock x:Name="txtLoginStatus" Text="☁ Click 'Fetch Models' to scan your Revit session" 
-                                                   FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" 
-                                                   VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <Button x:Name="btnFetchCloud" Grid.Column="1" Content="🔄 Fetch Models" 
-                                            Height="34" Style="{StaticResource PremiumButton}" 
-                                            Padding="16,6" Click="BtnFetchCloudModels_Click"/>
-                                </Grid>
-
-                                <!-- Cloud Models ListView -->
-                                <Border Grid.Row="1" Background="{StaticResource CardLightBrush}" CornerRadius="8" 
-                                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                                        MaxHeight="160" Margin="0,0,0,10">
-                                    <ListView x:Name="lvCloudModels" Background="Transparent" 
-                                              Foreground="{StaticResource TextPrimaryBrush}" 
-                                              BorderThickness="0" FontSize="12"
-                                              SelectionMode="Extended">
-                                        <ListView.View>
-                                            <GridView>
-                                                <GridViewColumn Header="Model Name" Width="250" 
-                                                                DisplayMemberBinding="{Binding DisplayName}"/>
-                                                <GridViewColumn Header="Project GUID" Width="220" 
-                                                                DisplayMemberBinding="{Binding ProjectGuid}"/>
-                                                <GridViewColumn Header="Status" Width="100" 
-                                                                DisplayMemberBinding="{Binding OpenStatus}"/>
-                                            </GridView>
-                                        </ListView.View>
-                                    </ListView>
+                                <Border Background="{StaticResource CardLightBrush}" CornerRadius="6" Padding="2">
+                                    <TextBox x:Name="txtCloudDCPath" Height="36" 
+                                             VerticalContentAlignment="Center" Padding="10,0" 
+                                             IsReadOnly="True" Background="Transparent" 
+                                             Foreground="{StaticResource TextSecondaryBrush}" 
+                                             BorderThickness="0" FontSize="13"
+                                             Text="Select target .rvt files from ACC..."/>
                                 </Border>
+                                <Button x:Name="btnBrowseCloud" Grid.Column="1" Content="Browse ACC" 
+                                        Width="100" Height="36" Margin="10,0,0,0" 
+                                        Style="{StaticResource PremiumButton}" Click="BtnBrowseCloud_Click"/>
+                                <Button x:Name="btnAddCloudDC" Grid.Column="2" Content="＋ Add" 
+                                        Width="80" Height="36" Margin="8,0,0,0" 
+                                        Style="{StaticResource PremiumButton}" Click="BtnAddCloudDC_Click"/>
 
-                                <!-- Select All / Add Selected -->
-                                <Grid Grid.Row="2" Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Button x:Name="btnSelectAll" Content="Select All" 
-                                            Style="{StaticResource GhostButton}" Padding="10,5" FontSize="11"
-                                            Click="BtnSelectAll_Click"/>
-                                    <Button x:Name="btnDeselectAll" Grid.Column="1" Content="Deselect All" 
-                                            Style="{StaticResource GhostButton}" Padding="10,5" FontSize="11" Margin="6,0,0,0"
-                                            Click="BtnDeselectAll_Click"/>
-                                    <Button x:Name="btnAddCloudSelected" Grid.Column="3" Content="＋ Add Selected" 
-                                            Height="32" Style="{StaticResource PremiumButton}" Padding="16,6"
-                                            Click="BtnAddCloudSelected_Click"/>
-                                </Grid>
 
-                                <!-- Manual GUID Fallback (Expander) -->
-                                <Expander Grid.Row="3" Header="  Manual GUID Entry" Foreground="{StaticResource TextSecondaryBrush}" 
-                                          FontSize="11" IsExpanded="False" Margin="0,4,0,0">
-                                    <Grid Margin="0,8,0,0">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Border Grid.Row="0" Background="{StaticResource CardLightBrush}" CornerRadius="6" Padding="2" Margin="0,0,0,6">
-                                            <TextBox x:Name="txtCloudProjectGuid" Height="32" 
-                                                     VerticalContentAlignment="Center" Padding="10,0"
-                                                     Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" 
-                                                     BorderThickness="0" FontSize="12"
-                                                     Tag="Project GUID" GotFocus="PlaceholderText_GotFocus" LostFocus="PlaceholderText_LostFocus"/>
-                                        </Border>
-                                        <Border Grid.Row="1" Background="{StaticResource CardLightBrush}" CornerRadius="6" Padding="2">
-                                            <TextBox x:Name="txtCloudModelGuid" Height="32" 
-                                                     VerticalContentAlignment="Center" Padding="10,0"
-                                                     Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" 
-                                                     BorderThickness="0" FontSize="12"
-                                                     Tag="Model GUID" GotFocus="PlaceholderText_GotFocus" LostFocus="PlaceholderText_LostFocus"/>
-                                        </Border>
-                                        <Button x:Name="btnAddCloud" Grid.Column="1" Grid.RowSpan="2" 
-                                                Content="＋ Add" Width="80" Height="32" Margin="10,0,0,0" 
-                                                VerticalAlignment="Center"
-                                                Style="{StaticResource PremiumButton}" Click="BtnAddSource_Click"/>
-                                    </Grid>
-                                </Expander>
+
                             </Grid>
                         </Grid>
                     </Border>
