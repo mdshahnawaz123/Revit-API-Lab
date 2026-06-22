@@ -7,7 +7,7 @@
         ResizeMode="NoResize"
         Topmost="True"
         AllowsTransparency="False"
-        WindowStyle="SingleBorderWindow"
+        WindowStyle="ToolWindow"
         Icon="{x:Null}">
     
     <Grid Margin="20">

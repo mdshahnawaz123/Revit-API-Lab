@@ -300,18 +300,20 @@ namespace RevitUI.UI.Dimensioning
                         continue;
                 }
 
-#if NET48
+#if NET10_0_OR_GREATER
+                // Revit 2027+: new API without out parameter
+                var cir = transformedWallLine.Intersect(
+                    gridCurve,
+                    CurveIntersectResultOption.Simple);
+
+                if (cir.Result == SetComparisonResult.Overlap ||
+                    cir.Result == SetComparisonResult.Subset)
+#else
+                // Revit 2024-2026: old API with out parameter
                 SetComparisonResult result = transformedWallLine.Intersect(gridCurve, out IntersectionResultArray _);
 
                 if (result == SetComparisonResult.Overlap ||
                     result == SetComparisonResult.Subset)
-#else
-                CurveIntersectResult result = transformedWallLine.Intersect(
-                    gridCurve,
-                    CurveIntersectResultOption.Simple);
-
-                if (result.Result == SetComparisonResult.Overlap ||
-                    result.Result == SetComparisonResult.Subset)
 #endif
                 {
                     Reference? gridRef = GetGridReference(gItem.Element, gItem.Link);
@@ -335,12 +337,14 @@ namespace RevitUI.UI.Dimensioning
                 
                 if (wItem.Link != null) otherCurve = otherCurve.CreateTransformed(wItem.Link.GetTotalTransform());
 
-#if NET48
+#if NET10_0_OR_GREATER
+                // Revit 2027+: new API without out parameter
+                var cir2 = transformedWallLine.Intersect(otherCurve, CurveIntersectResultOption.Simple);
+                if (cir2.Result == SetComparisonResult.Overlap || cir2.Result == SetComparisonResult.Subset)
+#else
+                // Revit 2024-2026: old API with out parameter
                 SetComparisonResult result = transformedWallLine.Intersect(otherCurve, out IntersectionResultArray _);
                 if (result == SetComparisonResult.Overlap || result == SetComparisonResult.Subset)
-#else
-                CurveIntersectResult result = transformedWallLine.Intersect(otherCurve, CurveIntersectResultOption.Simple);
-                if (result.Result == SetComparisonResult.Overlap || result.Result == SetComparisonResult.Subset)
 #endif
                 {
                     if (otherCurve is Line ol)

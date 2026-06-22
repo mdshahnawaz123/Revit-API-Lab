@@ -6,7 +6,8 @@
         Topmost="True"
         Background="#1A1A2E" Foreground="#E0E0E0"
         FontFamily="Segoe UI"
-        MinWidth="750" MinHeight="680">
+        MinWidth="750" MinHeight="680"
+        Icon="{x:Null}">
 
     <Window.Resources>
         <!-- Accent Colors -->

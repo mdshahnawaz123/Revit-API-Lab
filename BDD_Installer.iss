@@ -65,7 +65,7 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
-DefaultDirName={autopf}\BDD-Tool
+DefaultDirName={code:GetDefaultDirName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=admin
@@ -107,21 +107,81 @@ Source: "{#JOIN_ROOT_24}\*"; DestDir: "{app}\ElementJoin\R24"; Flags: recursesub
 Source: "{#JOIN_ROOT_25}\*"; DestDir: "{app}\ElementJoin\R25"; Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#JOIN_ROOT_27}\*"; DestDir: "{app}\ElementJoin\R27"; Flags: recursesubdirs ignoreversion createallsubdirs
 
+[UninstallDelete]
+; Force-remove the entire app directory (including empty subdirs from createallsubdirs)
+Type: filesandordirs; Name: "{app}"
+; Force-remove .addin manifests from ALL possible Revit Addins locations (2024-2027)
+Type: files; Name: "{commonappdata}\Autodesk\Revit\Addins\2024\BDD-Tool.addin"
+Type: files; Name: "{commonappdata}\Autodesk\Revit\Addins\2025\BDD-Tool.addin"
+Type: files; Name: "{commonappdata}\Autodesk\Revit\Addins\2026\BDD-Tool.addin"
+Type: files; Name: "{commonappdata}\Autodesk\Revit\Addins\2027\BDD-Tool.addin"
+Type: files; Name: "{userappdata}\Autodesk\Revit\Addins\2024\BDD-Tool.addin"
+Type: files; Name: "{userappdata}\Autodesk\Revit\Addins\2025\BDD-Tool.addin"
+Type: files; Name: "{userappdata}\Autodesk\Revit\Addins\2026\BDD-Tool.addin"
+Type: files; Name: "{userappdata}\Autodesk\Revit\Addins\2027\BDD-Tool.addin"
+Type: files; Name: "{commonpf}\Autodesk\Revit\Addins\2024\BDD-Tool.addin"
+Type: files; Name: "{commonpf}\Autodesk\Revit\Addins\2025\BDD-Tool.addin"
+Type: files; Name: "{commonpf}\Autodesk\Revit\Addins\2026\BDD-Tool.addin"
+Type: files; Name: "{commonpf}\Autodesk\Revit\Addins\2027\BDD-Tool.addin"
+
 [Code]
 var
   InstallForAllUsers : Boolean;
   Years              : array of string;
 
+function GetDefaultDirName(Param: String): String;
+begin
+  if InstallForAllUsers then
+    Result := ExpandConstant('{commonpf}\BDD-Tool')
+  else
+    Result := ExpandConstant('{localappdata}\Programs\BDD-Tool');
+end;
+
+function InitializeSetup(): Boolean;
+var
+  Response: Integer;
+begin
+  Response := MsgBox('Install for ALL users on this machine?' + #13#10#13#10 +
+                     'Yes = All Users (requires Admin rights)' + #13#10 +
+                     'No = Current User only', mbConfirmation, MB_YESNO);
+  if Response = idYes then
+    InstallForAllUsers := True
+  else
+    InstallForAllUsers := False;
+    
+  Result := True;
+end;
+
+function IsRevitRunning(): Boolean;
+var
+  WbemLocator, WbemServices, WbemObjectSet: Variant;
+begin
+  Result := False;
+  try
+    WbemLocator := CreateOleObject('WbemScripting.SWbemLocator');
+    WbemServices := WbemLocator.ConnectServer('localhost', 'root\CIMV2');
+    WbemObjectSet := WbemServices.ExecQuery('SELECT Name FROM Win32_Process WHERE Name="Revit.exe"');
+    Result := (WbemObjectSet.Count > 0);
+  except
+  end;
+end;
+
 procedure InitializeWizard();
 begin
-  // Force "All Users" installation to ensure Administrator rights are strictly applied
-  InstallForAllUsers := True;
-  
+  // InstallForAllUsers is already set in InitializeSetup()
   SetArrayLength(Years, 4);
   Years[0] := '2024';
   Years[1] := '2025';
   Years[2] := '2026';
   Years[3] := '2027';
+
+  // Warn user if Revit is running during installation
+  if IsRevitRunning() then
+  begin
+    MsgBox('Autodesk Revit is currently running.' + #13#10 + #13#10 +
+           'Please close all Revit instances before continuing the installation ' +
+           'to avoid file-locking issues.', mbInformation, MB_OK);
+  end;
 end;
 
 function InitializeUninstall(): Boolean;
@@ -131,6 +191,20 @@ begin
   Years[1] := '2025';
   Years[2] := '2026';
   Years[3] := '2027';
+
+  // Block uninstall until Revit is closed for a clean removal
+  while IsRevitRunning() do
+  begin
+    if MsgBox('Autodesk Revit is currently running.' + #13#10 + #13#10 +
+              'Please close ALL Revit instances for a clean uninstallation.' + #13#10 +
+              'Click OK after closing Revit, or Cancel to abort uninstall.',
+              mbError, MB_OKCANCEL) = IDCANCEL then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+
   Result := True;
 end;
 
@@ -253,15 +327,22 @@ end;
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   i: Integer;
+  AppDir: string;
 begin
   if CurUninstallStep = usPostUninstall then
   begin
+    // 1. Force removal of .addin files from ALL possible locations
     for i := 0 to GetArrayLength(Years) - 1 do
     begin
-      // Force removal from all possible locations to ensure complete uninstallation
       DeleteFile(ExpandConstant('{commonappdata}\Autodesk\Revit\Addins\' + Years[i] + '\BDD-Tool.addin'));
       DeleteFile(ExpandConstant('{userappdata}\Autodesk\Revit\Addins\' + Years[i] + '\BDD-Tool.addin'));
       DeleteFile(ExpandConstant('{commonpf}\Autodesk\Revit\Addins\' + Years[i] + '\BDD-Tool.addin'));
     end;
+
+    // 2. Force removal of the entire app directory to prevent leftover files/empty dirs
+    AppDir := ExpandConstant('{app}');
+    if DirExists(AppDir) then
+      DelTree(AppDir, True, True, True);
   end;
 end;
+

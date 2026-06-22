@@ -6,6 +6,7 @@
         Background="White"
         ResizeMode="NoResize"
         Topmost="True"
+        WindowStyle="ToolWindow"
         Icon="{x:Null}">
     <Grid Margin="30">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
