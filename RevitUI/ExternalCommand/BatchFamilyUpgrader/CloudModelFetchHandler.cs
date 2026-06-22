@@ -69,8 +69,10 @@ namespace RevitUI.ExternalCommand.BatchFamilyUpgrader
                                     // Revit 2023+ exposes GetProjectGUID / GetModelGUID on cloud paths
                                     var pGuid = cloudPath.GetType().GetMethod("GetProjectGUID")?.Invoke(cloudPath, null);
                                     var mGuid = cloudPath.GetType().GetMethod("GetModelGUID")?.Invoke(cloudPath, null);
+                                    var regionProp = cloudPath.GetType().GetProperty("Region")?.GetValue(cloudPath);
                                     if (pGuid is Guid pg) projectGuid = pg.ToString();
                                     if (mGuid is Guid mg) modelGuid = mg.ToString();
+                                    if (regionProp is string reg && !string.IsNullOrEmpty(reg)) region = reg;
                                 }
                                 catch { /* Reflection fallback failed, try CentralServerPath */ }
 
