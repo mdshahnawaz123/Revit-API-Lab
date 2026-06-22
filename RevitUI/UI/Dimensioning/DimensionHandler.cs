@@ -187,9 +187,17 @@ namespace RevitUI.UI.Dimensioning
             Log($"[WallsFull] Found {targets.Count} wall target(s)");
             if (targets.Count == 0) return 0;
 
+            // Track dimension line signatures to avoid creating duplicate dimensions
+            // when two walls share the same alignment (e.g., Wall A intersects Wall B
+            // and Wall B intersects Wall A → same dimension placed twice).
+            var createdDimSignatures = new HashSet<string>();
+
+            // Track dimension line positions to catch collinear walls producing overlapping dims
+            var createdDimLines = new List<(XYZ Dir, XYZ Start, XYZ End)>();
+
             foreach (var target in targets)
             {
-                int r = CreateWallFullDimension(doc, view, target.Wall, target.Link, target.OpeningFilter);
+                int r = CreateWallFullDimension(doc, view, target.Wall, target.Link, target.OpeningFilter, createdDimSignatures, createdDimLines);
                 Log($"    → Wall Full dim: {(r > 0 ? '✓' : '✗')}");
                 count += r;
             }
@@ -197,7 +205,7 @@ namespace RevitUI.UI.Dimensioning
             return count;
         }
 
-        private int CreateWallFullDimension(Document doc, View view, Wall wall, RevitLinkInstance? link, HashSet<ElementId>? filter)
+        private int CreateWallFullDimension(Document doc, View view, Wall wall, RevitLinkInstance? link, HashSet<ElementId>? filter, HashSet<string> createdDimSignatures, List<(XYZ Dir, XYZ Start, XYZ End)> createdDimLines)
         {
             ReferenceArray refs = new ReferenceArray();
 
@@ -253,10 +261,69 @@ namespace RevitUI.UI.Dimensioning
             refs = DeduplicateReferences(doc, refs, view, perp);
             if (refs.Size < 2) return 0;
 
+            // ── Compute a signature from the reference set to detect duplicates ──
+            // Two walls that share the same set of intersection references would produce
+            // the same dimension. Skip if this exact reference combination already exists.
+            var stableReps = new List<string>();
+            for (int i = 0; i < refs.Size; i++)
+            {
+                try
+                {
+                    string stable = refs.get_Item(i).ConvertToStableRepresentation(doc) ?? "";
+                    if (!string.IsNullOrEmpty(stable))
+                        stableReps.Add(stable);
+                }
+                catch { }
+            }
+            stableReps.Sort(StringComparer.Ordinal);
+            string signature = string.Join("|", stableReps);
+
+            if (!string.IsNullOrEmpty(signature) && !createdDimSignatures.Add(signature))
+            {
+                Log($"        [WallFull] ⚠ Duplicate dimension skipped (same refs) for wall '{wall.Name}' (Id:{wall.Id})");
+                return 0;
+            }
+
             double offsetFeet = OffsetMm / 304.8;
             Line dimLine = Line.CreateBound(
                 FlattenToView(view, line.GetEndPoint(0) + perp * offsetFeet),
                 FlattenToView(view, line.GetEndPoint(1) + perp * offsetFeet));
+
+            // ── Spatial dedup: check if a dimension already exists along this same line ──
+            // Catches collinear or overlapping wall segments that produce different references
+            // but visually identical dimension lines.
+            XYZ dimDir = dimLine.Direction.Normalize();
+            XYZ dimMid = (dimLine.GetEndPoint(0) + dimLine.GetEndPoint(1)) * 0.5;
+            double collinearTol = 0.15; // ~45mm tolerance for "same line" detection
+
+            foreach (var existing in createdDimLines)
+            {
+                // Check if directions are parallel
+                if (Math.Abs(existing.Dir.DotProduct(dimDir)) < 0.95) continue;
+
+                // Check if the midpoints are roughly on the same line
+                // (perpendicular distance between the two dim lines)
+                XYZ delta = dimMid - existing.Start;
+                XYZ crossDir = GetPlanPerpendicular(existing.Dir, view);
+                double perpDist = Math.Abs(delta.DotProduct(crossDir));
+                if (perpDist > collinearTol) continue;
+
+                // Check if lines overlap (project this dim onto the existing dim's axis)
+                double projStart = (dimLine.GetEndPoint(0) - existing.Start).DotProduct(existing.Dir);
+                double projEnd = (dimLine.GetEndPoint(1) - existing.Start).DotProduct(existing.Dir);
+                double existLen = existing.Start.DistanceTo(existing.End);
+                double pMin = Math.Min(projStart, projEnd);
+                double pMax = Math.Max(projStart, projEnd);
+
+                // If they overlap significantly along the direction
+                if (pMax > 0.1 && pMin < existLen - 0.1)
+                {
+                    Log($"        [WallFull] ⚠ Duplicate dimension skipped (overlapping line) for wall '{wall.Name}' (Id:{wall.Id})");
+                    return 0;
+                }
+            }
+
+            createdDimLines.Add((dimDir, dimLine.GetEndPoint(0), dimLine.GetEndPoint(1)));
 
             return TryCreateDimension(doc, view, dimLine, refs) ? 1 : 0;
         }
@@ -343,6 +410,12 @@ namespace RevitUI.UI.Dimensioning
 
                     try
                     {
+                        // Only add the NEAREST face of the intersecting wall to avoid
+                        // creating "0" dimension segments between exterior and interior faces.
+                        Reference? bestFaceRef = null;
+                        double bestDist = double.MaxValue;
+                        XYZ wallMid = (transformedWallLine.GetEndPoint(0) + transformedWallLine.GetEndPoint(1)) * 0.5;
+
                         foreach (ShellLayerType layerType in new[] { ShellLayerType.Exterior, ShellLayerType.Interior })
                         {
                             IList<Reference> faces = HostObjectUtils.GetSideFaces(wItem.Element, layerType);
@@ -357,12 +430,22 @@ namespace RevitUI.UI.Dimensioning
                                     XYZ n = pf.FaceNormal.Normalize();
                                     if (wItem.Link != null) n = wItem.Link.GetTotalTransform().OfVector(n).Normalize();
                                     if (Math.Abs(n.DotProduct(dir)) < 0.99) continue; // Must be parallel to dim direction
-                                }
 
-                                Reference r = wItem.Link != null ? faceRef.CreateLinkReference(wItem.Link) : faceRef;
-                                try { refs.Append(r); } catch { }
+                                    // Calculate distance from the face origin to the target wall centerline
+                                    XYZ faceOrigin = pf.Origin;
+                                    if (wItem.Link != null) faceOrigin = wItem.Link.GetTotalTransform().OfPoint(faceOrigin);
+                                    double dist = wallMid.DistanceTo(faceOrigin);
+                                    if (dist < bestDist)
+                                    {
+                                        bestDist = dist;
+                                        bestFaceRef = wItem.Link != null ? faceRef.CreateLinkReference(wItem.Link) : faceRef;
+                                    }
+                                }
                             }
                         }
+
+                        if (bestFaceRef != null)
+                            try { refs.Append(bestFaceRef); } catch { }
                     }
                     catch { }
                 }

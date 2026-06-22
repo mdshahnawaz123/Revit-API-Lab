@@ -24,6 +24,17 @@ namespace RevitUI.UI.AccessRequest
                                     "Lifetime Access Request", 
                                     MessageBoxButton.OK, 
                                     MessageBoxImage.Information);
+                    if (BtnSubmit != null)
+                    {
+                        BtnSubmit.Content = "Send Email";
+                    }
+                }
+                else
+                {
+                    if (BtnSubmit != null)
+                    {
+                        BtnSubmit.Content = "Submit Request";
+                    }
                 }
             }
         }
@@ -34,6 +45,23 @@ namespace RevitUI.UI.AccessRequest
             string email = TxtEmail.Text;
             string password = TxtPassword.Password;
             string duration = (ComboDuration.SelectedItem as ComboBoxItem)?.Content.ToString();
+
+            if (duration == "Lifetime")
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "mailto:bimdigitaldesign@gmail.com?subject=Lifetime Access Request - B-Lab Suite",
+                        UseShellExecute = true
+                    });
+                }
+                catch
+                {
+                    MessageBox.Show("Could not open email client. Please manually send an email to bimdigitaldesign@gmail.com.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                return;
+            }
 
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
