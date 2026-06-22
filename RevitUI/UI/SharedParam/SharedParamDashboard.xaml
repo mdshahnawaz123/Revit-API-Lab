@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Shared Parameter Manager" Height="700" Width="900"
         WindowStartupLocation="CenterScreen"
-        Background="#0B192C" AllowsTransparency="True" WindowStyle="None">
+        Background="#0B192C" AllowsTransparency="True" WindowStyle="None"
+        Icon="{x:Null}">
 
     <Window.Resources>
         <Style TargetType="CheckBox">

@@ -5,7 +5,8 @@
         WindowStartupLocation="CenterScreen"
         Background="White"
         ResizeMode="NoResize"
-        Topmost="True">
+        Topmost="True"
+        Icon="{x:Null}">
     <Grid Margin="30">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <!-- LICENSE STATUS -->

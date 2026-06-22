@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Workset Pro" Height="620" Width="850"
         WindowStartupLocation="CenterScreen" Topmost="True"
-        Background="Transparent" WindowStyle="None" AllowsTransparency="True">
+        Background="Transparent" WindowStyle="None" AllowsTransparency="True"
+        Icon="{x:Null}">
 
     <Window.Resources>
         <!-- Professional Light Colors -->

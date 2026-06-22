@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Master Export Dashboard" Height="580" Width="850"
         WindowStartupLocation="CenterScreen" Topmost="True"
-        Background="White" AllowsTransparency="True" WindowStyle="None">
+        Background="White" AllowsTransparency="True" WindowStyle="None"
+        Icon="{x:Null}">
     
     <Border CornerRadius="15" BorderBrush="#E0E0E0" BorderThickness="1">
         <Grid Margin="30">

@@ -9,7 +9,8 @@
         ResizeMode="NoResize"
         Background="Transparent"
         AllowsTransparency="True"
-        WindowStyle="None">
+        WindowStyle="None"
+        Icon="{x:Null}">
     
     <Border CornerRadius="20" Background="#1A1A1A" BorderBrush="#333" BorderThickness="1">
         <Grid>

@@ -4,7 +4,8 @@
         Title="Slope Analysis" Height="650" Width="420"
         WindowStartupLocation="CenterScreen" Topmost="True"
         Background="Transparent" WindowStyle="None" AllowsTransparency="True"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        Icon="{x:Null}">
 
     <Window.Resources>
         <!-- Professional Light Colors -->

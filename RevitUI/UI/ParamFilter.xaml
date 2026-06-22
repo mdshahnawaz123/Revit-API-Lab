@@ -5,7 +5,8 @@
         Title="Parameter Filter"
         Height="550" Width="550"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        Icon="{x:Null}">
 
     <Window.Resources>
         <ResourceDictionary>

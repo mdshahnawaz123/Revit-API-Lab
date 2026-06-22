@@ -11,7 +11,8 @@
         Background="#F0F0F0"
         FontFamily="Segoe UI"
         FontSize="12"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        Icon="{x:Null}">
 
     <Window.Resources>
 

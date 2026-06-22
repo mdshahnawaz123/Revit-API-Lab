@@ -5,7 +5,8 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#F9FAFB"
-        Topmost="True">
+        Topmost="True"
+        Icon="{x:Null}">
     <Grid Margin="20">
         <StackPanel>
             <TextBlock Text="Enter Company Name" FontWeight="SemiBold" Margin="0,0,0,10"/>

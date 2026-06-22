@@ -5,7 +5,8 @@
         Background="Transparent" WindowStyle="None" AllowsTransparency="True"
         Height="650" Width="480"
         WindowStartupLocation="CenterScreen"
-        Topmost="True">
+        Topmost="True"
+        Icon="{x:Null}">
 
     <Border Background="#F9FAFB" CornerRadius="16" BorderBrush="#E5E7EB" BorderThickness="1">
         <Grid>
