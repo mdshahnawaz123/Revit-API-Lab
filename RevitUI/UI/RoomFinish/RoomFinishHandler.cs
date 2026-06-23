@@ -18,6 +18,7 @@ namespace RevitUI.UI.RoomFinish
         public double HeightOverrideMm { get; set; } = -1;
         public RoomScope Scope { get; set; } = RoomScope.Selection;
         public bool IsSyncMode { get; set; } = false;
+        public ElementId SelectedRoomId { get; set; } = ElementId.InvalidElementId;
 
         private UIApplication _app;
         private Document _doc;
@@ -142,6 +143,11 @@ namespace RevitUI.UI.RoomFinish
                     .Cast<Room>()
                     .Where(r => r.Area > 0);
                 foreach (var r in hostRooms) results.Add((r, null));
+            }
+
+            if (SelectedRoomId != ElementId.InvalidElementId)
+            {
+                results = results.Where(x => x.Item1.Id == SelectedRoomId).ToList();
             }
 
             return results;

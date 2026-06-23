@@ -43,6 +43,8 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\*.rfa" />
+		<Page Remove="UI\RoomWizard\RoomWizardDashboard.xaml" />
+		<Page Include="UI\RoomWizard\RoomWizardDashboard.xaml" />
 	</ItemGroup>
 	<ItemGroup>
 	  <None Remove="Resources\3DTag.png" />
@@ -53,6 +55,8 @@
 	  <None Remove="Resources\StructuralLoadingIcon.png" />
   <None Remove="Resources\Dimension.png" />
   <None Remove="Resources\Slope.png" />
+  <None Remove="Resources\RoomFinish.png" />
+  <None Remove="Resources\RoomWizard.png" />
   <None Remove="Resources\Interop.png" />
   <None Remove="Resources\Workset.png" />
   <None Remove="Resources\Purge.png" />
@@ -73,6 +77,8 @@
 	  <EmbeddedResource Include="Resources\StructuralLoadingPreview.png" />
   <EmbeddedResource Include="Resources\Dimension.png" />
   <EmbeddedResource Include="Resources\Slope.png" />
+  <EmbeddedResource Include="Resources\RoomFinish.png" />
+  <EmbeddedResource Include="Resources\RoomWizard.png" />
   <EmbeddedResource Include="Resources\Interop.png" />
   <EmbeddedResource Include="Resources\Workset.png" />
   <EmbeddedResource Include="Resources\Purge.png" />
@@ -109,6 +115,12 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 		<Content Include="Helper\SlopeHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Helper\RoomFinishHelp.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Helper\RoomWizardHelp.html">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 		<Content Include="Helper\InteropHelp.html">

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Room Wizard Help</title>
+<style>body{font-family:Segoe UI,sans-serif;max-width:700px;margin:40px auto;padding:20px;background:#1a1a1a;color:#ddd}
+h1{color:#007ACC}h2{color:#0ea5e9;border-bottom:1px solid #333;padding-bottom:5px}
+.tip{background:#222;border-left:3px solid #007ACC;padding:10px 15px;margin:10px 0;border-radius:4px}
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { border: 1px solid #444; padding: 8px; text-align: left; }
+th { background-color: #333; }
+</style>
+</head><body>
+<h1>Room Wizard</h1>
+<p>Export elements belonging to host or linked rooms into a CSV file, easily modify their parameter data in Excel, and quickly import those changes directly back into Revit.</p>
+<h2>Features</h2>
+<ul>
+<li><strong>Element Detection</strong> — Analyzes the geometric bounds of rooms (host or linked) to accurately find all architectural and MEP elements contained within them.</li>
+<li><strong>CSV Export</strong> — Exports detailed element data to an editable CSV format.</li>
+<li><strong>CSV Import</strong> — Re-imports your modified CSV and applies changes directly to the element parameters in the Revit model via an automated transaction.</li>
+</ul>
+<h2>Usage Workflow</h2>
+<ol>
+<li>Click <strong>Room Wizard</strong> in the BIM Digital Design ribbon.</li>
+<li>Select whether you want to use Host Rooms or Linked Rooms as the boundary reference.</li>
+<li>Review the populated elements in the UI DataGrid.</li>
+<li>Click <strong>Export</strong> and save the generated CSV file.</li>
+<li>Open the CSV in Excel, modify the parameters as needed, and save.</li>
+<li>Click <strong>Import</strong> in the Room Wizard UI to load your modified CSV.</li>
+<li>Click <strong>Update Model</strong> to apply the changes to the Revit elements.</li>
+</ol>
+<div class="tip">Note: The ElementId and Category columns in the CSV are used to map the data back to Revit. Do not modify or delete these columns. Read-only parameters cannot be updated via import.</div>
+</body></html>

@@ -51,6 +51,7 @@ namespace B_Lab.RevitApp
                 var dimBtn = new PushButtonData("BDD_DimensionAuto_BTN", "Dimension\nAuto", dll, "RevitUI.Command.DimensionCommand");
                 var slopeBtn = new PushButtonData("BDD_SlopeAnalysis_BTN", "Slope\nAnalysis", dll, "RevitUI.Command.SlopeAnalysisCommand");
                 var roomFinishBtn = new PushButtonData("RoomFinish_BTN", "Room\nFinish", dll, "RevitUI.Command.RoomFinishCommand");
+                var roomWizardBtn = new PushButtonData("RoomWizard_BTN", "Room\nWizard", dll, "RevitUI.Command.RoomWizardCommand");
                 var interopBtn = new PushButtonData("BDD_Interop_BTN", "Interop\nDashboard", dll, "RevitUI.Command.InteropCommand");
                 var exportBtn = new PushButtonData("BDD_AutoCadExport_BTN", "Master\nExport", dll, "RevitUI.Command.AutoCadExportCommand");
                 var sharedBtn = new PushButtonData("BDD_SharedParam_BTN", "Shared\nParam", dll, "RevitUI.Command.SharedParamCommand");
@@ -76,6 +77,7 @@ namespace B_Lab.RevitApp
                 var dimensionButton = GetOrAddButton(panel2, dimBtn);
                 var slopeButton = GetOrAddButton(panel2, slopeBtn);
                 var roomFinishButton = GetOrAddButton(panel2, roomFinishBtn);
+                var roomWizardButton = GetOrAddButton(panel2, roomWizardBtn);
                 var interopButton = GetOrAddButton(panel2, interopBtn);
                 
                 var exportButton = GetOrAddButton(panel3, exportBtn);
@@ -97,6 +99,7 @@ namespace B_Lab.RevitApp
                     dimensionButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Dimension.png", uiAssembly);
                     slopeButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Slope.png", uiAssembly);
                     roomFinishButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.RoomFinish.png", uiAssembly);
+                    roomWizardButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.RoomWizard.png", uiAssembly);
                     interopButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Interop.png", uiAssembly);
                     worksetButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Workset.png", uiAssembly);
                     purgeButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Purge.png", uiAssembly);
@@ -117,6 +120,8 @@ namespace B_Lab.RevitApp
                 SetHelp(loadingButton, "StructuralLoadingHelp.html");
                 SetHelp(dimensionButton, "DimensionHelp.html");
                 SetHelp(slopeButton, "SlopeHelp.html");
+                SetHelp(roomFinishButton, "RoomFinishHelp.html");
+                SetHelp(roomWizardButton, "RoomWizardHelp.html");
                 SetHelp(interopButton, "InteropHelp.html");
                 SetHelp(exportButton, "AutoCadExportHelp.html");
                 SetHelp(roomSheetButton, "AutoCadExportHelp.html");

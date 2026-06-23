@@ -59,10 +59,15 @@
                     <!-- Scope Selection -->
                     <TextBlock Text="SCOPE &amp; SELECTION" Foreground="#007ACC" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
                     
-                    <RadioButton x:Name="RbScopeSelection" GroupName="ScopeMode" Content="Selected Rooms Only" Foreground="#333" IsChecked="True" Margin="0,0,0,10"/>
-                    <RadioButton x:Name="RbScopeLevel" GroupName="ScopeMode" Content="Active Level" Foreground="#333" Margin="0,0,0,10"/>
-                    <RadioButton x:Name="RbScopeHost" GroupName="ScopeMode" Content="Entire Host Model" Foreground="#333" Margin="0,0,0,10"/>
-                    <RadioButton x:Name="RbScopeLinked" GroupName="ScopeMode" Content="Include Linked Models" Foreground="#333" Margin="0,0,0,20"/>
+                    <RadioButton x:Name="RbScopeSelection" GroupName="ScopeMode" Content="Selected Rooms Only" Foreground="#333" IsChecked="True" Margin="0,0,0,10" Checked="RbScope_Checked"/>
+                    <RadioButton x:Name="RbScopeLevel" GroupName="ScopeMode" Content="Active Level" Foreground="#333" Margin="0,0,0,10" Checked="RbScope_Checked"/>
+                    <RadioButton x:Name="RbScopeHost" GroupName="ScopeMode" Content="Host Model Rooms" Foreground="#333" Margin="0,0,0,10" Checked="RbScope_Checked"/>
+                    <RadioButton x:Name="RbScopeLinked" GroupName="ScopeMode" Content="Include Linked Models" Foreground="#333" Margin="0,0,0,15" Checked="RbScope_Checked"/>
+
+                    <StackPanel x:Name="PanelRoomSelect" Orientation="Horizontal" Margin="0,0,0,10" Visibility="Collapsed">
+                        <TextBlock Text="Room:" Foreground="#555" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox x:Name="ComboRooms" Width="220" Height="28" DisplayMemberPath="Name" VerticalContentAlignment="Center"/>
+                    </StackPanel>
 
                 </StackPanel>
             </ScrollViewer>

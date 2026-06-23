@@ -1,0 +1,113 @@
+<Window x:Class="RevitUI.UI.RoomWizard.RoomWizardDashboard"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Room Wizard" Height="700" Width="800"
+        WindowStartupLocation="CenterScreen" Topmost="True"
+        Background="Transparent" AllowsTransparency="True" WindowStyle="None">
+    
+    <Border Background="#F9FAFB" CornerRadius="16" BorderBrush="#E5E7EB" BorderThickness="1">
+        <Grid Margin="25">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                <Grid>
+                    <TextBlock Text="ROOM WIZARD" Foreground="#222" FontSize="20" FontWeight="Bold"/>
+                    <Button Content="✕" Click="BtnClose_Click" HorizontalAlignment="Right" Background="Transparent" Foreground="#AAA" BorderThickness="0" Cursor="Hand" FontSize="18"/>
+                </Grid>
+                <Border Height="2" Background="#007ACC" Width="40" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+                <TextBlock Text="Export elements by room, modify in Excel, and sync back to Revit" Foreground="#888" FontSize="11" Margin="0,8,0,0" FontStyle="Italic"/>
+            </StackPanel>
+
+            <!-- Controls -->
+            <Grid Grid.Row="1" Margin="0,0,0,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,15,0">
+                    <TextBlock Text="Room Source:" Foreground="#555" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <ComboBox x:Name="ComboRoomSource" Width="140" Height="30" SelectedIndex="0" SelectionChanged="ComboRoomSource_SelectionChanged">
+                        <ComboBoxItem Content="Host Model"/>
+                        <ComboBoxItem Content="Linked Models"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Room:" Foreground="#555" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <ComboBox x:Name="ComboRooms" Width="180" Height="30" SelectionChanged="ComboRooms_SelectionChanged" DisplayMemberPath="Name"/>
+                </StackPanel>
+
+                <Button x:Name="BtnExport" Grid.Column="1" Content="⭳ Export to CSV" Background="#007ACC" Foreground="White" Width="130" Height="35" Margin="0,0,10,0" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="BtnExport_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+                
+                <Button x:Name="BtnImport" Grid.Column="2" Content="⭱ Import CSV" Background="#10B981" Foreground="White" Width="130" Height="35" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="BtnImport_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
+
+            <!-- DataGrid Preview -->
+            <Border Grid.Row="2" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Background="White" Margin="0,0,0,20">
+                <DataGrid x:Name="DgElements" AutoGenerateColumns="True" CanUserAddRows="False" IsReadOnly="True" 
+                          Background="Transparent" RowBackground="White" AlternatingRowBackground="#F9FAFB" 
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE" HeadersVisibility="Column"
+                          BorderThickness="0" Margin="1">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#F3F4F6"/>
+                            <Setter Property="Foreground" Value="#444"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="10,8"/>
+                            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Padding" Value="10,6"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Foreground" Value="#555"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#EBF5FF"/>
+                                    <Setter Property="Foreground" Value="#007ACC"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.CellStyle>
+                </DataGrid>
+            </Border>
+
+            <!-- Action Area -->
+            <Grid Grid.Row="3">
+                <TextBlock x:Name="TxtStatus" Text="Ready." Foreground="#888" VerticalAlignment="Center" FontStyle="Italic"/>
+                
+                <Button x:Name="BtnUpdateModel" Content="Update Revit Model" Background="#333" Foreground="White" 
+                        Height="40" Width="180" HorizontalAlignment="Right" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnUpdateModel_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="8"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

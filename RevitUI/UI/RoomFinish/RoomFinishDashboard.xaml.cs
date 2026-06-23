@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using System;
 using System.Linq;
@@ -69,6 +70,57 @@ namespace RevitUI.UI.RoomFinish
             RevitUI.Command.RoomFinishCommand.Instance = null;
         }
 
+        private void RbScope_Checked(object sender, RoutedEventArgs e)
+        {
+            if (PanelRoomSelect == null || ComboRooms == null) return;
+
+            if (RbScopeHost.IsChecked == true || RbScopeLinked.IsChecked == true)
+            {
+                PanelRoomSelect.Visibility = System.Windows.Visibility.Visible;
+                PopulateRooms();
+            }
+            else
+            {
+                PanelRoomSelect.Visibility = System.Windows.Visibility.Collapsed;
+                ComboRooms.ItemsSource = null;
+            }
+        }
+
+        private void PopulateRooms()
+        {
+            if (_doc == null) return;
+            bool useLinked = RbScopeLinked.IsChecked == true;
+            var rooms = new System.Collections.Generic.List<Room>();
+
+            if (useLinked)
+            {
+                var linkInstances = new FilteredElementCollector(_doc)
+                    .OfClass(typeof(RevitLinkInstance))
+                    .Cast<RevitLinkInstance>()
+                    .ToList();
+
+                foreach (var link in linkInstances)
+                {
+                    Document linkDoc = link.GetLinkDocument();
+                    if (linkDoc != null)
+                    {
+                        rooms.AddRange(new FilteredElementCollector(linkDoc)
+                            .OfCategory(BuiltInCategory.OST_Rooms)
+                            .Cast<Room>()
+                            .Where(r => r.Area > 0));
+                    }
+                }
+            }
+            
+            // Host model rooms
+            rooms.AddRange(new FilteredElementCollector(_doc)
+                .OfCategory(BuiltInCategory.OST_Rooms)
+                .Cast<Room>()
+                .Where(r => r.Area > 0));
+
+            ComboRooms.ItemsSource = rooms.OrderBy(r => r.Name).ToList();
+        }
+
         private void PopulateHandlerSettings()
         {
             _handler.CreateFloorFinish = CbCreateFloor.IsChecked == true;
@@ -96,6 +148,11 @@ namespace RevitUI.UI.RoomFinish
             else if (RbScopeLevel.IsChecked == true) _handler.Scope = RoomScope.Level;
             else if (RbScopeHost.IsChecked == true) _handler.Scope = RoomScope.Host;
             else if (RbScopeLinked.IsChecked == true) _handler.Scope = RoomScope.Linked;
+
+            if (ComboRooms.SelectedItem is Room selectedRoom && PanelRoomSelect.Visibility == System.Windows.Visibility.Visible)
+                _handler.SelectedRoomId = selectedRoom.Id;
+            else
+                _handler.SelectedRoomId = ElementId.InvalidElementId;
         }
 
         private void BtnGenerate_Click(object sender, RoutedEventArgs e)
