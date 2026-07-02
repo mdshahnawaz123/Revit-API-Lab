@@ -168,7 +168,13 @@ end;
 
 procedure InitializeWizard();
 begin
+<<<<<<< Updated upstream
   // InstallForAllUsers is already set in InitializeSetup()
+=======
+  // Force "All Users" installation to ensure Administrator rights are strictly applied
+  InstallForAllUsers := True;
+  
+>>>>>>> Stashed changes
   SetArrayLength(Years, 4);
   Years[0] := '2024';
   Years[1] := '2025';
@@ -205,6 +211,16 @@ begin
     end;
   end;
 
+  Result := True;
+end;
+
+function InitializeUninstall(): Boolean;
+begin
+  SetArrayLength(Years, 4);
+  Years[0] := '2024';
+  Years[1] := '2025';
+  Years[2] := '2026';
+  Years[3] := '2027';
   Result := True;
 end;
 
@@ -334,6 +350,10 @@ begin
     // 1. Force removal of .addin files from ALL possible locations
     for i := 0 to GetArrayLength(Years) - 1 do
     begin
+<<<<<<< Updated upstream
+=======
+      // Force removal from all possible locations to ensure complete uninstallation
+>>>>>>> Stashed changes
       DeleteFile(ExpandConstant('{commonappdata}\Autodesk\Revit\Addins\' + Years[i] + '\BDD-Tool.addin'));
       DeleteFile(ExpandConstant('{userappdata}\Autodesk\Revit\Addins\' + Years[i] + '\BDD-Tool.addin'));
       DeleteFile(ExpandConstant('{commonpf}\Autodesk\Revit\Addins\' + Years[i] + '\BDD-Tool.addin'));
