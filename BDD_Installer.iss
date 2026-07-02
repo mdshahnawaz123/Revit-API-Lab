@@ -142,7 +142,7 @@ var
   Response: Integer;
 begin
   Response := MsgBox('Install for ALL users on this machine?' + #13#10#13#10 +
-                     'Yes = All Users (requires Admin rights)' + #13#10 +
+                     'Yes = All Users' + #13#10 +
                      'No = Current User only', mbConfirmation, MB_YESNO);
   if Response = idYes then
     InstallForAllUsers := True
