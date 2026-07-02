@@ -175,7 +175,7 @@ begin
   Years[2] := '2026';
   Years[3] := '2027';
 
-  // Warn user if Revit is running during installation
+  // // Warn user if Revit is running during installation
   if IsRevitRunning() then
   begin
     MsgBox('Autodesk Revit is currently running.' + #13#10 + #13#10 +

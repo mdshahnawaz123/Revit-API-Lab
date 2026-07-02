@@ -269,7 +269,7 @@ namespace RevitUI.UI.ModelHealth
         </div>
 
         <footer>
-            <p>B-Lab Revit Suite - Professional BIM Audit Intelligence Dashboard</p>
+            <p>BIM Digital Design - Professional BIM Audit Intelligence Dashboard</p>
             <p>© {DateTime.Now.Year} BIM Digital Design</p>
         </footer>
     </div>
