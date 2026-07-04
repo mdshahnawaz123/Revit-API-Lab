@@ -6,10 +6,7 @@
         Background="White"
         ResizeMode="NoResize"
         Topmost="True"
-<<<<<<< Updated upstream
         WindowStyle="ToolWindow"
-=======
->>>>>>> Stashed changes
         Icon="{x:Null}">
     <Grid Margin="30">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">

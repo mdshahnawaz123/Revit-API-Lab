@@ -3,11 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Dimension Automation" Height="750" Width="530"
         WindowStartupLocation="CenterScreen" Topmost="True"
-<<<<<<< Updated upstream
         Background="Transparent" AllowsTransparency="True" WindowStyle="None"
-=======
-        Background="White" AllowsTransparency="True" WindowStyle="None"
->>>>>>> Stashed changes
         Icon="{x:Null}">
     
     <Border Background="#F9FAFB" CornerRadius="16" BorderBrush="#E5E7EB" BorderThickness="1">
