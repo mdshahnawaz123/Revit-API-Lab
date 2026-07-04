@@ -53,6 +53,7 @@ namespace B_Lab.RevitApp
                 var roomFinishBtn = new PushButtonData("RoomFinish_BTN", "Room\nFinish", dll, "RevitUI.Command.RoomFinishCommand");
                 var roomWizardBtn = new PushButtonData("RoomWizard_BTN", "Room\nWizard", dll, "RevitUI.Command.RoomWizardCommand");
                 var interopBtn = new PushButtonData("BDD_Interop_BTN", "Interop\nDashboard", dll, "RevitUI.Command.InteropCommand");
+                var ifcViewerBtn = new PushButtonData("BDD_IfcViewer_BTN", "IFC\nViewer", dll, "RevitUI.Command.IfcViewerCommand");
                 var exportBtn = new PushButtonData("BDD_AutoCadExport_BTN", "Master\nExport", dll, "RevitUI.Command.AutoCadExportCommand");
                 var sharedBtn = new PushButtonData("BDD_SharedParam_BTN", "Shared\nParam", dll, "RevitUI.Command.SharedParamCommand");
                 var batchUpgradeBtn = new PushButtonData("BDD_BatchUpgrade_BTN", "Batch\nUpgrade", dll, "RevitUI.Command.BatchFamilyUpgraderCommand");
@@ -79,6 +80,7 @@ namespace B_Lab.RevitApp
                 var roomFinishButton = GetOrAddButton(panel2, roomFinishBtn);
                 var roomWizardButton = GetOrAddButton(panel2, roomWizardBtn);
                 var interopButton = GetOrAddButton(panel2, interopBtn);
+                var ifcViewerButton = GetOrAddButton(panel2, ifcViewerBtn);
                 
                 var exportButton = GetOrAddButton(panel3, exportBtn);
                 var roomSheetButton = GetOrAddButton(panel3, roomSheetBtn);
@@ -101,6 +103,7 @@ namespace B_Lab.RevitApp
                     roomFinishButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.RoomFinish.png", uiAssembly);
                     roomWizardButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.RoomWizard.png", uiAssembly);
                     interopButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Interop.png", uiAssembly);
+                    ifcViewerButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.BDD.png", uiAssembly);
                     worksetButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Workset.png", uiAssembly);
                     purgeButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Purge.png", uiAssembly);
                     exportButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Export.png", uiAssembly);
