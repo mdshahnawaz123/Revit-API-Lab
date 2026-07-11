@@ -70,7 +70,7 @@ DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=admin
 OutputDir=Output
-OutputBaseFilename=B-Lab_Installer
+OutputBaseFilename=B-Lab
 SetupIconFile={#AppIconFile}
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -212,10 +212,20 @@ end;
 
 
 function GetAddinDir(Year: string): string;
+var
+  IntYear: Integer;
 begin
+  IntYear := StrToIntDef(Year, 0);
   if InstallForAllUsers then
-    // Revit 2024+: Standard ProgramData location
-    Result := ExpandConstant('{commonappdata}\Autodesk\Revit\Addins\' + Year)
+  begin
+    if IntYear >= 2027 then
+      // Revit 2027+: ProgramData is DEPRECATED and ignored by Revit.
+      // Use C:\Program Files\Autodesk\Revit\Addins\2027
+      Result := ExpandConstant('{autopf}\Autodesk\Revit\Addins\' + Year)
+    else
+      // Revit 2024-2026: Standard ProgramData location
+      Result := ExpandConstant('{commonappdata}\Autodesk\Revit\Addins\' + Year);
+  end
   else
     // Per-user: AppData\Roaming works for all Revit versions
     Result := ExpandConstant('{userappdata}\Autodesk\Revit\Addins\' + Year);
