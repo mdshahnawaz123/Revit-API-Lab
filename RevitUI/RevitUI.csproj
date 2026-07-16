@@ -47,6 +47,7 @@
 		<Page Include="UI\RoomWizard\RoomWizardDashboard.xaml" />
 	</ItemGroup>
 	<ItemGroup>
+	  <None Remove="Resources\IfcViewer.png" />
 	  <None Remove="Resources\3DTag.png" />
 	  <None Remove="Resources\BDD.png" />
 	  <None Remove="Resources\cad.png" />
