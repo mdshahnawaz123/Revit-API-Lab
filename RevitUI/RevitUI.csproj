@@ -68,6 +68,7 @@
   <None Remove="Resources\BDD_Main.png" />
 	</ItemGroup>
 	<ItemGroup>
+	  <EmbeddedResource Include="Resources\IfcViewer.png" />
 	  <EmbeddedResource Include="Resources\3DTag.png" />
 	  <EmbeddedResource Include="Resources\BDD.png" />
 	  <EmbeddedResource Include="Resources\cad.png" />

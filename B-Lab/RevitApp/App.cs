@@ -103,7 +103,7 @@ namespace B_Lab.RevitApp
                     roomFinishButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.RoomFinish.png", uiAssembly);
                     roomWizardButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.RoomWizard.png", uiAssembly);
                     interopButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Interop.png", uiAssembly);
-                    ifcViewerButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.BDD.png", uiAssembly);
+                    ifcViewerButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.IfcViewer.png", uiAssembly);
                     worksetButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Workset.png", uiAssembly);
                     purgeButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Purge.png", uiAssembly);
                     exportButton.LargeImage = ImageUtils.GetEmbeddedImage("RevitUI.Resources.Export.png", uiAssembly);
