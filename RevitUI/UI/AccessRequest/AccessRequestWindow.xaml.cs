@@ -52,7 +52,7 @@ namespace RevitUI.UI.AccessRequest
                 {
                     Process.Start(new ProcessStartInfo
                     {
-                        FileName = "mailto:bimdigitaldesign@gmail.com?subject=Lifetime Access Request - B-Lab Suite",
+                        FileName = "mailto:bimdigitaldesign@gmail.com?subject=Lifetime Access Request - BuiltFlow Suite",
                         UseShellExecute = true
                     });
                 }
@@ -106,7 +106,7 @@ namespace RevitUI.UI.AccessRequest
                         try
                         {
                             string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "B_Lab_Login_Details.txt");
-                            System.IO.File.WriteAllText(path, $"B-Lab Suite Login Details\n=======================\nUsername: {username}\nEmail: {email}\nPassword: {password}\nPlan: {duration}\nRegistered: {DateTime.Now}");
+                            System.IO.File.WriteAllText(path, $"BuiltFlow Suite Login Details\n=======================\nUsername: {username}\nEmail: {email}\nPassword: {password}\nPlan: {duration}\nRegistered: {DateTime.Now}");
                             MessageBox.Show($"Details saved to:\n{path}", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                         catch (Exception ex)

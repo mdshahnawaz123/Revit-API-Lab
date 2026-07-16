@@ -98,7 +98,7 @@ namespace RevitUI.UI.ModelHealth
                         $"QC,Views w/o Templates,{_lastData.ViewWithoutTemplateCount}"
                     };
                     System.IO.File.WriteAllLines(saveFileDialog.FileName, lines);
-                    TaskDialog.Show("B-Lab", "Report exported successfully! You can now load this into your PowerBI template.");
+                    TaskDialog.Show("BuiltFlow", "Report exported successfully! You can now load this into your PowerBI template.");
                 }
                 catch (Exception ex)
                 {
@@ -276,7 +276,7 @@ namespace RevitUI.UI.ModelHealth
 </body>
 </html>";
                     System.IO.File.WriteAllText(saveFileDialog.FileName, html);
-                    TaskDialog.Show("B-Lab", "Professional Dashboard HTML Report generated successfully!");
+                    TaskDialog.Show("BuiltFlow", "Professional Dashboard HTML Report generated successfully!");
                 }
                 catch (Exception ex)
                 {

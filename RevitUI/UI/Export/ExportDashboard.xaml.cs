@@ -40,7 +40,7 @@ namespace RevitUI.UI.Export
             SheetListBox.ItemsSource = _filteredSheets;
 
             // Default path
-            TxtPath.Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "B-Lab Exports");
+            TxtPath.Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BuiltFlow Exports");
         }
 
         private void BtnBrowse_Click(object sender, RoutedEventArgs e)
@@ -79,13 +79,13 @@ namespace RevitUI.UI.Export
                 _handler.SelectedViewIds = Sheets.Where(s => s.IsChecked).Select(s => s.Id).ToList();
                 if (_handler.SelectedViewIds.Count == 0)
                 {
-                    TaskDialog.Show("B-Lab", "Please select at least one sheet.");
+                    TaskDialog.Show("BuiltFlow", "Please select at least one sheet.");
                     return;
                 }
             }
 
             _externalEvent.Raise();
-            TaskDialog.Show("B-Lab Export", "Master Export started in background. Please wait for completion message.");
+            TaskDialog.Show("BuiltFlow Export", "Master Export started in background. Please wait for completion message.");
         }
 
         private void Radio_Changed(object sender, RoutedEventArgs e)

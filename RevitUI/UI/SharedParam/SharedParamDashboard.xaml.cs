@@ -23,7 +23,7 @@ namespace RevitUI.UI.SharedParam
 
             _historyFilePath = System.IO.Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "B-Lab", "Revit", "SharedParamHistory.txt");
+                "BuiltFlow", "Revit", "SharedParamHistory.txt");
 
             LoadHistory();
             _externalEvent = externalEvent;
@@ -142,7 +142,7 @@ namespace RevitUI.UI.SharedParam
             string path = CmbFileHistory.Text;
             if (string.IsNullOrEmpty(path) || !System.IO.File.Exists(path) || path.Contains("Select a"))
             {
-                MessageBox.Show(this, "Please select a valid shared parameter file first.", "B-Lab");
+                MessageBox.Show(this, "Please select a valid shared parameter file first.", "BuiltFlow");
                 return;
             }
 
@@ -193,7 +193,7 @@ namespace RevitUI.UI.SharedParam
                 if (System.IO.File.Exists(helpPath))
                     System.Diagnostics.Process.Start(helpPath);
                 else
-                    MessageBox.Show(this, "Help file not found.", "B-Lab");
+                    MessageBox.Show(this, "Help file not found.", "BuiltFlow");
             }
             catch { }
         }
@@ -308,12 +308,12 @@ namespace RevitUI.UI.SharedParam
 
             if (selectedParams.Count == 0)
             {
-                MessageBox.Show(this, "Please select at least one parameter.", "B-Lab");
+                MessageBox.Show(this, "Please select at least one parameter.", "BuiltFlow");
                 return;
             }
             if (selectedCategories.Count == 0)
             {
-                MessageBox.Show(this, "Please select at least one category.", "B-Lab");
+                MessageBox.Show(this, "Please select at least one category.", "BuiltFlow");
                 return;
             }
 
@@ -369,7 +369,7 @@ namespace RevitUI.UI.SharedParam
 
             if (names.Count == 0)
             {
-                MessageBox.Show(this, "Please enter at least one parameter name.", "B-Lab");
+                MessageBox.Show(this, "Please enter at least one parameter name.", "BuiltFlow");
                 return;
             }
 

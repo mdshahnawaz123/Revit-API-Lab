@@ -65,7 +65,7 @@ namespace RevitUI.UI.SharedParam
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("B-Lab Error", ex.Message);
+                TaskDialog.Show("BuiltFlow Error", ex.Message);
             }
             finally
             {
@@ -91,7 +91,7 @@ namespace RevitUI.UI.SharedParam
             }
 
             // Get or create the group
-            string groupName = "B-Lab Created";
+            string groupName = "BuiltFlow Created";
             DefinitionGroup group = defFile.Groups.get_Item(groupName) ?? defFile.Groups.Create(groupName);
 
             int createdCount = 0;
@@ -214,7 +214,7 @@ namespace RevitUI.UI.SharedParam
 
             if (defFile == null)
             {
-                TaskDialog.Show("B-Lab", "Could not open the shared parameter file.");
+                TaskDialog.Show("BuiltFlow", "Could not open the shared parameter file.");
                 return;
             }
 
@@ -268,7 +268,7 @@ namespace RevitUI.UI.SharedParam
 
             if (catSet.Size == 0)
             {
-                TaskDialog.Show("B-Lab", "No valid categories selected.");
+                TaskDialog.Show("BuiltFlow", "No valid categories selected.");
                 return;
             }
 
@@ -331,7 +331,7 @@ namespace RevitUI.UI.SharedParam
                 trans.Commit();
             }
 
-            TaskDialog.Show("B-Lab Shared Parameter Manager",
+            TaskDialog.Show("BuiltFlow Shared Parameter Manager",
                 $"Operation Complete!\n\n" +
                 $"  ✅ Applied: {applied} parameters\n" +
                 $"  ⏭ Skipped: {skipped} (already exist or failed)\n" +

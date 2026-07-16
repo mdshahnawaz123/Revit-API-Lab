@@ -42,7 +42,7 @@ namespace RevitUI.UI.Export
                 if (ExportCad) RunCadExport(doc, viewsToExport);
                 if (ExportNwc) RunNwcExport(doc);
 
-                TaskDialog.Show("B-Lab", "Master Export Complete!\nFiles are sorted into sub-folders.");
+                TaskDialog.Show("BuiltFlow", "Master Export Complete!\nFiles are sorted into sub-folders.");
             }
             catch (Exception ex)
             {
@@ -192,7 +192,7 @@ namespace RevitUI.UI.Export
 
             string msg = $"NWC Export Complete.\nFiles Exported: {exportCount}";
             if (errors.Any()) msg += "\n\nErrors:\n" + string.Join("\n", errors.Take(5));
-            TaskDialog.Show("B-Lab Debug", msg);
+            TaskDialog.Show("BuiltFlow Debug", msg);
         }
 
         private int ExportNwcSlicesWithDebug(Document doc, string dir, NavisworksExportOptions options, out List<string> errors)

@@ -51,7 +51,7 @@ namespace RevitUI.UI.Dimensioning
                     {
                         Log($"✗ BLOCKED: View type '{view.ViewType}' is not supported.");
                         Log($"  Supported: FloorPlan, CeilingPlan, EngineeringPlan, AreaPlan, Section, Elevation, Detail");
-                        TaskDialog.Show("B-Lab",
+                        TaskDialog.Show("BuiltFlow",
                             "Dimension Automation works in floor plans, sections, and elevations.\n" +
                             "Open a 2D view (not a 3D view) and try again.");
                         trans.RollBack();
@@ -62,7 +62,7 @@ namespace RevitUI.UI.Dimensioning
                     if (view.ViewType == ViewType.ThreeD)
                     {
                         Log($"✗ BLOCKED: 3D view detected.");
-                        TaskDialog.Show("B-Lab", "Switch to a plan, section, or elevation view before creating dimensions.");
+                        TaskDialog.Show("BuiltFlow", "Switch to a plan, section, or elevation view before creating dimensions.");
                         trans.RollBack();
                         return;
                     }
@@ -74,7 +74,7 @@ namespace RevitUI.UI.Dimensioning
                         if (selIds.Count == 0)
                         {
                             Log($"✗ BLOCKED: No elements selected.");
-                            TaskDialog.Show("B-Lab", "Please select elements before running the tool.");
+                            TaskDialog.Show("BuiltFlow", "Please select elements before running the tool.");
                             trans.RollBack();
                             return;
                         }
@@ -119,13 +119,13 @@ namespace RevitUI.UI.Dimensioning
                     {
                         trans.Commit();
                         Log($"\n✓ SUCCESS: {createdCount} dimension(s) created and committed.");
-                        TaskDialog.Show("B-Lab", $"Successfully created {createdCount} dimension(s).");
+                        TaskDialog.Show("BuiltFlow", $"Successfully created {createdCount} dimension(s).");
                     }
                     else
                     {
                         trans.RollBack();
                         Log($"\n✗ FAILED: No dimensions created for mode '{GetModeDisplayName(Mode)}'.");
-                        TaskDialog.Show("B-Lab", $"No dimensions were created for mode: {GetModeDisplayName(Mode)}.");
+                        TaskDialog.Show("BuiltFlow", $"No dimensions were created for mode: {GetModeDisplayName(Mode)}.");
                     }
                 }
                 catch (Exception ex)

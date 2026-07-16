@@ -3,7 +3,7 @@
 ; Optimized for Revit 2021-2027
 ; ==============================================================
 
-#define AppName        "B-Lab Tools"
+#define AppName        "BuiltFlow"
 #define AppVersion     "1.0.4.0"
 #define AppPublisher   "BIM Digital Design"
 #define AppURL         "https://www.bimdigitaldesign.com"
@@ -34,7 +34,7 @@
 #define JOIN_ROOT_27 "D:\RevitPlugin\ElementJoin\bin\Release\net10.0-windows"
 
 ; ================= PLUGIN METADATA =================
-#define API_NAME   "BIM API Lab"
+#define API_NAME   "BuiltFlow API"
 #define API_DLL    "B-Lab.dll"
 #define API_CLASS  "B_Lab.RevitApp.App"
 #define API_ID     "{0d9c15ae-c9e1-4120-b490-d46c3fc9b9ef}"
@@ -70,7 +70,7 @@ DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=admin
 OutputDir=Output
-OutputBaseFilename=B-Lab
+OutputBaseFilename=BuiltFlow
 SetupIconFile={#AppIconFile}
 Compression=lzma2/ultra64
 SolidCompression=yes

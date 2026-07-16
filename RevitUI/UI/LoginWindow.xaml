@@ -3,12 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
              xmlns:local="clr-namespace:RevitUI.UI"
              Height="480" Width="400" ResizeMode="NoResize" 
-             Title="BIM Digital Design" 
+             Title="BuiltFlow Suite" 
              Icon="{x:Null}">
     <Grid Margin="30">
         <!-- Login Panel -->
         <StackPanel x:Name="LoginPanel" Visibility="Visible">
-            <TextBlock Text="BIM Digital Design" FontSize="24" FontWeight="Bold" Foreground="#111827" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+            <TextBlock Text="BuiltFlow Suite" FontSize="24" FontWeight="Bold" Foreground="#111827" HorizontalAlignment="Center" Margin="0,0,0,5"/>
             <TextBlock Text="Sign in to your account" FontSize="14" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,0,0,20"/>
             
             <TextBlock Text="Username" FontWeight="SemiBold" Foreground="#374151" FontSize="12" Margin="0,0,0,4"/>

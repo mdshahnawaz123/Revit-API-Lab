@@ -38,7 +38,7 @@ namespace RevitUI.UI.Slope
                         count++;
                     }
 
-                    TaskDialog.Show("B-Lab Analysis", $"Processed {count} elements.\nCheck properties for slope data.");
+                    TaskDialog.Show("BuiltFlow Analysis", $"Processed {count} elements.\nCheck properties for slope data.");
                     trans.Commit();
                 }
                 catch (Exception ex)

@@ -32,7 +32,7 @@ namespace RevitUI.UI.Purge
                     if (PurgeEmptyViews) deletedCount += PurgeEmptyViewsLogic(doc);
 
                     trans.Commit();
-                    TaskDialog.Show("B-Lab", $"Deep Clean Complete!\nRemoved {deletedCount} items from the model.");
+                    TaskDialog.Show("BuiltFlow", $"Deep Clean Complete!\nRemoved {deletedCount} items from the model.");
                 }
                 catch (Exception ex)
                 {

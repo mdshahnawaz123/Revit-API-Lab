@@ -1,7 +1,7 @@
 <Window x:Class="RevitUI.UI.Purge.PurgeDashboard"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="B-Lab Model Purge Plus" Height="500" Width="400"
+        Title="BuiltFlow Model Purge Plus" Height="500" Width="400"
         WindowStartupLocation="CenterScreen" Topmost="True"
         Background="Transparent" AllowsTransparency="True" WindowStyle="None"
         Icon="{x:Null}">

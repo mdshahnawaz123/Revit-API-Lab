@@ -151,7 +151,7 @@ namespace RevitUI.UI.RoomSheet
                     }
                 }
             }
-            TaskDialog.Show("B-Lab", "Batch creation complete!");
+            TaskDialog.Show("BuiltFlow", "Batch creation complete!");
         }
 
         private string GetUniqueViewName(Document doc, string baseName)
