@@ -15,22 +15,27 @@
 ; ================= BUILD PATHS =================
 #define API_ROOT_24  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\x64\Release\net48"
 #define API_ROOT_25  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\x64\Release\net8.0-windows"
+#define API_ROOT_26  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\x64\Release\net9.0-windows"
 #define API_ROOT_27  "C:\Users\Mohd Shahnawaz\source\repos\Revit-API-Lab\B-Lab\bin\x64\Release\net10.0-windows"
 
 #define TOP_ROOT_24  "C:\Users\Mohd Shahnawaz\source\repos\RevitTopSurfacePoint\bin\Release\net48"
 #define TOP_ROOT_25  "C:\Users\Mohd Shahnawaz\source\repos\RevitTopSurfacePoint\bin\Release\net8.0-windows"
+#define TOP_ROOT_26  "C:\Users\Mohd Shahnawaz\source\repos\RevitTopSurfacePoint\bin\Release\net9.0-windows"
 #define TOP_ROOT_27  "C:\Users\Mohd Shahnawaz\source\repos\RevitTopSurfacePoint\bin\Release\net10.0-windows"
 
 #define COST_ROOT_24 "C:\Users\Mohd Shahnawaz\source\repos\CostAnalysis\bin\Release\net48"
 #define COST_ROOT_25 "C:\Users\Mohd Shahnawaz\source\repos\CostAnalysis\bin\Release\net8.0-windows"
+#define COST_ROOT_26 "C:\Users\Mohd Shahnawaz\source\repos\CostAnalysis\bin\Release\net9.0-windows"
 #define COST_ROOT_27 "C:\Users\Mohd Shahnawaz\source\repos\CostAnalysis\bin\Release\net10.0-windows"
 
 #define ABS_ROOT_24  "C:\Users\Mohd Shahnawaz\source\repos\ABS-WIZZ\bin\Release\net48"
 #define ABS_ROOT_25  "C:\Users\Mohd Shahnawaz\source\repos\ABS-WIZZ\bin\Release\net8.0-windows"
+#define ABS_ROOT_26  "C:\Users\Mohd Shahnawaz\source\repos\ABS-WIZZ\bin\Release\net9.0-windows"
 #define ABS_ROOT_27  "C:\Users\Mohd Shahnawaz\source\repos\ABS-WIZZ\bin\Release\net10.0-windows"
 
 #define JOIN_ROOT_24 "D:\RevitPlugin\ElementJoin\bin\Release\net48"
 #define JOIN_ROOT_25 "D:\RevitPlugin\ElementJoin\bin\Release\net8.0-windows"
+#define JOIN_ROOT_26 "D:\RevitPlugin\ElementJoin\bin\Release\net9.0-windows"
 #define JOIN_ROOT_27 "D:\RevitPlugin\ElementJoin\bin\Release\net10.0-windows"
 
 ; ================= PLUGIN METADATA =================
@@ -87,24 +92,29 @@ Source: "{#AppIconFile}"; DestDir: "{app}"; Flags: ignoreversion
 ; 1. API Lab Binaries
 Source: "{#API_ROOT_24}\*"; DestDir: "{app}\APILab\R24"; Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#API_ROOT_25}\*"; DestDir: "{app}\APILab\R25"; Flags: recursesubdirs ignoreversion createallsubdirs
+Source: "{#API_ROOT_26}\*"; DestDir: "{app}\APILab\R26"; Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#API_ROOT_27}\*"; DestDir: "{app}\APILab\R27"; Flags: recursesubdirs ignoreversion createallsubdirs
 
 ; 2. Other Tools
 Source: "{#TOP_ROOT_24}\*";  DestDir: "{app}\TopSurface\R24";   Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#TOP_ROOT_25}\*";  DestDir: "{app}\TopSurface\R25";   Flags: recursesubdirs ignoreversion createallsubdirs
+Source: "{#TOP_ROOT_26}\*";  DestDir: "{app}\TopSurface\R26";   Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#TOP_ROOT_27}\*";  DestDir: "{app}\TopSurface\R27";   Flags: recursesubdirs ignoreversion createallsubdirs
 
 Source: "{#COST_ROOT_24}\*"; DestDir: "{app}\CostAnalysis\R24"; Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#COST_ROOT_25}\*"; DestDir: "{app}\CostAnalysis\R25"; Flags: recursesubdirs ignoreversion createallsubdirs
+Source: "{#COST_ROOT_26}\*"; DestDir: "{app}\CostAnalysis\R26"; Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#COST_ROOT_27}\*"; DestDir: "{app}\CostAnalysis\R27"; Flags: recursesubdirs ignoreversion createallsubdirs
 
 Source: "{#ABS_ROOT_24}\*";  DestDir: "{app}\ABS-WIZZ\R24";     Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#ABS_ROOT_25}\*";  DestDir: "{app}\ABS-WIZZ\R25";     Flags: recursesubdirs ignoreversion createallsubdirs
+Source: "{#ABS_ROOT_26}\*";  DestDir: "{app}\ABS-WIZZ\R26";     Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#ABS_ROOT_27}\*";  DestDir: "{app}\ABS-WIZZ\R27";     Flags: recursesubdirs ignoreversion createallsubdirs
 
 ; 3. Element Join
 Source: "{#JOIN_ROOT_24}\*"; DestDir: "{app}\ElementJoin\R24"; Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#JOIN_ROOT_25}\*"; DestDir: "{app}\ElementJoin\R25"; Flags: recursesubdirs ignoreversion createallsubdirs
+Source: "{#JOIN_ROOT_26}\*"; DestDir: "{app}\ElementJoin\R26"; Flags: recursesubdirs ignoreversion createallsubdirs
 Source: "{#JOIN_ROOT_27}\*"; DestDir: "{app}\ElementJoin\R27"; Flags: recursesubdirs ignoreversion createallsubdirs
 
 [UninstallDelete]
@@ -237,7 +247,8 @@ var
 begin
   IntYear := StrToIntDef(Year, 0);
   if IntYear <= 2024 then Result := 'R24'
-  else if (IntYear = 2025) or (IntYear = 2026) then Result := 'R25'
+  else if IntYear = 2025 then Result := 'R25'
+  else if IntYear = 2026 then Result := 'R26'
   else Result := 'R27';
 end;
 
